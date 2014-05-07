@@ -230,6 +230,15 @@ public class CtfTmfEvent extends TmfEvent
         return fContent;
     }
 
+    // ------------------------------------------------------------------------
+    // ITmfEvent
+    // ------------------------------------------------------------------------
+
+    @Override
+    public void compress() {
+        fContent = null;
+    }
+
     /**
      * Extract the field information from the structDefinition haze-inducing
      * mess, and put them into something ITmfEventField can cope with.

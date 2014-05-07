@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
+import org.eclipse.linuxtools.tmf.core.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
 /**
@@ -184,6 +185,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
             if (!unmatchedTbl.get(event.getTrace()).containsKey(eventKey)) {
                 unmatchedTbl.get(event.getTrace()).put(eventKey, event);
             }
+        }
+        if (event instanceof TmfEvent) {
+            ((TmfEvent) event).compress();
         }
 
     }

@@ -158,6 +158,13 @@ public class TmfEvent extends PlatformObject implements ITmfEvent {
         return fReference;
     }
 
+    /**
+     * @since 3.1
+     */
+    public void compress() {
+
+    }
+
     // ------------------------------------------------------------------------
     // Object
     // ------------------------------------------------------------------------
