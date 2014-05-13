@@ -28,6 +28,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTmfGraphP
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTraceEventHandler;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AnalysisPhase;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.ITmfGraphProvider;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfModelRegistry;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfSystemModelWithCpu;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfWorker;
@@ -69,6 +70,12 @@ public class TestGraphMultiHost {
      * /~fgiraldeau/traces/django-index.tar.gz
      */
     private static String EXP_DJANGO_INDEX = "django-index";
+
+    /**
+     * django-index experiment on three hosts
+     * http://secretaire.dorsal.polymtl.ca/~fgiraldeau/traces/wget-100M.tar.gz
+     */
+    private static String EXP_WGET = "wget-100M";
 
     private static String TRACE_DIR = "traces";
 
@@ -263,19 +270,61 @@ public class TestGraphMultiHost {
         TmfGraph graph = module.getGraph();
 
         // search for the client thread
-        TmfWorker client = null;
+        TmfWorker client = findWorkerByName(graph, "/home/ubuntu/.virtualenvs/wkdb/bin/python");
+        System.out.println("client = " + client);
+        assertNotNull(client);
+    }
+
+    public TmfWorker findWorkerByName(TmfGraph graph, String name) {
+        ArrayListMultimap<Object, TmfVertex> nodesMap = graph.getNodesMap();
+        for (Object obj: nodesMap.keySet()) {
+            if (obj instanceof TmfWorker) {
+                TmfWorker worker = (TmfWorker) obj;
+                if (worker.getName().equals(name)) {
+                    return worker;
+                }
+            }
+        }
+        return null;
+    }
+
+    public TmfWorker findWorkerByTID(TmfGraph graph, Long tid) {
         ArrayListMultimap<Object, TmfVertex> nodesMap = graph.getNodesMap();
         for (Object obj : nodesMap.keySet()) {
             if (obj instanceof TmfWorker) {
                 TmfWorker worker = (TmfWorker) obj;
-                if (worker.getName().equals("/home/ubuntu/.virtualenvs/wkdb/bin/python")) {
-                    client = worker;
-                    break;
+                if (worker.getId() == tid) {
+                    return worker;
                 }
             }
         }
+        return null;
+    }
+    /**
+     * Test wget trace
+     * @throws Throwable exception
+     */
+    @Test
+    public void testWgetTrace() throws Throwable {
+        TmfExperiment experiment = makeTmfExperiment(EXP_WGET);
+        TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
+        experiment.traceOpened(signal);
+
+        LttngKernelExecutionGraph module = new LttngKernelExecutionGraph();
+        module.setId(LttngKernelExecutionGraph.ANALYSIS_ID);
+        module.setTrace(experiment);
+        TmfTestHelper.executeAnalysis(module);
+        TmfGraph graph = module.getGraph();
+
+        // search for the client thread
+        TmfWorker client = findWorkerByTID(graph, 1409L);
+        TmfVertex head = graph.getHead(client);
+        TmfVertex tail = graph.getTail(client);
+        CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(graph);
+        TmfGraph path = algo.compute(head, tail);
         System.out.println("client = " + client);
         assertNotNull(client);
+        assertNotNull(path);
     }
 
     /**
