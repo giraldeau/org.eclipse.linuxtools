@@ -94,13 +94,8 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
 
             @Override
             public void addMatch(TmfEventDependency match) {
-                ITmfEvent sourceEvent = match.getSourceEvent();
-                long emitter = (Long) sourceEvent.getContent().getField("context._tid").getValue();
-                TmfWorker worker = system.getWorker(sourceEvent.getTrace().getHostId(), Integer.parseInt(sourceEvent.getSource()), emitter);
-
                 log.entry("tcp match " + match.getSourceEvent().getContent() + " " + match.getDestinationEvent().getContent());
                 log.entry("xmit " + match.getSourceEvent().getTimestamp() + " recv" + match.getDestinationEvent().getTimestamp());
-                log.entry("xmit by " + emitter + " " + worker);
 
                 TmfVertex output = tcpNodes.remove(match.getSourceEvent());
                 TmfVertex input = tcpNodes.remove(match.getDestinationEvent());
