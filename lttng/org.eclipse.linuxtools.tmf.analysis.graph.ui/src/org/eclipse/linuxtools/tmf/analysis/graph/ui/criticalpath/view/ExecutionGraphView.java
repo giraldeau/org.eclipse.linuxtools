@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge.EdgeType;
@@ -30,9 +28,6 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraphStatistics;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraphVisitor;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.TmfGraphBuilderModule;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmUnbounded;
-import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.CriticalPathAlgorithmProvider;
 import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.CriticalPathModule;
 import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.Messages;
 import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.CriticalPathPresentationProvider.State;
@@ -55,7 +50,7 @@ import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.TimeLinkEvent;
  *
  * @author Francis Giraldeau <francis.giraldeau@gmail.com>
  */
-@SuppressWarnings("nls")
+//@SuppressWarnings("nls")
 public class ExecutionGraphView extends AbstractTimeGraphPerObjectView {
 
     // ------------------------------------------------------------------------
@@ -96,9 +91,6 @@ public class ExecutionGraphView extends AbstractTimeGraphPerObjectView {
     private final Map<ITmfTrace, Map<Object, TmfGraphStatistics>> fObjectStatistics = new HashMap<>();
 
     private final Map<Object, CriticalPathEntry> fRootList = new HashMap<>();
-    private Action fAlgorithmChoice;
-
-    private Action fResetAction;
 
     private class CriticalPathTreeLabelProvider extends TreeLabelProvider {
 
@@ -438,38 +430,6 @@ public class ExecutionGraphView extends AbstractTimeGraphPerObjectView {
 
     @Override
     protected void fillLocalToolBar(IToolBarManager manager) {
-        fResetAction = new Action() {
-            @Override
-            public void run() {
-                System.out.println("reset graph");
-                /*
-                 * FIXME: How to force recomputation of the graph? Seems to be
-                 * cached, and resetAnalysis() does only a count down latch
-                 * (does it really trigger reset anyway?), and is not
-                 * accessible.
-                 */
-            }
-        };
-        fResetAction.setText("Reset");
-        fResetAction.setToolTipText("Recompute the graph and the critical path");
-
-        fAlgorithmChoice = new Action("Bounded", IAction.AS_CHECK_BOX) {
-            @Override
-            public void run() {
-                if (fAlgorithmChoice.isChecked()) {
-                    CriticalPathAlgorithmProvider.getInstance().setAlgorithm(CriticalPathAlgorithmUnbounded.class);
-                    fAlgorithmChoice.setText("Unbounded");
-                } else {
-                    CriticalPathAlgorithmProvider.getInstance().setAlgorithm(CriticalPathAlgorithmBounded.class);
-                    fAlgorithmChoice.setText("Bounded");
-                }
-            }
-        };
-        fAlgorithmChoice.setToolTipText("Select the critical path algorithm to use");
-        fAlgorithmChoice.setChecked(false);
-
-        manager.add(fResetAction);
-        manager.add(fAlgorithmChoice);
         super.fillLocalToolBar(manager);
     }
 
