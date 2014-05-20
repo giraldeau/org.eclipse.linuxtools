@@ -8,7 +8,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
@@ -60,8 +59,8 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      * @param evKlass the event type
      * @return experiment
      */
-    public static TmfExperiment makeTmfExperiment(String dir, String base, Class<? extends ITmfTrace> traceKlass, Class<? extends ITmfEvent> evKlass) {
-        List<Path> paths = findCtfTrace(Paths.get(dir, base));
+    public static TmfExperiment makeTmfExperiment(Path base, Class<? extends ITmfTrace> traceKlass, Class<? extends ITmfEvent> evKlass) {
+        List<Path> paths = findCtfTrace(base);
         final ITmfTrace[] traces = new TmfTrace[paths.size()];
         int i = 0;
         for (Path p: paths) {
@@ -96,8 +95,8 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      * @param base trace directory
      * @return the experiment
      */
-    public static TmfExperiment makeTmfExperiment(String dir, String base) {
-        return makeTmfExperiment(dir, base, LttngKernelTrace.class, ITmfEvent.class);
+    public static TmfExperiment makeTmfExperiment(Path base) {
+        return makeTmfExperiment(base, LttngKernelTrace.class, ITmfEvent.class);
     }
 
     /**
