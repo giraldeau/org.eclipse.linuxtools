@@ -6,7 +6,7 @@ import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
 public interface IExperimentProcessor {
 
-    public void before(Path experiment);
-    public void core(TmfExperiment experiment);
+    public void before(Path experiment, int iter);
+    public void main(TmfExperiment experiment);
     public void after(TmfExperiment experiment);
 }

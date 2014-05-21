@@ -65,6 +65,8 @@ public class TestGraphMultiHost {
 
     private static String TRACE_DIR = "traces";
 
+    public static String DJANGO_CLIENT_NAME = "/home/ubuntu/.virtualenvs/wkdb/bin/python";
+
     /**
      * Test that traces are correctly found
      */
@@ -161,7 +163,7 @@ public class TestGraphMultiHost {
         TmfGraph graph = module.getGraph();
 
         // search for the client thread
-        TmfWorker client = findWorkerByName(graph, "/home/ubuntu/.virtualenvs/wkdb/bin/python");
+        TmfWorker client = findWorkerByName(graph, DJANGO_CLIENT_NAME);
         System.out.println("client = " + client);
         assertNotNull(client);
     }
@@ -172,7 +174,7 @@ public class TestGraphMultiHost {
      * @param name the worker process name
      * @return worker object if found, null otherwise
      */
-    public TmfWorker findWorkerByName(TmfGraph graph, String name) {
+    public static TmfWorker findWorkerByName(TmfGraph graph, String name) {
         ArrayListMultimap<Object, TmfVertex> nodesMap = graph.getNodesMap();
         for (Object obj: nodesMap.keySet()) {
             if (obj instanceof TmfWorker) {
@@ -191,7 +193,7 @@ public class TestGraphMultiHost {
      * @param tid the worker process id
      * @return worker object if found, null otherwise
      */
-    public TmfWorker findWorkerByTID(TmfGraph graph, Long tid) {
+    public static TmfWorker findWorkerByTID(TmfGraph graph, Long tid) {
         ArrayListMultimap<Object, TmfVertex> nodesMap = graph.getNodesMap();
         for (Object obj : nodesMap.keySet()) {
             if (obj instanceof TmfWorker) {

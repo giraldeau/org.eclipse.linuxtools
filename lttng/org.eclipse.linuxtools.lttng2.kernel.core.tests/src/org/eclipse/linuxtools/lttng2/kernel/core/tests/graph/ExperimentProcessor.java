@@ -7,11 +7,11 @@ import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 public class ExperimentProcessor implements IExperimentProcessor {
 
     @Override
-    public void before(Path path) {
+    public void before(Path path, int iter) {
     }
 
     @Override
-    public void core(TmfExperiment experiment) {
+    public void main(TmfExperiment experiment) {
     }
 
     @Override

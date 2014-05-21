@@ -3,6 +3,7 @@ package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -10,6 +11,10 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -114,5 +119,39 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         }
         return finder.getResults();
 
+    }
+
+    /**
+     * Find all trace paths below a given directory
+     *
+     * @param dir parent directory
+     * @return ordered list of paths
+     */
+    public static List<Path> getTracePathsByCreationTime(Path dir) {
+        List<Path> paths = new ArrayList<>();
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            for (Path item: stream) {
+                BasicFileAttributes attrs = Files.readAttributes(item, BasicFileAttributes.class);
+                if (attrs.isDirectory()) {
+                    paths.add(item);
+                }
+            }
+        } catch (IOException e) { }
+
+        Collections.sort(paths, new Comparator<Path>() {
+            @Override
+            public int compare(Path p0, Path p1) {
+                FileTime t0;
+                FileTime t1;
+                try {
+                    t0 = Files.readAttributes(p0, BasicFileAttributes.class).creationTime();
+                    t1 = Files.readAttributes(p1, BasicFileAttributes.class).creationTime();
+                    return t0.compareTo(t1);
+                } catch (IOException e) {
+                }
+                return 0;
+            }
+        });
+        return paths;
     }
 }

@@ -80,8 +80,9 @@ public class Activator extends Plugin {
         plugin = this;
         TmfEventMatching.registerMatchObject(new TcpEventMatching());
         TmfEventMatching.registerMatchObject(new TcpLttngEventMatching());
-        ALog.getInstance().init(LOG_PATH);
-        ALog.getInstance().entry("Hello ALog"); //$NON-NLS-1$
+        // can't access ALog from unit tests, so disable it for now
+        //ALog.getInstance().init(LOG_PATH);
+        ALog.getInstance().entry("Hello ALog " + LOG_PATH); //$NON-NLS-1$
     }
 
     @Override
