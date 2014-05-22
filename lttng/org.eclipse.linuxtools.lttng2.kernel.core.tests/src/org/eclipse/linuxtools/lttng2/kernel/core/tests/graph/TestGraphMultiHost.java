@@ -27,6 +27,7 @@ import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest.ExecutionType;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -62,6 +63,8 @@ public class TestGraphMultiHost {
      * http://secretaire.dorsal.polymtl.ca/~fgiraldeau/traces/wget-100M.tar.gz
      */
     private static String EXP_WGET = "wget-100M";
+
+    private static String EXP_BUG_SYNC = "django-benchmark-subset/django-benchmark-0";
 
     private static String TRACE_DIR = "traces";
 
@@ -230,6 +233,21 @@ public class TestGraphMultiHost {
         System.out.println("client = " + client);
         assertNotNull(client);
         assertNotNull(path);
+    }
+
+    /**
+     * Bug with trace synchronization: only one trace should have IDENTITY transform
+     */
+    @Test
+    public void testSyncTransform() {
+        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_BUG_SYNC));
+        int identity = 0;
+        for (ITmfTrace trace: experiment.getTraces()) {
+            if (trace.getTimestampTransform() == TmfTimestampTransform.IDENTITY) {
+                identity++;
+            }
+        }
+        assertEquals(1, identity);
     }
 
     /**

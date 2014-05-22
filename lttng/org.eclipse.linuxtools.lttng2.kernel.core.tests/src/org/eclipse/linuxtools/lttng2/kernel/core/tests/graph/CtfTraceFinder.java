@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
@@ -88,13 +87,8 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         } catch (TmfTraceException e) {
             e.printStackTrace();
         }
-        Map<String, Map<String, Object>> stats = algo.getStats();
-        for (String stat: stats.keySet()) {
-            System.out.println(stat + " " + stats.get(stat));
-        }
         for (ITmfTrace trace: experiment.getTraces()) {
             ITmfTimestampTransform tstrans = algo.getTimestampTransform(trace.getHostId());
-            System.out.println(trace.getHostId() + " " + tstrans);
             trace.setTimestampTransform(tstrans);
         }
         return experiment;
