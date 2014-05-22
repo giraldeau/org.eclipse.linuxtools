@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
@@ -27,6 +29,9 @@ import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest.ExecutionType;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -84,9 +89,9 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testMakeExperiment() {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
         assertEquals(2, experiment.getTraces().length);
-        experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
         assertEquals(3, experiment.getTraces().length);
     }
 
@@ -101,7 +106,7 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testTraceSynchronization() throws InterruptedException {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
         TmfEventRequest request = new TmfEventRequest(ITmfEvent.class, 0, ITmfEventRequest.ALL_DATA, ExecutionType.BACKGROUND) {
             public long prev = 0;
 
@@ -130,7 +135,7 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testSwapperExistsWithHelper() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -155,7 +160,7 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testGraphDjango() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -214,7 +219,7 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testWgetTrace() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_WGET));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_WGET));
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -240,10 +245,31 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testSyncTransform() {
+        System.out.println(EXP_BUG_SYNC);
         TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_BUG_SYNC));
+        SyncAlgorithmFullyIncremental algo = (SyncAlgorithmFullyIncremental) CtfTraceFinder.synchronizeExperiment(experiment);
+
+        for (ITmfTrace i: experiment.getTraces()) {
+            for (ITmfTrace j: experiment.getTraces()) {
+                SyncQuality q = algo.getSynchronizationQuality(i, j);
+                System.out.println(i.getHostId() + " ---> " + j.getHostId() + " " + q);
+            }
+        }
+
         int identity = 0;
+        ArrayList<String> hostsList = new ArrayList<>();
         for (ITmfTrace trace: experiment.getTraces()) {
-            if (trace.getTimestampTransform() == TmfTimestampTransform.IDENTITY) {
+            hostsList.add(trace.getHostId());
+        }
+        Collections.sort(hostsList);
+        System.out.println(hostsList);
+        System.out.println("base trace: " + hostsList.get(0));
+        for (ITmfTrace trace: experiment.getTraces()) {
+            String host = trace.getHostId();
+            //algo.getTimestampTransform(0, host);
+            ITmfTimestampTransform xform = algo.getTimestampTransform(host);
+            System.out.println("result " + trace.getHostId() + " " + xform);
+            if (xform == TmfTimestampTransform.IDENTITY) {
                 identity++;
             }
         }
@@ -259,7 +285,7 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testAssertOutgoingNet() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 

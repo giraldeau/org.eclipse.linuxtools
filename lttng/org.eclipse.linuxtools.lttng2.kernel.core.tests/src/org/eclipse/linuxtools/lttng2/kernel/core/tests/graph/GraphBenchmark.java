@@ -92,6 +92,7 @@ public class GraphBenchmark {
                     @Override
                     public void func() {
                         exp = CtfTraceFinder.makeTmfExperiment(path, CtfTmfTrace.class, CtfTmfEvent.class);
+                        CtfTraceFinder.synchronizeExperiment(exp);
                     }
                 });
                 s.addSample(SAMPLE_LOAD_TIME, power, data.time);

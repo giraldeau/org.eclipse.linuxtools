@@ -81,16 +81,6 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
 
         TmfExperiment experiment = new TmfExperiment();
         experiment.initExperiment(evKlass, "", traces, Integer.MAX_VALUE, null);
-        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
-        try {
-            algo = experiment.synchronizeTraces(true, algo);
-        } catch (TmfTraceException e) {
-            e.printStackTrace();
-        }
-        for (ITmfTrace trace: experiment.getTraces()) {
-            ITmfTimestampTransform tstrans = algo.getTimestampTransform(trace.getHostId());
-            trace.setTimestampTransform(tstrans);
-        }
         return experiment;
     }
 
@@ -101,6 +91,38 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      */
     public static TmfExperiment makeTmfExperiment(Path base) {
         return makeTmfExperiment(base, LttngKernelTrace.class, ITmfEvent.class);
+    }
+
+    /**
+     * Make experiment from a trace directory and perform the trace synchronization
+     * @param base trace directory
+     * @return the synchronized experiment
+     */
+    public static TmfExperiment makeSynchronizedTmfExperiment(Path base) {
+        TmfExperiment exp = makeTmfExperiment(base);
+        synchronizeExperiment(exp);
+        return exp;
+    }
+
+    /**
+     * Synchronize experiment
+     * @param experiment the experiment to synchronize
+     * @return the synchronization algorithm used
+     */
+    public static SynchronizationAlgorithm synchronizeExperiment(TmfExperiment experiment) {
+        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+        try {
+            algo = experiment.synchronizeTraces(true, algo);
+        } catch (TmfTraceException e) {
+            e.printStackTrace();
+        }
+        SyncAlgorithmFullyIncremental realAlgo = (SyncAlgorithmFullyIncremental) algo;
+        for (ITmfTrace trace: experiment.getTraces()) {
+            String host = trace.getHostId();
+            ITmfTimestampTransform tstrans = realAlgo.getTimestampTransform(host);
+            trace.setTimestampTransform(tstrans);
+        }
+        return algo;
     }
 
     /**
