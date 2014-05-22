@@ -12,10 +12,14 @@
 
 package org.eclipse.linuxtools.tmf.core.tests.synchronization;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventDependency;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
@@ -244,4 +248,80 @@ public class SyncTest {
         assertEquals(SyncQuality.APPROXIMATE, syncAlgo.getSynchronizationQuality(t1, t2));
         assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1 beta 2.5 ]]", syncAlgo.toString());
     }
+
+    /**
+     * Test synchronization combinations
+     */
+    @Test
+    public void testChainedTransforms() {
+        ArrayList<ITmfTrace> traces = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            TmfTraceStub trace = new TmfTraceStub();
+            trace.init(String.format("T%d", i));
+            traces.add(trace);
+        }
+        int[][] links0 = new int[][] { {0, 1}, {1, 2}, {0, 2} }; // full
+        int[][] links1 = new int[][] { {1, 0}, {2, 1}, {2, 0} }; // inverted
+        int[][] links2 = new int[][] { {0, 1}, {0, 2} }; // edges from T0
+        int[][] links3 = new int[][] { {1, 0}, {2, 0} }; // edges toward T0
+        int[][] links4 = new int[][] { {0, 2}, {2, 1} }; // transitivity
+        int[][] links5 = new int[][] { {0, 2}, {2, 1} }; // transitivity
+
+        int[][][] links = new int[][][] { links0, links1, links2, links3, links4, links5 };
+        for (int[][] link: links) {
+            assertIdentity(traces, link);
+        }
+    }
+
+    private static void assertIdentity(List<ITmfTrace> traces, int[][] links) {
+        SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+        algo.init(traces);
+        int clk = 100000;
+        for (int[] link: links) {
+            int id0 = link[0];
+            int id1 = link[1];
+            ITmfTrace x = traces.get(id0);
+            ITmfTrace y = traces.get(id1);
+            for (int i = 0; i < 3; i++) {
+                int off = i * 1000;
+                genMatchEvent(algo, x, y, (id0 * clk) + off + ((i + 0) * 10), (id1 * clk) + off + ((i + 1) * 10));
+                genMatchEvent(algo, y, x, (id1 * clk) + off + ((i + 2) * 10), (id0 * clk) + off + ((i + 3) * 10));
+            }
+            assertEquals(SyncQuality.ACCURATE, algo.getSynchronizationQuality(x, y));
+        }
+
+        int identity = 0;
+        for (ITmfTrace trace: traces) {
+            ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
+            if (xform == TmfTimestampTransform.IDENTITY) {
+                identity++;
+            }
+        }
+        System.out.println("dump:");
+        Map<String, Map<String, Object>> stats = algo.getStats();
+        for (String key: stats.keySet()) {
+            System.out.println(stats.get(key));
+        }
+        for (ITmfTrace trace: traces) {
+            ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
+            System.out.println(trace.getHostId() + " " + xform);
+        }
+        try {
+             assertEquals(1, identity);
+             System.out.println("PASS:" + Arrays.deepToString(links));
+        } catch (AssertionError e) {
+            System.out.println("FAIL:" + Arrays.deepToString(links));
+            throw e;
+        }
+    }
+
+    private static void genMatchEvent(SynchronizationAlgorithm algo, ITmfTrace sender, ITmfTrace receiver, long send, long recv) {
+        algo.addMatch(
+                new TmfEventDependency(
+                        new TmfSyncEventStub(sender, new TmfTimestamp(send)),
+                        new TmfSyncEventStub(receiver, new TmfTimestamp(recv))
+                        )
+                );
+    }
+
 }
