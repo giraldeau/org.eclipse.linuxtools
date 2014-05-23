@@ -141,4 +141,13 @@ public class TsTransformTest {
         assertEquals(312, tc1.transform(t));
 
     }
+
+    /**
+     * Verify that the composition of any transform with it's inverse yields the
+     * identity
+     */
+    @Test
+    public void testInverseComposition() {
+        // TODO: implement inverse transform
+    }
 }
