@@ -8,6 +8,7 @@
  *
  * Contributors:
  *   Geneviève Bastien - Initial implementation and API
+ *   Francis Giraldeau - Transform computation using synchronization graph
  *******************************************************************************/
 
 package org.eclipse.linuxtools.tmf.core.synchronization;
@@ -53,6 +54,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     private final List<ConvexHull> fSyncs;
 
+    private SyncGraph<String, ITmfTimestampTransform> fSyncGraph;
+
+    private String fRootNode;
+
     /**
      * Initialization of the attributes
      */
@@ -75,6 +80,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         ITmfTrace[] traceArr = traces.toArray(new ITmfTrace[traces.size()]);
         fSyncs.clear();
         /* Create a convex hull for all trace pairs */
+        // FIXME: is it necessary to make ConvexHull for every pairs up-front?
+        // The ConvexHull seems to be created on the fly in processMatch().
         for (int i = 0; i < traceArr.length; i++) {
             for (int j = i + 1; j < traceArr.length; j++) {
                 ConvexHull algo = new ConvexHull(traceArr[i].getHostId(), traceArr[j].getHostId());
@@ -105,7 +112,12 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             fSyncs.add(algo);
         }
         algo.processMatch(match);
+        invalidateSyncGraph();
+    }
 
+    private void invalidateSyncGraph() {
+        fSyncGraph = null;
+        fRootNode = null;
     }
 
     @Override
@@ -115,6 +127,57 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     @Override
     public ITmfTimestampTransform getTimestampTransform(String hostId) {
+        ITmfTimestampTransform result = TmfTimestampTransform.IDENTITY;
+        /*
+         * Build the sync graph if needed. Add two edges for each ConvexHull. A
+         * forward edge with the given transform, and a reverse edge with the
+         * inverse transform.
+         */
+        if (fRootNode == null || fSyncGraph == null) {
+            fRootNode = null;
+            fSyncGraph = new SyncGraph<>();
+            for (ConvexHull traceSync : fSyncs) {
+                SyncQuality q = traceSync.getQuality();
+                if (q == SyncQuality.ACCURATE || q == SyncQuality.APPROXIMATE) {
+                    String from = traceSync.getReferenceHost();
+                    String to = traceSync.getOtherHost();
+                    ITmfTimestampTransform xform = traceSync.getTimestampTransform(to);
+                    if (fRootNode == null || from.compareTo(fRootNode) < 0) {
+                        fRootNode = from;
+                    }
+                    fSyncGraph.addEdge(from, to, xform);
+                    fSyncGraph.addEdge(to, from, xform.inverse());
+                }
+            }
+        }
+
+        /*
+         * Compute the path from reference node to the given host id
+         */
+        if (fRootNode != null) {
+            List<Edge<String, ITmfTimestampTransform>> path = fSyncGraph.path(fRootNode, hostId);
+            /*
+             * Compute the resulting transform by chaining each transforms on
+             * the path.
+             */
+            for (Edge<String, ITmfTimestampTransform> edge : path) {
+                result = result.composeWith(edge.getLabel());
+            }
+        }
+        System.out.println("xform " + result);
+        return result;
+    }
+
+    /**
+     * Previous method to compute the timestamps transform
+     *
+     * FIXME: remove once the newer method based on graph path is validated
+     *
+     * @param hostId
+     *            the host string
+     * @return the timestamps transform
+     */
+    public ITmfTimestampTransform getOldTimestampTransform(String hostId) {
         for (ConvexHull traceSync : fSyncs) {
             if (traceSync.isTraceSynced(hostId)) {
                 /*

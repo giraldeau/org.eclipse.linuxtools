@@ -281,9 +281,8 @@ public class SyncTest {
         int[][] links2 = new int[][] { { 0, 1 }, { 0, 2 } }; // edges from T0
         int[][] links3 = new int[][] { { 1, 0 }, { 2, 0 } }; // edges toward T0
         int[][] links4 = new int[][] { { 0, 2 }, { 2, 1 } }; // transitivity
-        int[][] links5 = new int[][] { { 0, 2 }, { 2, 1 } }; // transitivity
 
-        int[][][] links = new int[][][] { links0, links1, links2, links3, links4, links5 };
+        int[][][] links = new int[][][] { links0, links1, links2, links3, links4 };
         for (int[][] link : links) {
             assertIdentity(traces, link);
         }
@@ -313,6 +312,7 @@ public class SyncTest {
                 identity++;
             }
         }
+        // FIXME: remove the output
         System.out.println("dump:");
         Map<String, Map<String, Object>> stats = algo.getStats();
         for (String key : stats.keySet()) {
@@ -320,7 +320,9 @@ public class SyncTest {
         }
         for (ITmfTrace trace : traces) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
-            System.out.println(trace.getHostId() + " " + xform);
+            System.out.println("new " + trace.getHostId() + " " + xform);
+            xform = algo.getOldTimestampTransform(trace.getHostId());
+            System.out.println("old " + trace.getHostId() + " " + xform);
         }
         try {
             assertEquals(1, identity);
