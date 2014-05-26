@@ -134,7 +134,7 @@ public class CtfParserTest {
     private CommonTree primaryExpression(String content) {
         try {
             setInput(content);
-            return parser.primaryExpression().getTree();
+            return (CommonTree) parser.primaryExpression().getTree();
         } catch (RecognitionException e) {
             return null;
         }
@@ -143,7 +143,7 @@ public class CtfParserTest {
     private CommonTree unaryExpression(String content) {
         try {
             setInput(content);
-            return parser.unaryExpression().getTree();
+            return (CommonTree) parser.unaryExpression().getTree();
         } catch (RecognitionException e) {
             return null;
         }
@@ -152,7 +152,7 @@ public class CtfParserTest {
     private CommonTree declaration(String content) {
         try {
             setInput(content);
-            return parser.declaration().getTree();
+            return (CommonTree) parser.declaration().getTree();
         } catch (RecognitionException e) {
             return null;
         }
