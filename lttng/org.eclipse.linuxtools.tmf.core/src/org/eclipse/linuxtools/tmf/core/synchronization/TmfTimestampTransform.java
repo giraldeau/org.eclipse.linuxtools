@@ -59,6 +59,11 @@ public class TmfTimestampTransform implements ITmfTimestampTransform, Serializab
     }
 
     @Override
+    public ITmfTimestampTransform inverse() {
+        return IDENTITY;
+    }
+
+    @Override
     public boolean equals(Object other) {
         return other.getClass().equals(TmfTimestampTransform.class);
     }

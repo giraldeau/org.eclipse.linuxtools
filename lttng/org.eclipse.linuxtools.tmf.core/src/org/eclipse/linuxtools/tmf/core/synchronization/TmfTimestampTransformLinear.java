@@ -121,6 +121,11 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform, Seri
     }
 
     @Override
+    public ITmfTimestampTransform inverse() {
+        return new TmfTimestampTransformLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
+    }
+
+    @Override
     public boolean equals(Object other) {
         boolean result = false;
         if (other instanceof TmfTimestampTransformLinear) {

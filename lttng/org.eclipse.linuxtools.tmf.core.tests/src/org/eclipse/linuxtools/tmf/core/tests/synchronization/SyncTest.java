@@ -27,6 +27,7 @@ import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncreme
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.tests.stubs.event.TmfSyncEventStub;
@@ -249,6 +250,21 @@ public class SyncTest {
         assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1 beta 2.5 ]]", syncAlgo.toString());
     }
 
+    @Test
+    public void testComposeWithInverse() {
+        TmfTimestampTransformLinear xform = new TmfTimestampTransformLinear(10.0, 1000.0);
+        ITmfTimestampTransform xformInv = xform.inverse();
+        ITmfTimestampTransform iden = xform.composeWith(xformInv);
+        /*
+         * The same timestamp should be returned for the identity but account
+         * for any error margin
+         */
+        long err = 1;
+        long exp = 1000000;
+        long act = iden.transform(exp);
+        assertTrue(Math.abs(exp - act) < err);
+    }
+
     /**
      * Test synchronization combinations
      */
@@ -260,15 +276,15 @@ public class SyncTest {
             trace.init(String.format("T%d", i));
             traces.add(trace);
         }
-        int[][] links0 = new int[][] { {0, 1}, {1, 2}, {0, 2} }; // full
-        int[][] links1 = new int[][] { {1, 0}, {2, 1}, {2, 0} }; // inverted
-        int[][] links2 = new int[][] { {0, 1}, {0, 2} }; // edges from T0
-        int[][] links3 = new int[][] { {1, 0}, {2, 0} }; // edges toward T0
-        int[][] links4 = new int[][] { {0, 2}, {2, 1} }; // transitivity
-        int[][] links5 = new int[][] { {0, 2}, {2, 1} }; // transitivity
+        int[][] links0 = new int[][] { { 0, 1 }, { 1, 2 }, { 0, 2 } }; // full
+        int[][] links1 = new int[][] { { 1, 0 }, { 2, 1 }, { 2, 0 } }; // inverted
+        int[][] links2 = new int[][] { { 0, 1 }, { 0, 2 } }; // edges from T0
+        int[][] links3 = new int[][] { { 1, 0 }, { 2, 0 } }; // edges toward T0
+        int[][] links4 = new int[][] { { 0, 2 }, { 2, 1 } }; // transitivity
+        int[][] links5 = new int[][] { { 0, 2 }, { 2, 1 } }; // transitivity
 
         int[][][] links = new int[][][] { links0, links1, links2, links3, links4, links5 };
-        for (int[][] link: links) {
+        for (int[][] link : links) {
             assertIdentity(traces, link);
         }
     }
@@ -277,7 +293,7 @@ public class SyncTest {
         SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
         algo.init(traces);
         int clk = 100000;
-        for (int[] link: links) {
+        for (int[] link : links) {
             int id0 = link[0];
             int id1 = link[1];
             ITmfTrace x = traces.get(id0);
@@ -291,7 +307,7 @@ public class SyncTest {
         }
 
         int identity = 0;
-        for (ITmfTrace trace: traces) {
+        for (ITmfTrace trace : traces) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
             if (xform == TmfTimestampTransform.IDENTITY) {
                 identity++;
@@ -299,16 +315,16 @@ public class SyncTest {
         }
         System.out.println("dump:");
         Map<String, Map<String, Object>> stats = algo.getStats();
-        for (String key: stats.keySet()) {
+        for (String key : stats.keySet()) {
             System.out.println(stats.get(key));
         }
-        for (ITmfTrace trace: traces) {
+        for (ITmfTrace trace : traces) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
             System.out.println(trace.getHostId() + " " + xform);
         }
         try {
-             assertEquals(1, identity);
-             System.out.println("PASS:" + Arrays.deepToString(links));
+            assertEquals(1, identity);
+            System.out.println("PASS:" + Arrays.deepToString(links));
         } catch (AssertionError e) {
             System.out.println("FAIL:" + Arrays.deepToString(links));
             throw e;
@@ -320,7 +336,7 @@ public class SyncTest {
                 new TmfEventDependency(
                         new TmfSyncEventStub(sender, new TmfTimestamp(send)),
                         new TmfSyncEventStub(receiver, new TmfTimestamp(recv))
-                        )
+                )
                 );
     }
 
