@@ -29,7 +29,9 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.linuxtools.internal.tmf.ui.Activator;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
@@ -183,6 +185,11 @@ public class SynchronizeTracesHandler extends AbstractHandler {
                                 }
                                 if ((expTrace != null) && syncAlgo.isTraceSynced(expTrace.getHostId())) {
 
+                                    ITmfTimestampTransform xform = syncAlgo.getTimestampTransform(expTrace);
+                                    if (xform == TmfTimestampTransform.IDENTITY) {
+                                        continue;
+                                    }
+
                                     /* Find the original trace */
                                     TmfTraceElement origtrace = traceel.getElementUnderTraceFolder();
 
@@ -217,7 +224,9 @@ public class SynchronizeTracesHandler extends AbstractHandler {
                                     ITmfEvent traceEvent = newtrace.instantiateEvent();
 
                                     try {
+
                                         trace.initTrace(newtrace.getResource(), newtrace.getLocation().getPath(), traceEvent.getClass());
+
                                     } catch (TmfTraceException e) {
                                         Activator.getDefault().logError(String.format(Messages.SynchronizeTracesHandler_ErrorSynchingForTrace, exp.getName(), traceel.getName()), e);
                                         TraceUtils.displayErrorMsg(Messages.SynchronizeTracesHandler_Title, Messages.SynchronizeTracesHandler_Error + CR + CR + e.getMessage());
