@@ -1,7 +1,9 @@
 package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -13,9 +15,19 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfWorker;
+import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfAnalysisException;
+import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
+import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
+import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
+import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
+import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
@@ -150,6 +162,124 @@ public class GraphBenchmark {
         Matcher m = pattern.matcher(name);
         m.find();
         return Integer.parseInt(m.group(1));
+    }
+
+    private static class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear {
+        private static final long serialVersionUID = 2398540405078949738L;
+        private static int PWR = 10;
+        private long m = 0;
+        private long b = 0;
+        public TmfTimestampTransformLinearFast(TmfTimestampTransformLinear xform) {
+            super();
+            m = BigDecimal.valueOf(1 << PWR).multiply(xform.getAlpha(), xform.getMathContext()).longValue();
+            b = xform.getBeta().longValue();
+        }
+
+        private long apply(long ts) {
+            return ((m * ts) >> PWR) + b;
+        }
+
+        @Override
+        public ITmfTimestamp transform(ITmfTimestamp timestamp) {
+            return new TmfTimestamp(timestamp, apply(timestamp.getValue()));
+        }
+
+        @Override
+        public long transform(long timestamp) {
+            return apply(timestamp);
+        }
+    }
+
+    int count;
+    @Test
+    public void testBenchmarkReadTrace() {
+        String name = "traces/django-benchmark-7";
+        TmfExperiment nosync = CtfTraceFinder.makeTmfExperiment(Paths.get(name), CtfTmfTrace.class, CtfTmfEvent.class);
+        TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, nosync, null);
+        nosync.traceOpened(signal);
+
+        TmfExperiment sync = CtfTraceFinder.makeTmfExperiment(Paths.get(name), CtfTmfTrace.class, CtfTmfEvent.class);
+        signal = new TmfTraceOpenedSignal(this, sync, null);
+        sync.traceOpened(signal);
+        CtfTraceFinder.synchronizeExperiment(sync);
+
+        int repeat = 10;
+        Samples<Integer, Long> samples = new Samples<>();
+        for (int i = 0; i < repeat; i++) {
+            Data d1 = readBenchHelper(nosync);
+            Data d2 = readBenchHelper(sync);
+            samples.addSample("nosync", i, d1.time);
+            samples.addSample("sync", i, d2.time);
+        }
+        samples.save(Paths.get("sync-benchmark.data"));
+    }
+
+    private Data readBenchHelper(final TmfExperiment experiment) {
+        Data data = Run.go(new Func() {
+            @Override
+            public void func() {
+                count = 0;
+                TmfEventRequest rq =  new TmfEventRequest(ITmfEvent.class,
+                        TmfTimeRange.ETERNITY, 0L, ITmfEventRequest.ALL_DATA,
+                        ITmfEventRequest.ExecutionType.BACKGROUND) {
+                    @Override
+                    public void handleData(final ITmfEvent event) {
+                        if (event != null) {
+                            count++;
+                        }
+                    }
+                    @Override
+                    public void handleCompleted() {
+                        System.out.println("done " + count);
+                    }
+                };
+                experiment.sendRequest(rq);
+                try {
+                    rq.waitForCompletion();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    assertTrue(false);
+                }
+            }
+        });
+        return data;
+    }
+
+    @Test
+    public void testBenchmarkTransform() {
+        exp = CtfTraceFinder.makeTmfExperiment(Paths.get("traces/django-index"), CtfTmfTrace.class, CtfTmfEvent.class);
+        CtfTraceFinder.synchronizeExperiment(exp);
+
+        ITmfTimestampTransform orig = null;
+        ITmfTimestampTransform fast = null;
+        for (ITmfTrace trace: exp.getTraces()) {
+            ITmfTimestampTransform xform = trace.getTimestampTransform();
+            if (xform != TmfTimestampTransform.IDENTITY) {
+                orig = xform;
+                break;
+            }
+        }
+        assertNotNull(orig);
+        fast = new TmfTimestampTransformLinearFast((TmfTimestampTransformLinear)orig);
+        int iter = (1 << 25);
+        Data dataOrig = xformBenchHelper(orig, iter);
+        Data dataFast = xformBenchHelper(fast, iter);
+        System.out.println("Results:");
+        System.out.println("orig: " + dataOrig.time + " ms");
+        System.out.println("fast: " + dataFast.time + " ms");
+        System.out.println("ratio: " + ((double) dataOrig.time) / dataFast.time);
+    }
+
+    private static Data xformBenchHelper(final ITmfTimestampTransform xform, final int iter) {
+        Data data = Run.go(new Func() {
+            @Override
+            public void func() {
+                for (int i = 0; i < iter; i++) {
+                    xform.transform(i);
+                }
+            }
+        });
+        return data;
     }
 
 }
