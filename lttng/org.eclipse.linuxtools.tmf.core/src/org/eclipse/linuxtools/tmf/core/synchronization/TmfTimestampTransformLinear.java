@@ -125,6 +125,30 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform, Seri
         return new TmfTimestampTransformLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
     }
 
+    /**
+     * Return alpha (slope) parameter
+     * @return alpha
+     */
+    public BigDecimal getAlpha() {
+        return fAlpha;
+    }
+
+    /**
+     * Return beta (offset) parameter
+     * @return beta
+     */
+    public BigDecimal getBeta() {
+        return fBeta;
+    }
+
+    /**
+     * Return the math context for the BigDecimal operations
+     * @return math context
+     */
+    public MathContext getMathContext() {
+        return fMc;
+    }
+
     @Override
     public boolean equals(Object other) {
         boolean result = false;
