@@ -18,7 +18,8 @@ Require-Bundle: org.junit;bundle-version="4.0.0",
  org.eclipse.linuxtools.lttng2.control.core,
  org.eclipse.linuxtools.tmf.analysis.graph.core,
  org.eclipse.core.resources,
- com.google.guava
+ com.google.guava,
+ org.eclipse.linuxtools.ctf.core
 Export-Package: org.eclipse.linuxtools.lttng2.kernel.core.tests,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.analysis;x-internal:=true,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.event.matchandsync;x-internal:=true,

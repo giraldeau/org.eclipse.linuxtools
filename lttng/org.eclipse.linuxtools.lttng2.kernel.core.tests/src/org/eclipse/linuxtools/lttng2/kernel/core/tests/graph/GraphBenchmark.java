@@ -59,16 +59,17 @@ public class GraphBenchmark {
         s.save(Paths.get("test.out"));
     }
 
-    private static class Data {
+    public static class Data {
         public long time;
         public long mem;
+        public long count;
     }
 
-    private static interface Func {
+    public static interface Func {
         public void func();
     }
 
-    private static class Run {
+    public static class Run {
         public static Data go(Func f) {
             Data d = new Data();
             System.gc();
@@ -214,7 +215,7 @@ public class GraphBenchmark {
         samples.save(Paths.get("sync-benchmark.data"));
     }
 
-    private Data readBenchHelper(final TmfExperiment experiment) {
+    public Data readBenchHelper(final TmfExperiment experiment) {
         Data data = Run.go(new Func() {
             @Override
             public void func() {
