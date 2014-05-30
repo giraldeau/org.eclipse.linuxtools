@@ -19,6 +19,7 @@ import org.eclipse.linuxtools.lttng2.kernel.core.tests.graph.GraphBenchmark.Run;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
+import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest.ExecutionType;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
@@ -31,11 +32,12 @@ public class ProfileTMF {
 
     int tmfCount = 0;
 
-    private Data readRaw(final File tracePath) {
+    public Data readCtfReader(final File tracePath, final boolean parse) {
         Data data = Run.go(new Func() {
             @Override
             public void func() {
                 tmfCount = 0;
+                int noCtx = 0;
                 try (CTFTrace trace = new CTFTrace(tracePath);
                         CTFTraceReader reader = new CTFTraceReader(trace)) {
                     while(reader.hasMoreEvents()) {
@@ -43,21 +45,34 @@ public class ProfileTMF {
                         if (event == null || event.getFields().getDeclaration() == null) {
                             throw new RuntimeException("null event");
                         }
+                        if (parse) {
+                            event.getFields().getDefinition("");
+                            if (event.getEventContext() == null || event.getFields() == null) {
+                                noCtx++;
+                            }
+                        }
                         reader.advance();
                         tmfCount++;
                     }
                 } catch (CTFReaderException e) {
                     throw new RuntimeException(e);
                 }
-                System.out.println("read raw count: " + tmfCount);
+                System.out.println("read raw count: " + tmfCount + " (" + noCtx + ")");
             }
         });
         data.count = tmfCount;
         return data;
     }
 
-    @SuppressWarnings("all")
-    private Data readTmf(final File tracePath) {
+    public Data readTmfFg(final File tracePath, final boolean parse) {
+        return readTmf(tracePath, parse, ITmfEventRequest.ExecutionType.FOREGROUND);
+    }
+
+    public Data readTmfBg(final File tracePath, final boolean parse) {
+        return readTmf(tracePath, parse, ITmfEventRequest.ExecutionType.BACKGROUND);
+    }
+
+    public Data readTmf(final File tracePath, final boolean parse, final ExecutionType execType) {
         try (final CtfTmfTrace trace = new CtfTmfTrace()) {
             trace.initTrace(null, tracePath.getAbsolutePath(), CtfTmfEvent.class);
             Data data = Run.go(new Func() {
@@ -66,11 +81,17 @@ public class ProfileTMF {
                     tmfCount = 0;
                     TmfEventRequest rq =  new TmfEventRequest(ITmfEvent.class,
                             TmfTimeRange.ETERNITY, 0L, ITmfEventRequest.ALL_DATA,
-                            ITmfEventRequest.ExecutionType.BACKGROUND) {
+                            execType) {
                         @Override
                         public void handleData(final ITmfEvent event) {
                             if (event != null) {
                                 tmfCount++;
+                                if (parse) {
+                                    if (event.getContent() == null) {
+                                        event.getContent().getFields().size();
+                                        throw new RuntimeException("null ctx");
+                                    }
+                                }
                             }
                         }
                         @Override
@@ -94,20 +115,55 @@ public class ProfileTMF {
         }
     }
 
+    public Data readBabel(final File tracePath) {
+        Data data = Run.go(new Func() {
+            @Override
+            public void func() {
+                Process p;
+                try {
+                    p = new ProcessBuilder("babeltrace", "-o", "dummy", tracePath.getAbsolutePath()).start();
+                    p.waitFor();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException("process error: " + e.getMessage());
+                }
+            }
+        });
+        return data;
+    }
+
     @Test
-    public void testCompareCtfReaderToTMF() throws IOException {
+    public void testBabel() {
+        Data d = readBabel(new File("traces/django-index/django-httpd"));
+        System.out.println("time: " + d.time);
+    }
+
+    @Test
+    public void testCompareCtfReaders() throws IOException {
+        String fmt = "%s;%s;%d;%d\n";
         List<Path> path = CtfTraceFinder.getTracePathsByCreationTime(Paths.get(TRACE_DIR));
         try (FileWriter out = new FileWriter(new File("read-trace.data"))) {
+            out.write(String.format("%s;%s;%s;%s\n", "type", "parse", "count", "time"));
             for (Path p: path) {
                 String dir = p.toFile().getCanonicalPath() + "/django-httpd";
                 File in = CtfTraceFinder.findCtfTrace(Paths.get(dir)).get(0).toFile();
                 int repeat = 10;
                 for (int i = 0; i < repeat; i++) {
-                    Data raw = readRaw(in);
-                    Data tmf = readTmf(in);
-                    out.write(String.format("%s;%d;%d\n", "raw", raw.count, raw.time));
-                    out.write(String.format("%s;%d;%d\n", "tmf", tmf.count, tmf.time));
-                    out.flush();
+                    for (Boolean parse: new boolean[] {Boolean.TRUE, Boolean.FALSE}) {
+                        Data rawctf = readCtfReader(in, parse);
+                        Data tmfBg = readTmf(in, parse, ITmfEventRequest.ExecutionType.BACKGROUND);
+                        Data tmfFg = readTmf(in, parse, ITmfEventRequest.ExecutionType.FOREGROUND);
+                        out.write(String.format(fmt, "ctf", parse, rawctf.count, rawctf.time));
+                        out.write(String.format(fmt, "tmf-fg", parse, tmfFg.count, tmfFg.time));
+                        out.write(String.format(fmt, "tmf-bg", parse, tmfBg.count, tmfBg.time));
+
+                        // babeltrace always parse fields
+                        // using previous count, because babeltrace does not report the number of events
+                        if (parse) {
+                            Data babel = readBabel(in);
+                            out.write(String.format(fmt, "babel", parse, rawctf.count, babel.time));
+                        }
+                        out.flush();
+                    }
                 }
             }
         }

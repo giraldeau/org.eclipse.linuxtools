@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph;
+import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
@@ -97,65 +97,72 @@ public class GraphBenchmark {
         for (final Path path: input) {
             Integer power = parseTracePath(p, path);
             for (int i = 0; i < repeat; i++) {
-                System.out.println("processing " + path.toFile().getName() + " power=" + power + " repeat=" + i);
-                /*
-                 * Step 1: synchronize the trace
-                 */
-                Data data = Run.go(new Func() {
-                    @Override
-                    public void func() {
-                        exp = CtfTraceFinder.makeTmfExperiment(path, CtfTmfTrace.class, CtfTmfEvent.class);
-                        CtfTraceFinder.synchronizeExperiment(exp);
-                    }
-                });
-                s.addSample(SAMPLE_LOAD_TIME, power, data.time);
-                s.addSample(SAMPLE_LOAD_MEM, power, data.mem);
-
-                /*
-                 * Step 2: build the execution graph
-                 */
-                TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, exp, null);
-                exp.traceOpened(signal);
-
-                final LttngKernelExecutionGraph module = new LttngKernelExecutionGraph();
-                module.setId(LttngKernelExecutionGraph.ANALYSIS_ID);
-                module.setTrace(exp);
-
-                data = Run.go(new Func() {
-                    @Override
-                    public void func() {
-                        try {
-                            TmfTestHelper.executeAnalysis(module);
-                        } catch (Throwable e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-
-                graph = module.getGraph();
-                s.addSample(SAMPLE_BUILD_TIME, power, data.time);
-                s.addSample(SAMPLE_BUILD_MEM, power, data.mem);
-                s.addSample(SAMPLE_GRAPH_SIZE, power, (long) graph.size());
-                /*
-                 * Step 3: compute the critical path
-                 */
-                data = Run.go(new Func() {
-                    @Override
-                    public void func() {
-                        TmfWorker client = TestGraphMultiHost.findWorkerByName(graph, TestGraphMultiHost.DJANGO_CLIENT_NAME);
-                        TmfVertex head = graph.getHead(client);
-                        TmfVertex tail = graph.getTail(client);
-                        CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(graph);
-                        criticalPath = algo.compute(head, tail);
-                    }
-                });
-                s.addSample(SAMPLE_EXTRACT_TIME, power, data.time);
-                s.addSample(SAMPLE_EXTRACT_MEM, power, data.mem);
-                s.addSample(SAMPLE_PATH_SIZE, power, (long) criticalPath.size());
+                graphBenchHelper(path, power, s);
             }
+            s.save(Paths.get("django-benchmark.out"));
         }
+    }
+
+    public void graphBenchHelper(final Path path, int power, Samples<Integer, Long> s) throws TmfAnalysisException {
+        System.out.println("processing " + path.toFile().getName() + " power=" + power);
+        /*
+         * Step 1: synchronize the trace
+         */
+        Data data = Run.go(new Func() {
+            @Override
+            public void func() {
+                exp = CtfTraceFinder.makeTmfExperiment(path, CtfTmfTrace.class, CtfTmfEvent.class);
+                CtfTraceFinder.synchronizeExperiment(exp);
+            }
+        });
+        s.addSample(SAMPLE_LOAD_TIME, power, data.time);
+        s.addSample(SAMPLE_LOAD_MEM, power, data.mem);
+
+        /*
+         * Step 2: build the execution graph
+         */
+        TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, exp, null);
+        exp.traceOpened(signal);
+
+        final LttngKernelExecutionGraph module = new LttngKernelExecutionGraph();
+        module.setId(LttngKernelExecutionGraph.ANALYSIS_ID);
+        module.setTrace(exp);
+
+        data = Run.go(new Func() {
+            @Override
+            public void func() {
+                try {
+                    TmfTestHelper.executeAnalysis(module);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+
         s.save(Paths.get("django-benchmark.out"));
         assertTrue(true);
+
+        graph = module.getGraph();
+        s.addSample(SAMPLE_BUILD_TIME, power, data.time);
+        s.addSample(SAMPLE_BUILD_MEM, power, data.mem);
+        s.addSample(SAMPLE_GRAPH_SIZE, power, (long) graph.size());
+        /*
+         * Step 3: compute the critical path
+         */
+        data = Run.go(new Func() {
+            @Override
+            public void func() {
+                TmfWorker client = TestGraphMultiHost.findWorkerByName(graph, TestGraphMultiHost.DJANGO_CLIENT_NAME);
+                TmfVertex head = graph.getHead(client);
+                TmfVertex tail = graph.getTail(client);
+                CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(graph);
+                criticalPath = algo.compute(head, tail);
+            }
+        });
+        s.addSample(SAMPLE_EXTRACT_TIME, power, data.time);
+        s.addSample(SAMPLE_EXTRACT_MEM, power, data.mem);
+        s.addSample(SAMPLE_PATH_SIZE, power, (long) criticalPath.size());
     }
 
     private static Integer parseTracePath(Pattern pattern, Path tracePath) {
@@ -225,9 +232,7 @@ public class GraphBenchmark {
                         ITmfEventRequest.ExecutionType.BACKGROUND) {
                     @Override
                     public void handleData(final ITmfEvent event) {
-                        if (event != null) {
-                            count++;
-                        }
+                        count++;
                     }
                     @Override
                     public void handleCompleted() {
