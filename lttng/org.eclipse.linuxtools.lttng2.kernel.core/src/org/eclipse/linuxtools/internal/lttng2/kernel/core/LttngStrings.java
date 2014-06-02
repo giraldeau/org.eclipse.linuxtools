@@ -85,5 +85,6 @@ public interface LttngStrings {
     static final String UNKNOWN = "unknown";
     static final String SEQ = "seq";
     static final String SK = "sk";
+    static final String HRTIMER = "hrtimer";
 
 }
