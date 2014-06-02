@@ -11,10 +11,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph;
+import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule;
+import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfWorker;
+import org.eclipse.linuxtools.tmf.core.analysis.TmfAbstractAnalysisModule;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfAnalysisException;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
@@ -34,9 +37,6 @@ import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 import org.junit.Test;
 
 public class GraphBenchmark {
-
-    private static final String TRACE_DIR = "traces";
-    private static final String DJANGO_BENCHMARK = "django-benchmark";
 
     private static final String SAMPLE_LOAD_TIME = "load_ms";
     private static final String SAMPLE_BUILD_TIME = "build_ms";
@@ -85,6 +85,7 @@ public class GraphBenchmark {
     }
 
     TmfExperiment exp;
+    TmfAbstractAnalysisModule module;
     TmfGraph graph;
     TmfGraph criticalPath;
     Pattern p = Pattern.compile("django-benchmark-([0-9]+)");
@@ -93,7 +94,8 @@ public class GraphBenchmark {
     public void testGraphBenchmark() throws TmfAnalysisException {
         final Samples<Integer, Long> s = new Samples<>();
         int repeat = 3;
-        List<Path> input = CtfTraceFinder.getTracePathsByCreationTime(Paths.get(TRACE_DIR, DJANGO_BENCHMARK));
+        Path base = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.DJANGO_BENCHMARK);
+        List<Path> input = CtfTraceFinder.getTracePathsByCreationTime(base);
         for (final Path path: input) {
             Integer power = parseTracePath(p, path);
             for (int i = 0; i < repeat; i++) {
@@ -103,8 +105,22 @@ public class GraphBenchmark {
         }
     }
 
-    public void graphBenchHelper(final Path path, int power, Samples<Integer, Long> s) throws TmfAnalysisException {
-        System.out.println("processing " + path.toFile().getName() + " power=" + power);
+    @Test
+    public void testGraphStateSystemBenchmark() throws TmfAnalysisException {
+        final Samples<Integer, Long> s = new Samples<>();
+        int repeat = 3;
+        Path base = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.DJANGO_BENCHMARK);
+        List<Path> input = CtfTraceFinder.getTracePathsByCreationTime(base).subList(0, 3);
+        for (final Path path: input) {
+            Integer power = parseTracePath(p, path);
+            for (int i = 0; i < repeat; i++) {
+                graphStateHistoryBenchHelper(path, power, s);
+            }
+            s.save(Paths.get("django-benchmark-ss.out"));
+        }
+    }
+
+    public Data step1(final Path path) {
         /*
          * Step 1: synchronize the trace
          */
@@ -115,20 +131,21 @@ public class GraphBenchmark {
                 CtfTraceFinder.synchronizeExperiment(exp);
             }
         });
-        s.addSample(SAMPLE_LOAD_TIME, power, data.time);
-        s.addSample(SAMPLE_LOAD_MEM, power, data.mem);
+        return data;
+    }
 
+    public Data step2() throws TmfAnalysisException {
         /*
          * Step 2: build the execution graph
          */
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, exp, null);
         exp.traceOpened(signal);
 
-        final LttngKernelExecutionGraph module = new LttngKernelExecutionGraph();
+        module = new LttngKernelExecutionGraph();
         module.setId(LttngKernelExecutionGraph.ANALYSIS_ID);
         module.setTrace(exp);
 
-        data = Run.go(new Func() {
+        Data data = Run.go(new Func() {
             @Override
             public void func() {
                 try {
@@ -138,31 +155,84 @@ public class GraphBenchmark {
                 }
             }
         });
+        return data;
+    }
 
+    public Data step2ss() throws TmfAnalysisException {
+        /*
+         * Step 2: build the execution graph
+         */
+        TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, exp, null);
+        exp.traceOpened(signal);
 
-        s.save(Paths.get("django-benchmark.out"));
-        assertTrue(true);
+        module = new ExecGraphModule();
+        module.setId(ExecGraphModule.ID);
+        module.setTrace(exp);
 
-        graph = module.getGraph();
-        s.addSample(SAMPLE_BUILD_TIME, power, data.time);
-        s.addSample(SAMPLE_BUILD_MEM, power, data.mem);
-        s.addSample(SAMPLE_GRAPH_SIZE, power, (long) graph.size());
+        Data data = Run.go(new Func() {
+            @Override
+            public void func() {
+                try {
+                    TmfTestHelper.executeAnalysis(module);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        return data;
+    }
+
+    public Data step3() {
         /*
          * Step 3: compute the critical path
          */
-        data = Run.go(new Func() {
+        Data data = Run.go(new Func() {
             @Override
             public void func() {
-                TmfWorker client = TestGraphMultiHost.findWorkerByName(graph, TestGraphMultiHost.DJANGO_CLIENT_NAME);
+                TmfWorker client = TestGraphMultiHost.findWorkerByName(graph, TraceStrings.DJANGO_CLIENT_NAME);
                 TmfVertex head = graph.getHead(client);
                 TmfVertex tail = graph.getTail(client);
                 CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(graph);
                 criticalPath = algo.compute(head, tail);
             }
         });
+        return data;
+    }
+
+    public void graphBenchHelper(final Path path, int power, Samples<Integer, Long> s) throws TmfAnalysisException {
+        System.out.println("processing " + path.toFile().getName() + " power=" + power);
+        Data data = step1(path);
+        s.addSample(SAMPLE_LOAD_TIME, power, data.time);
+        s.addSample(SAMPLE_LOAD_MEM, power, data.mem);
+
+        data = step2();
+        graph = ((LttngKernelExecutionGraph)module).getGraph();
+        s.addSample(SAMPLE_BUILD_TIME, power, data.time);
+        s.addSample(SAMPLE_BUILD_MEM, power, data.mem);
+        s.addSample(SAMPLE_GRAPH_SIZE, power, (long) graph.size());
+
+        data = step3();
         s.addSample(SAMPLE_EXTRACT_TIME, power, data.time);
         s.addSample(SAMPLE_EXTRACT_MEM, power, data.mem);
         s.addSample(SAMPLE_PATH_SIZE, power, (long) criticalPath.size());
+    }
+
+    public void graphStateHistoryBenchHelper(final Path path, int power, Samples<Integer, Long> s) throws TmfAnalysisException {
+        System.out.println("processing " + path.toFile().getName() + " power=" + power);
+        Data data = step1(path);
+        s.addSample(SAMPLE_LOAD_TIME, power, data.time);
+        s.addSample(SAMPLE_LOAD_MEM, power, data.mem);
+
+        data = step2ss();
+        ITmfStateSystem ss = ((ExecGraphModule) module).getStateSystem();
+        if (ss == null) {
+            throw new IllegalStateException("State system is null");
+        }
+        s.addSample(SAMPLE_BUILD_TIME, power, data.time);
+        s.addSample(SAMPLE_BUILD_MEM, power, data.mem);
+        s.addSample(SAMPLE_GRAPH_SIZE, power, (long) ss.getNbAttributes());
+        Path ht = Paths.get(String.format("/tmp/null/%s.ht", ExecGraphModule.ID));
+        ht.toFile().delete();
     }
 
     private static Integer parseTracePath(Pattern pattern, Path tracePath) {

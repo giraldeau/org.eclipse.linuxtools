@@ -51,36 +51,12 @@ import com.google.common.collect.Table;
 public class TestGraphMultiHost {
 
     /**
-     * rcp-hog experiment on two hosts
-     * http://secretaire.dorsal.polymtl.ca/~fgiraldeau/traces/phd-hog.tar.gz
-     */
-    private static String EXP_PHD_HOG = "phd-hog";
-
-    /**
-     * django-index experiment on three hosts
-     * http://secretaire.dorsal.polymtl.ca
-     * /~fgiraldeau/traces/django-index.tar.gz
-     */
-    private static String EXP_DJANGO_INDEX = "django-index";
-
-    /**
-     * django-index experiment on three hosts
-     * http://secretaire.dorsal.polymtl.ca/~fgiraldeau/traces/wget-100M.tar.gz
-     */
-    private static String EXP_WGET = "wget-100M";
-
-    private static String EXP_BUG_SYNC = "django-benchmark-subset/django-benchmark-0";
-
-    private static String TRACE_DIR = "traces";
-
-    public static String DJANGO_CLIENT_NAME = "/home/ubuntu/.virtualenvs/wkdb/bin/python";
-
-    /**
      * Test that traces are correctly found
      */
     @Test
     public void testFindCtfTraces() {
-        List<Path> findCtfTrace = CtfTraceFinder.findCtfTrace(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
+        List<Path> findCtfTrace = CtfTraceFinder.findCtfTrace(path);
         assertEquals(2, findCtfTrace.size());
     }
 
@@ -89,9 +65,11 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testMakeExperiment() {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        Path path1 = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
+        Path path2 = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path1);
         assertEquals(2, experiment.getTraces().length);
-        experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path2);
         assertEquals(3, experiment.getTraces().length);
     }
 
@@ -106,7 +84,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testTraceSynchronization() throws InterruptedException {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
         TmfEventRequest request = new TmfEventRequest(ITmfEvent.class, 0, ITmfEventRequest.ALL_DATA, ExecutionType.BACKGROUND) {
             public long prev = 0;
 
@@ -135,7 +114,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testSwapperExistsWithHelper() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_PHD_HOG));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -160,7 +140,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testGraphDjango() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -171,7 +152,7 @@ public class TestGraphMultiHost {
         TmfGraph graph = module.getGraph();
 
         // search for the client thread
-        TmfWorker client = findWorkerByName(graph, DJANGO_CLIENT_NAME);
+        TmfWorker client = findWorkerByName(graph, TraceStrings.DJANGO_CLIENT_NAME);
         System.out.println("client = " + client);
         assertNotNull(client);
     }
@@ -219,7 +200,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testWgetTrace() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_WGET));
+        Path tracePath = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_WGET);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(tracePath);
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
@@ -245,8 +227,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testSyncTransform() {
-        System.out.println(EXP_BUG_SYNC);
-        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(Paths.get(TRACE_DIR, EXP_BUG_SYNC));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_BUG_SYNC);
+        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
         SyncAlgorithmFullyIncremental algo = (SyncAlgorithmFullyIncremental) CtfTraceFinder.synchronizeExperiment(experiment);
 
         for (ITmfTrace i: experiment.getTraces()) {
@@ -285,7 +267,8 @@ public class TestGraphMultiHost {
      */
     @Test
     public void testAssertOutgoingNet() throws Throwable {
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(Paths.get(TRACE_DIR, EXP_DJANGO_INDEX));
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
+        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 
