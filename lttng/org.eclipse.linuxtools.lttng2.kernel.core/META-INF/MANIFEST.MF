@@ -25,6 +25,7 @@ Export-Package: org.eclipse.linuxtools.internal.lttng2.kernel.core;x-friends:="o
  org.eclipse.linuxtools.lttng2.kernel.core.analysis,
  org.eclipse.linuxtools.lttng2.kernel.core.cpuusage,
  org.eclipse.linuxtools.lttng2.kernel.core.event.matching,
+ org.eclipse.linuxtools.lttng2.kernel.core.graph.building,
  org.eclipse.linuxtools.lttng2.kernel.core.graph.sht,
  org.eclipse.linuxtools.lttng2.kernel.core.trace
 Import-Package: com.google.common.collect,

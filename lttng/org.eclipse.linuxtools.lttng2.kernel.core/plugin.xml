@@ -41,5 +41,14 @@
                class="org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace">
          </tracetype>
       </module>
+      <module
+            analysis_module="org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule"
+            id="org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule"
+            name="ExecGraphModule with State History Tree">
+         <tracetype
+               applies_experiment="true"
+               class="org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace">
+         </tracetype>
+      </module>
    </extension>
 </plugin>
