@@ -162,15 +162,15 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
         Long attr = 0L;
         Integer type = 0;
         switch(ctx.eventName) {
-        case LttngStrings.SOFTIRQ_ENTRY:
+        case LttngStrings.SOFTIRQ_EXIT:
             type = Interrupt.SOFTIRQ;
             attr = EventField.getLong(event, LttngStrings.VEC);
             break;
-        case LttngStrings.IRQ_HANDLER_ENTRY:
+        case LttngStrings.IRQ_HANDLER_EXIT:
             type = Interrupt.IRQ;
             attr = EventField.getLong(event, LttngStrings.IRQ);
             break;
-        case LttngStrings.HRTIMER_EXPIRE_ENTRY:
+        case LttngStrings.HRTIMER_EXPIRE_EXIT:
             type = Interrupt.HRTIMER;
             attr = EventField.getLong(event, LttngStrings.HRTIMER);
             break;
@@ -181,7 +181,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
         Interrupt ret = null;
         if (!stack.isEmpty()) {
             Interrupt top = stack.peek();
-            if (top.type == type && top.vec == attr) {
+            if (top.type.equals(type) && top.vec.equals(attr)) {
                 ret = stack.pop();
             } else {
                 System.out.println("warning: wrong interrupt stack");
@@ -199,7 +199,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
         Task nextTask = ctx.machine.getOrCreateTask(ctx.cpu, next, ctx.ts);
         Task prevTask = ctx.machine.getOrCreateTask(ctx.cpu, prev, ctx.ts);
         nextTask.setState(ctx.ts, Task.RUN);
-        prevTask.setState(ctx.ts, prevState == 0 ? Task.PREEMPTED : Task.BLOCKED);
+        prevTask.setState(ctx.ts, prevState.equals(0L) ? Task.PREEMPTED : Task.BLOCKED);
     }
 
     private void handleSchedWakeup(CtfTmfEvent event) {
