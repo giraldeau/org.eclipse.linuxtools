@@ -15,7 +15,6 @@ package org.eclipse.linuxtools.lttng2.kernel.core.graph.sht;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.statesystem.ITmfStateProvider;
 import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
-import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
 /**
  * Module for the virtual machine state systems
@@ -39,10 +38,7 @@ public class ExecGraphModule extends TmfStateSystemAnalysisModule {
     @Override
     protected @NonNull
     ITmfStateProvider createStateProvider() {
-        if (!(getTrace() instanceof TmfExperiment)) {
-            throw new IllegalStateException();
-        }
-        return new ExecGraphStateProvider((TmfExperiment) getTrace());
+        return new ExecGraphStateProvider(getTrace());
     }
 
     @Override

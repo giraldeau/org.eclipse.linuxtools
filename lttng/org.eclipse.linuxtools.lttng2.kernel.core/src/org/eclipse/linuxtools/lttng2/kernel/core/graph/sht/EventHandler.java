@@ -160,13 +160,19 @@ public class EventHandler {
     private void handleSchedSwitch(CtfTmfEvent event) {
         Long next = EventField.getLong(event, LttngStrings.NEXT_TID);
         Long prev = EventField.getLong(event, LttngStrings.PREV_TID);
-        Long prevState = EventField.getLong(event, LttngStrings.PREV_STATE);
-        prevState = new Long((prevState.intValue()) & (0x3));
+        int val = EventField.getLong(event, LttngStrings.PREV_STATE).intValue();
+
+        StateEnum prevState = StateEnum.PREEMPTED;
+        if ((val & 0x3) != 0) {
+            prevState = StateEnum.BLOCKED;
+        } else if ((val & 0x40) != 0) {
+            prevState = StateEnum.EXIT;
+        }
         ctx.machine.setCurrentTid(ctx.cpu, next);
         Task nextTask = ctx.machine.getOrCreateTask(ctx.cpu, next, ctx.ts);
         Task prevTask = ctx.machine.getOrCreateTask(ctx.cpu, prev, ctx.ts);
         notifyStateChange(nextTask, StateEnum.RUN);
-        notifyStateChange(prevTask, prevState.equals(0L) ? StateEnum.PREEMPTED : StateEnum.BLOCKED);
+        notifyStateChange(prevTask, prevState);
     }
 
     /**
@@ -191,6 +197,9 @@ public class EventHandler {
             listener.stateChange(ctx, task, task.getLastUpdate(), ctx.ts, nextState);
         }
         task.setState(ctx.ts, nextState);
+        if (nextState == StateEnum.EXIT) {
+            ctx.machine.removeTask(task);
+        }
     }
 
     /**

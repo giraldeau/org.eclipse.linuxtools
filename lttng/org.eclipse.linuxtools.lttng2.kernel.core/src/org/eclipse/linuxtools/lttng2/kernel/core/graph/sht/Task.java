@@ -30,7 +30,12 @@ public class Task {
         /**
          * Blocked
          */
-        BLOCKED(2);
+        BLOCKED(2),
+
+        /**
+         * Exit state
+         */
+        EXIT(3);
 
         private final Integer value;
         private StateEnum(Integer value) { this.value = value; }
@@ -76,6 +81,18 @@ public class Task {
     @Override
     public int hashCode() {
         return this.hc;
+    }
+
+    public Long getTID() {
+        return this.tid;
+    }
+
+    public String getHostID() {
+        return this.host;
+    }
+
+    public Long getStart() {
+        return ts;
     }
 
     public void setState(Long ts, StateEnum state) {

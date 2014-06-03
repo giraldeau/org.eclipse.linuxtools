@@ -87,4 +87,8 @@ public class Machine {
         return irq.get(cpu);
     }
 
+    public void removeTask(Task task) {
+        tasks.remove(task.getTID());
+    }
+
 }
