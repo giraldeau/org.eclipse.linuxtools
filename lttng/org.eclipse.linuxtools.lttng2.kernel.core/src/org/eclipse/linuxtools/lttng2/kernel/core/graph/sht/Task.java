@@ -11,22 +11,49 @@ import com.google.common.hash.Hashing;
  */
 public class Task {
 
-    public static final Integer RUN = 0;
-    public static final Integer PREEMPTED = 0;
-    public static final Integer BLOCKED = 0;
+    /**
+     * Available task states
+     *
+     * @author Francis Giraldeau <francis.giraldeau@gmail.com>
+     */
+    public enum StateEnum {
+        /**
+         * Running state
+         */
+        RUN(0),
+
+        /**
+         * Preempted state
+         */
+        PREEMPTED(1),
+
+        /**
+         * Blocked
+         */
+        BLOCKED(2);
+
+        private final Integer value;
+        private StateEnum(Integer value) { this.value = value; }
+        /**
+         * Return the integer value of this label
+         * @return integer value
+         */
+        public Integer value() { return this.value; }
+    }
+
 
     private static final HashFunction hf = Hashing.md5();
     private String host;
     private Long ts;
     private Long tid;
     private Long last;
-    private Integer state;
+    private StateEnum state;
     private String comm;
     private int hc;
 
     public Task(String host, long tid, long ts) {
         this.host = host; this.tid = tid; this.ts = ts;
-        this.state = RUN;
+        this.state = StateEnum.RUN;
         this.last = ts;
         this.hc = hf.newHasher()
                 .putLong(this.ts)
@@ -51,11 +78,11 @@ public class Task {
         return this.hc;
     }
 
-    public void setState(Long ts, Integer state) {
+    public void setState(Long ts, StateEnum state) {
         this.last = ts; this.state = state;
     }
 
-    public Integer getState() {
+    public StateEnum getState() {
         return state;
     }
 
@@ -69,6 +96,11 @@ public class Task {
 
     public void setComm(String comm) {
         this.comm = comm;
+    }
+
+    @Override
+    public String toString() {
+        return "" + this.tid;
     }
 
 }
