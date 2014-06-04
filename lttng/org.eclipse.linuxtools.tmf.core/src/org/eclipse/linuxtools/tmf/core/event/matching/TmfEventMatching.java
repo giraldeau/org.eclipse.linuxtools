@@ -53,7 +53,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
     /**
      * The array of traces to match
      */
-    private final Collection<ITmfTrace> fTraces;
+    private final Collection<? extends ITmfTrace> fTraces;
 
     /**
      * The class to call once a match is found
@@ -72,7 +72,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
      * @param tmfEventMatches
      *            The match processing class
      */
-    public TmfEventMatching(Collection<ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
+    public TmfEventMatching(Collection<? extends ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
         if (tmfEventMatches == null) {
             throw new IllegalArgumentException();
         }
@@ -212,6 +212,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
              * experiment.
              */
             trace.sendRequest(request);
+            System.out.println("Sending request for trace " + trace);
             try {
                 request.waitForCompletion();
             } catch (InterruptedException e) {

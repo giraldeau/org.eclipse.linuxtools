@@ -76,7 +76,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
     }
 
     @Override
-    public void init(Collection<ITmfTrace> traces) {
+    public void init(Collection<? extends ITmfTrace> traces) {
         ITmfTrace[] traceArr = traces.toArray(new ITmfTrace[traces.size()]);
         fSyncs.clear();
         /* Create a convex hull for all trace pairs */

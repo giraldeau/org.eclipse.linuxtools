@@ -32,7 +32,7 @@ public interface IMatchProcessingUnit {
      *
      * @param fTraces the set of traces that will be synchronized
      */
-    void init(Collection<ITmfTrace> fTraces);
+    void init(Collection<? extends ITmfTrace> fTraces);
 
     /**
      * Function called when a match is found

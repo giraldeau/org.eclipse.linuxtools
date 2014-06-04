@@ -46,7 +46,7 @@ public abstract class SynchronizationManager extends TmfComponent {
      *            file
      * @return The synchronization object
      */
-    public static SynchronizationAlgorithm synchronizeTraces(final File syncFile, final Collection<ITmfTrace> traces, boolean doSync) {
+    public static SynchronizationAlgorithm synchronizeTraces(final File syncFile, final Collection<? extends ITmfTrace> traces, boolean doSync) {
 
         SynchronizationAlgorithm syncAlgo;
         if (doSync) {
@@ -117,7 +117,7 @@ public abstract class SynchronizationManager extends TmfComponent {
         return null;
     }
 
-    private static SynchronizationAlgorithm synchronize(final File syncFile, final Collection<ITmfTrace> traces, SynchronizationAlgorithm syncAlgo) {
+    private static SynchronizationAlgorithm synchronize(final File syncFile, final Collection<? extends ITmfTrace> traces, SynchronizationAlgorithm syncAlgo) {
         ITmfEventMatching matching = new TmfNetworkEventMatching(traces, syncAlgo);
         matching.matchEvents();
 

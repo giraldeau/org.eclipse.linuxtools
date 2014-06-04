@@ -79,7 +79,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      * @param traces
      *            The set of traces for which to match events
      */
-    public TmfNetworkEventMatching(Collection<ITmfTrace> traces) {
+    public TmfNetworkEventMatching(Collection<? extends ITmfTrace> traces) {
         this(traces, new TmfEventMatches());
     }
 
@@ -91,7 +91,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      * @param tmfEventMatches
      *            The match processing class
      */
-    public TmfNetworkEventMatching(Collection<ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
+    public TmfNetworkEventMatching(Collection<? extends ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
         super(traces, tmfEventMatches);
         fCleanUpClass = new CleanUpStrategy();
     }

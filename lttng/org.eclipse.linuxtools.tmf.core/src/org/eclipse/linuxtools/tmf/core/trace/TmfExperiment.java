@@ -19,7 +19,6 @@ package org.eclipse.linuxtools.tmf.core.trace;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -94,10 +93,12 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
     private boolean fInitialized = false;
 
     /**
-     * Lock for synchronization methods
-     * @since 3.1
+     * Lock for synchronization methods. These methods cannot be 'synchronized'
+     * since it makes it impossible to use an event request on the experiment
+     * during synchronization (the request thread would block)
      */
-    protected final ReentrantLock fSyncLock = new ReentrantLock();
+    private final ReentrantLock fSyncLock = new ReentrantLock();
+
 
     // ------------------------------------------------------------------------
     // Construction
@@ -558,7 +559,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
 
         final File syncFile = (supplDirectory != null) ? new File(supplDirectory + File.separator + SYNCHRONIZATION_FILE_NAME) : null;
 
-        final SynchronizationAlgorithm syncAlgo = SynchronizationManager.synchronizeTraces(syncFile, Arrays.asList(fTraces), doSync);
+        final SynchronizationAlgorithm syncAlgo = SynchronizationManager.synchronizeTraces(syncFile, Collections.singleton(this), doSync);
 
         final TmfTraceSynchronizedSignal signal = new TmfTraceSynchronizedSignal(this, syncAlgo);
 

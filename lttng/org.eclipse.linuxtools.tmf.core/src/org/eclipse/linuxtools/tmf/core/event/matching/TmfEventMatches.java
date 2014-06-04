@@ -43,7 +43,7 @@ public class TmfEventMatches implements IMatchProcessingUnit {
      */
 
     @Override
-    public void init(Collection<ITmfTrace> fTraces) {
+    public void init(Collection<? extends ITmfTrace> fTraces) {
         fMatchCount = 0;
     }
 

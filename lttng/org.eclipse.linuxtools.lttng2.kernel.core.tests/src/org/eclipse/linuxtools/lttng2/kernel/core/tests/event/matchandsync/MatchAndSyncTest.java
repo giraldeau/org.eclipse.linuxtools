@@ -67,6 +67,7 @@ public class MatchAndSyncTest {
             m.setAccessible(true);
             IMatchProcessingUnit unit = (IMatchProcessingUnit) m.invoke(twoTraceMatch);
             assertEquals(46, unit.countMatches());
+
         }
 
     }
