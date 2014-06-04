@@ -20,11 +20,6 @@
                class="org.eclipse.linuxtools.tmf.core.trace.TmfTrace">
          </tracetype>
       </module>
-      <module
-            analysis_module="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule"
-            id="org.eclipse.linuxtools.lttng2.kernel.core.graph.staging.ExecGraphModule"
-            name="ExecGraph (SHT)">
-      </module>
    </extension>
    <extension
             point="org.eclipse.ui.views">

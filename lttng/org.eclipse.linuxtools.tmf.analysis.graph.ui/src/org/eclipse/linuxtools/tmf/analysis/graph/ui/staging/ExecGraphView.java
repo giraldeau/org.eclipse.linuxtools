@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule;
+import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.ui.views.timegraph.AbstractTimeGraphPerObjectView;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.ITimeEvent;
@@ -52,32 +55,42 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
 
     @Override
     protected void buildEventList(ITmfTrace trace, Object object, IProgressMonitor monitor) {
-        ArrayList<TimeGraphEntry> entryList = new ArrayList<>();
-        long off = trace.getStartTime().getValue();
-        setStartTime(off);
-        setEndTime(off + 1000000);
-/*
-        if (monitor.isCanceled()) {
+        TmfStateSystemAnalysisModule module = trace.getAnalysisModuleOfClass(ExecGraphModule.class, ExecGraphModule.ID);
+        if (module == null || monitor.isCanceled()) {
             return;
         }
-
-        TmfStateSystemAnalysisModule module = trace.getAnalysisModuleOfClass(ExecGraphModule.class, ExecGraphModule.ID);
         module.schedule();
         if (!module.waitForCompletion(new NullProgressMonitor())) {
             return;
         }
         ITmfStateSystem ssq = module.getStateSystem();
-        ssq.waitUntilBuilt();
-*/
-        for (int i = 0; i < 10; i++) {
-            ExecGraphEntry entry = new ExecGraphEntry("entry " + i, trace, off, off + 10 * 100 * 100, new Task("host1", i, 100)); //$NON-NLS-1$ //$NON-NLS-2$
-            getEventList(entry, off, off + 1000000, 0, null);
-            entryList.add(entry);
+        if (ssq == null) {
+            return;
         }
+
+        long start = ssq.getStartTime();
+        long end = ssq.getCurrentEndTime();
+        setStartTime(Math.min(getStartTime(), start));
+        setEndTime(Math.max(getEndTime(), end));
+
+        List<TimeGraphEntry> entryList = makeEntryList(ssq, start, end);
+
         putObjectEntryList("root", entryList);
         loadObject("root");
         redraw();
         refresh();
+    }
+
+    private List<TimeGraphEntry> makeEntryList(ITmfStateSystem ssq, long start, long end) {
+        // /host/tid/{state,blocking}
+        ArrayList<TimeGraphEntry> entries = new ArrayList<>();
+        List<Integer> rootQuarks = ssq.getQuarks("*");
+        for (Integer hostQuark: rootQuarks) {
+            String hostName = ssq.getAttributeName(hostQuark);
+            TimeGraphEntry entry = new ExecGraphEntry(hostName, getTrace(), start, end, "none");
+            entries.add(entry);
+        }
+        return entries;
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 public class ExecGraphModule extends TmfStateSystemAnalysisModule {
 
     /** ID of this analysis module */
-    public static final String ID = "org.eclipse.linuxtools.lttng2.kernel.core.graph.staging.ExecGraphModule"; //$NON-NLS-1$
+    public static final String ID = "org.eclipse.linuxtools.tmf.analysis.graph.core.graph.staging.ExecGraphModule"; //$NON-NLS-1$
 
     /**
      * Constructor
