@@ -31,11 +31,5 @@
             name="Critical Flow View"
             restorable="true">
       </view>
-            <view
-                  class="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.ExecutionGraphView"
-                  id="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.executiongraphview"
-                  name="Execution Graph View"
-                  restorable="true">
-            </view>
    </extension>
 </plugin>
