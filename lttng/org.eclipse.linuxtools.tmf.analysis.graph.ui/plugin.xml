@@ -20,6 +20,11 @@
                class="org.eclipse.linuxtools.tmf.core.trace.TmfTrace">
          </tracetype>
       </module>
+      <module
+            analysis_module="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule"
+            id="org.eclipse.linuxtools.lttng2.kernel.core.graph.staging.ExecGraphModule"
+            name="ExecGraph (SHT)">
+      </module>
    </extension>
    <extension
             point="org.eclipse.ui.views">
@@ -31,5 +36,12 @@
             name="Critical Flow View"
             restorable="true">
       </view>
+            <view
+                  category="org.eclipse.linuxtools.tmf.ui.views.category"
+                  class="org.eclipse.linuxtools.tmf.analysis.graph.ui.staging.ExecGraphView"
+                  id="org.eclipse.linuxtools.tmf.analysis.graph.ui.staging.ExecGraphView"
+                  name="Exec Graph View"
+                  restorable="true">
+            </view>
    </extension>
 </plugin>
