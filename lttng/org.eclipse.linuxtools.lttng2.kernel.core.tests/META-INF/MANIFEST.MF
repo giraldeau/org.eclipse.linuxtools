@@ -23,7 +23,6 @@ Require-Bundle: org.junit;bundle-version="4.0.0",
 Export-Package: org.eclipse.linuxtools.lttng2.kernel.core.tests,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.analysis;x-internal:=true,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.event.matchandsync;x-internal:=true,
- org.eclipse.linuxtools.lttng2.kernel.core.tests.graph,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.perf,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.analysis;x-internal:=true,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.stateprovider;x-internal:=true

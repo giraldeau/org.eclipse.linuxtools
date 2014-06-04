@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -10,17 +10,17 @@
  *   Francis Giraldeau - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng2.kernel.core.graph.sht;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
 import java.util.HashMap;
 
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.EventHandler.Ctx;
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.Task.StateEnum;
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystemBuilder;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
 import org.eclipse.linuxtools.statesystem.core.exceptions.StateValueTypeException;
 import org.eclipse.linuxtools.statesystem.core.statevalue.ITmfStateValue;
 import org.eclipse.linuxtools.statesystem.core.statevalue.TmfStateValue;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.EventHandler.Ctx;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.statesystem.AbstractTmfStateProvider;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;

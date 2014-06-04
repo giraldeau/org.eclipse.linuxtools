@@ -42,7 +42,7 @@
          </tracetype>
       </module>
       <module
-            analysis_module="org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule"
+            analysis_module="org.eclipse.linuxtools.lttng2.kernel.core.TBD.ExecGraphModule"
             id="org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule"
             name="ExecGraphModule with State History Tree">
          <tracetype

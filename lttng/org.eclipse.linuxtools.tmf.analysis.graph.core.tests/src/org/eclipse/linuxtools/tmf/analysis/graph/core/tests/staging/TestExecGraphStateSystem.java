@@ -1,13 +1,14 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.ExecGraphModule;
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.Machine;
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Machine;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -55,6 +56,7 @@ public class TestExecGraphStateSystem {
         module.setTrace(experiment);
         TmfTestHelper.executeAnalysis(module);
         ITmfStateSystem stateSystem = module.getStateSystem();
+        assertNotNull(stateSystem);
         System.out.println("size: " + stateSystem.getNbAttributes());
     }
 

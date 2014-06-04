@@ -10,7 +10,7 @@
  *   Geneviève Bastien - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng2.kernel.core.graph.sht;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.statesystem.ITmfStateProvider;

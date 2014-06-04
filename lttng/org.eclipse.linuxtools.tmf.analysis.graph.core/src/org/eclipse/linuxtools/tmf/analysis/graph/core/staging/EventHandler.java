@@ -1,12 +1,10 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.graph.sht;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.EventField;
-import org.eclipse.linuxtools.lttng2.kernel.core.graph.sht.Task.StateEnum;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEventField;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
 
@@ -101,15 +99,15 @@ public class EventHandler {
         switch(ctx.eventName) {
         case LttngStrings.SOFTIRQ_ENTRY:
             type = Interrupt.SOFTIRQ;
-            attr = EventField.getLong(event, LttngStrings.VEC);
+            attr = Field.getLong(event, LttngStrings.VEC);
             break;
         case LttngStrings.IRQ_HANDLER_ENTRY:
             type = Interrupt.IRQ;
-            attr = EventField.getLong(event, LttngStrings.IRQ);
+            attr = Field.getLong(event, LttngStrings.IRQ);
             break;
         case LttngStrings.HRTIMER_EXPIRE_ENTRY:
             type = Interrupt.HRTIMER;
-            attr = EventField.getLong(event, LttngStrings.HRTIMER);
+            attr = Field.getLong(event, LttngStrings.HRTIMER);
             break;
         default:
             break;
@@ -129,15 +127,15 @@ public class EventHandler {
         switch(ctx.eventName) {
         case LttngStrings.SOFTIRQ_EXIT:
             type = Interrupt.SOFTIRQ;
-            attr = EventField.getLong(event, LttngStrings.VEC);
+            attr = Field.getLong(event, LttngStrings.VEC);
             break;
         case LttngStrings.IRQ_HANDLER_EXIT:
             type = Interrupt.IRQ;
-            attr = EventField.getLong(event, LttngStrings.IRQ);
+            attr = Field.getLong(event, LttngStrings.IRQ);
             break;
         case LttngStrings.HRTIMER_EXPIRE_EXIT:
             type = Interrupt.HRTIMER;
-            attr = EventField.getLong(event, LttngStrings.HRTIMER);
+            attr = Field.getLong(event, LttngStrings.HRTIMER);
             break;
         default:
             break;
@@ -158,9 +156,9 @@ public class EventHandler {
      * @param event
      */
     private void handleSchedSwitch(CtfTmfEvent event) {
-        Long next = EventField.getLong(event, LttngStrings.NEXT_TID);
-        Long prev = EventField.getLong(event, LttngStrings.PREV_TID);
-        int val = EventField.getLong(event, LttngStrings.PREV_STATE).intValue();
+        Long next = Field.getLong(event, LttngStrings.NEXT_TID);
+        Long prev = Field.getLong(event, LttngStrings.PREV_TID);
+        int val = Field.getLong(event, LttngStrings.PREV_STATE).intValue();
 
         StateEnum prevState = StateEnum.PREEMPTED;
         if ((val & 0x3) != 0) {
@@ -180,7 +178,7 @@ public class EventHandler {
      * @param event
      */
     private void handleSchedWakeup(CtfTmfEvent event) {
-        Long target = EventField.getLong(event, LttngStrings.TID);
+        Long target = Field.getLong(event, LttngStrings.TID);
         Task targetTask = ctx.machine.getOrCreateTask(ctx.cpu, target, ctx.ts);
         notifyStateChange(targetTask, StateEnum.PREEMPTED);
     }

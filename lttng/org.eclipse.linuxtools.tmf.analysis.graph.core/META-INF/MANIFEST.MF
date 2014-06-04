@@ -11,9 +11,13 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.linuxtools.tmf.core,
- com.google.guava
+ com.google.guava,
+ org.eclipse.linuxtools.tmf.ctf.core,
+ org.eclipse.core.resources;bundle-version="3.9.0"
 Export-Package: org.eclipse.linuxtools.tmf.analysis.graph.core,
  org.eclipse.linuxtools.tmf.analysis.graph.core.base,
  org.eclipse.linuxtools.tmf.analysis.graph.core.building,
  org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath,
- org.eclipse.linuxtools.tmf.analysis.graph.core.model
+ org.eclipse.linuxtools.tmf.analysis.graph.core.ctf,
+ org.eclipse.linuxtools.tmf.analysis.graph.core.model,
+ org.eclipse.linuxtools.tmf.analysis.graph.core.staging

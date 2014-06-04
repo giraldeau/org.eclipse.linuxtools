@@ -1,6 +1,4 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
-
-import static org.junit.Assert.fail;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.ctf;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -18,7 +16,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
@@ -27,6 +24,8 @@ import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTrace;
+import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
+import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 
 /**
  * Find traces under directory
@@ -74,7 +73,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
                 tmp = traceKlass.newInstance();
                 tmp.initTrace(null, p.toString(), evKlass);
             } catch (InstantiationException | IllegalAccessException | TmfTraceException e) {
-                fail(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
             traces[i++] = tmp;
         }
@@ -90,7 +89,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      * @return the experiment
      */
     public static TmfExperiment makeTmfExperiment(Path base) {
-        return makeTmfExperiment(base, LttngKernelTrace.class, ITmfEvent.class);
+        return makeTmfExperiment(base, CtfTmfTrace.class, CtfTmfEvent.class);
     }
 
     /**
@@ -136,7 +135,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         try {
             Files.walkFileTree(base, finder);
         } catch (IOException e) {
-            fail(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
         return finder.getResults();
 

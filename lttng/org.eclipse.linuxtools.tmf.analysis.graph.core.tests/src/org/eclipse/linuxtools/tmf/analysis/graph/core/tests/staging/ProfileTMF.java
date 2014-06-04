@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.tests.graph;
+package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
 import static org.junit.Assert.assertTrue;
 
@@ -13,9 +13,10 @@ import org.eclipse.linuxtools.ctf.core.event.EventDefinition;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
 import org.eclipse.linuxtools.ctf.core.trace.CTFTrace;
 import org.eclipse.linuxtools.ctf.core.trace.CTFTraceReader;
-import org.eclipse.linuxtools.lttng2.kernel.core.tests.graph.GraphBenchmark.Data;
-import org.eclipse.linuxtools.lttng2.kernel.core.tests.graph.GraphBenchmark.Func;
-import org.eclipse.linuxtools.lttng2.kernel.core.tests.graph.GraphBenchmark.Run;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging.GraphBenchmark.Data;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging.GraphBenchmark.Func;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging.GraphBenchmark.Run;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
