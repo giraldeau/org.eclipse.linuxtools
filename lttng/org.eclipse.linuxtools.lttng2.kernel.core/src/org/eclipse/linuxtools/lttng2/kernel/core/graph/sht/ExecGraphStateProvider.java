@@ -71,9 +71,9 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
         fHandler = new EventHandler();
         fHandler.addListener(new ITaskListener() {
             @Override
-            public void stateChange(Ctx ctx, Task task, Long start, Long end, StateEnum state) {
+            public void stateChange(Ctx ctx, Task task, StateEnum state) {
                 try {
-                    doStateChange(ctx, task, start, end, state);
+                    doStateChange(ctx, task, state);
                 } catch (StateValueTypeException | AttributeNotFoundException e) {
                     throw new RuntimeException("doStateChange() failed"); //$NON-NLS-1$
                 }
@@ -86,7 +86,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
              * @param end
              * @param state
              */
-            private void doStateChange(Ctx ctx, Task task, Long start, Long end, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
+            private void doStateChange(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
                 // make path
                 int quark;
                 if (!tidStateQuark.containsKey(task.getTID())) {
@@ -97,11 +97,13 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                     quark = tidStateQuark.get(task.getTID());
                 }
                 ITmfStateValue value = TmfStateValue.newValueInt(task.getState().value());
-                ss.modifyAttribute(start, value, quark);
+                ss.modifyAttribute(task.getLastUpdate(), value, quark);
 
                 // cleanup
                 if (state == StateEnum.EXIT) {
                     tidStateQuark.remove(task.getTID());
+                    value = TmfStateValue.newValueInt(StateEnum.EXIT.value());
+                    ss.modifyAttribute(ctx.ts, value, quark);
                 }
             }
         });

@@ -194,7 +194,7 @@ public class EventHandler {
      */
     private void notifyStateChange(Task task, StateEnum nextState) {
         for (ITaskListener listener: stateListeners) {
-            listener.stateChange(ctx, task, task.getLastUpdate(), ctx.ts, nextState);
+            listener.stateChange(ctx, task, nextState);
         }
         task.setState(ctx.ts, nextState);
         if (nextState == StateEnum.EXIT) {
