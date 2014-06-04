@@ -60,11 +60,11 @@ public class MatchAndSyncTest {
             String stats = twoTraceMatch.toString();
             assertEquals("TmfEventMatches [ Number of matches found: 46 ]" +
                     "Trace 0:" + cr +
-                    "  3 unmatched incoming events" + cr +
-                    "  2 unmatched outgoing events" + cr +
-                    "Trace 1:" + cr +
                     "  2 unmatched incoming events" + cr +
-                    "  1 unmatched outgoing events" + cr, stats);
+                    "  1 unmatched outgoing events" + cr +
+                    "Trace 1:" + cr +
+                    "  3 unmatched incoming events" + cr +
+                    "  2 unmatched outgoing events" + cr, stats);
 
         }
     }

@@ -20,6 +20,8 @@ package org.eclipse.linuxtools.tmf.core.trace;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -33,6 +35,8 @@ import org.eclipse.linuxtools.internal.tmf.core.trace.TmfExperimentLocation;
 import org.eclipse.linuxtools.internal.tmf.core.trace.TmfLocationArray;
 import org.eclipse.linuxtools.tmf.core.TmfCommonConstants;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
+import org.eclipse.linuxtools.tmf.core.event.matching.ITmfEventMatching;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.signal.TmfSignalHandler;
@@ -47,6 +51,7 @@ import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.indexer.ITmfPersistentlyIndexable;
 import org.eclipse.linuxtools.tmf.core.trace.indexer.ITmfTraceIndexer;
 import org.eclipse.linuxtools.tmf.core.trace.indexer.TmfBTreeTraceIndexer;
+import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
 import org.eclipse.linuxtools.tmf.core.trace.location.ITmfLocation;
 
 /**
@@ -87,6 +92,12 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
      * The set of traces that constitute the experiment
      */
     private boolean fInitialized = false;
+
+    /**
+     * Lock for synchronization methods
+     * @since 3.1
+     */
+    protected final ReentrantLock fSyncLock = new ReentrantLock();
 
     // ------------------------------------------------------------------------
     // Construction
@@ -477,6 +488,19 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
     }
 
     /**
+     * Create a new event matching class for this experiment
+     *
+     * TODO: There is no one matching class per experiment, it depends on the
+     * traces and the events present, it should be specified otherwise
+     *
+     * @return A new event matching instance
+     * @since 3.1
+     */
+    protected ITmfEventMatching createEventMatching() {
+        return new TmfNetworkEventMatching(Collections.singleton((ITmfTrace) this));
+    }
+
+    /**
      * Synchronizes the traces of an experiment. By default it only tries to
      * read a synchronization file if it exists
      *
@@ -485,7 +509,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
      *             propagate TmfTraceExceptions
      * @since 3.0
      */
-    public synchronized SynchronizationAlgorithm synchronizeTraces() throws TmfTraceException {
+    public SynchronizationAlgorithm synchronizeTraces() throws TmfTraceException {
         return synchronizeTraces(false);
     }
 
@@ -500,7 +524,24 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
      *             propagate TmfTraceExceptions
      * @since 3.0
      */
-    public synchronized SynchronizationAlgorithm synchronizeTraces(boolean doSync) throws TmfTraceException {
+    public SynchronizationAlgorithm synchronizeTraces(boolean doSync) throws TmfTraceException {
+        return synchronizeTraces(doSync, null);
+    }
+
+    /**
+     * Synchronizes the traces of an experiment.
+     *
+     * @param doSync
+     *            Whether to actually synchronize or just try opening a sync
+     *            file
+     * @param algorithm A new instance of the synchronization algorithm to use
+     * @return The synchronization object
+     * @throws TmfTraceException
+     *             propagate TmfTraceExceptions
+     * @since 3.1
+     */
+    public SynchronizationAlgorithm synchronizeTraces(boolean doSync, SynchronizationAlgorithm algorithm) throws TmfTraceException {
+        fSyncLock.lock();
 
         /* Set up the path to the synchronization file we'll use */
         IResource resource = this.getResource();
@@ -529,6 +570,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
             }
         }.start();
 
+        fSyncLock.unlock();
         return syncAlgo;
     }
 

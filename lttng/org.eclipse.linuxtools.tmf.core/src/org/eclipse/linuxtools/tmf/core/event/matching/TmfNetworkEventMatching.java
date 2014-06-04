@@ -181,8 +181,8 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
              * events as value for the unmatched table. Not necessary right now
              * though
              */
-            if (!unmatchedTbl.get(trace).containsKey(eventKey)) {
-                unmatchedTbl.get(trace).put(eventKey, event);
+            if (!unmatchedTbl.get(event.getTrace()).containsKey(eventKey)) {
+                unmatchedTbl.get(event.getTrace()).put(eventKey, event);
             }
         }
 
