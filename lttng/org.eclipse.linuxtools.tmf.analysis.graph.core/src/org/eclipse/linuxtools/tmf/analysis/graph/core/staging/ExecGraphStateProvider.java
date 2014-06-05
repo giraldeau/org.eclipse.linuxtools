@@ -12,7 +12,7 @@
 
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystemBuilder;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
@@ -25,6 +25,9 @@ import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.statesystem.AbstractTmfStateProvider;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 /**
  * Generate blocking interval tree
@@ -48,12 +51,23 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
      * @author Francis Giraldeau <francis.giraldeau@gmail.com>
      *
      */
-    public static class Attributes {
-        public static final String LABEL_STATE = "state"; //$NON-NLS-1$
-        public static final String LABEL_BLOCKED = "blocked"; //$NON-NLS-1$
+    public enum Attributes {
+        STATE(0, "state"); //$NON-NLS-1$
+        private final Integer value;
+        private final String label;
+        private Attributes(Integer v, String label) {
+            this.value = v;
+            this.label = label;
+        }
+        public Integer value() {
+            return value;
+        }
+        public String label() {
+            return label;
+        }
     }
 
-    HashMap<Long, Integer> tidStateQuark; // (tid, quark)
+    Table<String, Long, ArrayList<Integer>> quarkCache; // (host, tid, quark)
 
     /**
      * Instantiate a new state provider plugin.
@@ -63,7 +77,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
      */
     public ExecGraphStateProvider(ITmfTrace trace) {
         super(trace, CtfTmfEvent.class, "LTTng Kernel"); //$NON-NLS-1$
-        tidStateQuark = new HashMap<>();
+        quarkCache = HashBasedTable.create();
         initHandler();
     }
 
@@ -88,23 +102,31 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
              */
             private void doStateChange(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
                 // make path
-                int quark;
-                if (!tidStateQuark.containsKey(task.getTID())) {
-                    String host = task.getHostID().replaceAll("^\"|\"$", "");  //$NON-NLS-1$ //$NON-NLS-2$
-                    quark = ss.getQuarkAbsoluteAndAdd(host, task.getTID().toString(), Attributes.LABEL_STATE);
-                    tidStateQuark.put(task.getTID(), quark);
-                } else {
-                    quark = tidStateQuark.get(task.getTID());
-                }
+                ArrayList<Integer> q = getOrCreateTaskQuarks(task);
+
                 ITmfStateValue value = TmfStateValue.newValueInt(task.getState().value());
-                ss.modifyAttribute(task.getLastUpdate(), value, quark);
+                ss.modifyAttribute(task.getLastUpdate(), value, q.get(Attributes.STATE.value()));
 
                 // cleanup
                 if (state == StateEnum.EXIT) {
-                    tidStateQuark.remove(task.getTID());
                     value = TmfStateValue.newValueInt(StateEnum.EXIT.value());
-                    ss.modifyAttribute(ctx.ts, value, quark);
+                    ss.modifyAttribute(ctx.ts, value, q.get(Attributes.STATE.value()));
+                    quarkCache.remove(task.getHostID(), task.getTID());
                 }
+            }
+
+            private ArrayList<Integer> getOrCreateTaskQuarks(Task task) {
+                if (!quarkCache.contains(task.getHostID(), task.getTID())) {
+                    String host = task.getHostID().replaceAll("^\"|\"$", "");  //$NON-NLS-1$ //$NON-NLS-2$ // unquote
+                    // create all task attributes
+                    ArrayList<Integer> quarks = new ArrayList<>();
+                    for (Attributes attr: Attributes.values()) {
+                        int quark = ss.getQuarkAbsoluteAndAdd(host, task.getTID().toString(), attr.label());
+                        quarks.set(attr.value(), quark);
+                    }
+                    quarkCache.put(task.getHostID(), task.getTID(), quarks);
+                }
+                return quarkCache.get(task.getHostID(), task.getTID());
             }
         });
     }
