@@ -12,7 +12,7 @@
 
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
-import java.util.ArrayList;
+import java.util.EnumMap;
 
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystemBuilder;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
@@ -67,7 +67,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
         }
     }
 
-    Table<String, Long, ArrayList<Integer>> quarkCache; // (host, tid, quark)
+    Table<String, Long, EnumMap<Attributes, Integer>> quarkCache; // (host, tid, (attr, quark))
 
     /**
      * Instantiate a new state provider plugin.
@@ -101,32 +101,46 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
              * @param state
              */
             private void doStateChange(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
-                // make path
-                ArrayList<Integer> q = getOrCreateTaskQuarks(task);
+                Integer q = getOrCreateTaskQuark(task, Attributes.STATE);
 
-                ITmfStateValue value = TmfStateValue.newValueInt(task.getState().value());
-                ss.modifyAttribute(task.getLastUpdate(), value, q.get(Attributes.STATE.value()));
+                long packed = 0;
+                switch (task.getState()) {
+                case BLOCKED:
+                    packed = PackedLongValue.pack(task.getState().value(), 0);
+                    break;
+                case PREEMPTED:
+                    packed = PackedLongValue.pack(task.getState().value(), ctx.cpu);
+                    break;
+                case EXIT:
+                case RUN:
+                default:
+                    packed = task.getState().value();
+                    break;
+                }
+
+                ITmfStateValue value = TmfStateValue.newValueLong(packed);
+                ss.modifyAttribute(task.getLastUpdate(), value, q);
 
                 // cleanup
                 if (state == StateEnum.EXIT) {
-                    value = TmfStateValue.newValueInt(StateEnum.EXIT.value());
-                    ss.modifyAttribute(ctx.ts, value, q.get(Attributes.STATE.value()));
+                    value = TmfStateValue.newValueLong(StateEnum.EXIT.value());
+                    ss.modifyAttribute(ctx.ts, value, q);
                     quarkCache.remove(task.getHostID(), task.getTID());
                 }
             }
 
-            private ArrayList<Integer> getOrCreateTaskQuarks(Task task) {
+            private Integer getOrCreateTaskQuark(Task task, Attributes attribute) {
                 if (!quarkCache.contains(task.getHostID(), task.getTID())) {
                     String host = task.getHostID().replaceAll("^\"|\"$", "");  //$NON-NLS-1$ //$NON-NLS-2$ // unquote
                     // create all task attributes
-                    ArrayList<Integer> quarks = new ArrayList<>();
+                    EnumMap<Attributes, Integer> quarks = new EnumMap<>(Attributes.class);
                     for (Attributes attr: Attributes.values()) {
                         int quark = ss.getQuarkAbsoluteAndAdd(host, task.getTID().toString(), attr.label());
-                        quarks.set(attr.value(), quark);
+                        quarks.put(attr, quark);
                     }
                     quarkCache.put(task.getHostID(), task.getTID(), quarks);
                 }
-                return quarkCache.get(task.getHostID(), task.getTID());
+                return quarkCache.get(task.getHostID(), task.getTID()).get(attribute);
             }
         });
     }
