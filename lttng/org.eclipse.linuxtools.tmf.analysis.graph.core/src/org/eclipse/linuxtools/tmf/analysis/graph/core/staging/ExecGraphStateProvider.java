@@ -45,6 +45,9 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
 
     private EventHandler fHandler;
 
+    public static final String LABEL_TASK = "task";
+    public static final String LABEL_CPU = "cpu";
+
     /**
      * Attributes keys in the state system
      *
@@ -52,22 +55,18 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
      *
      */
     public enum Attributes {
-        STATE(0, "state"); //$NON-NLS-1$
-        private final Integer value;
+        STATE("state"); //$NON-NLS-1$
         private final String label;
-        private Attributes(Integer v, String label) {
-            this.value = v;
+        private Attributes(String label) {
             this.label = label;
-        }
-        public Integer value() {
-            return value;
         }
         public String label() {
             return label;
         }
     }
 
-    Table<String, Long, EnumMap<Attributes, Integer>> quarkCache; // (host, tid, (attr, quark))
+    Table<String, Long, EnumMap<Attributes, Integer>> quarkTidCache; // (host, tid, (attr, quark))
+    Table<String, Long, EnumMap<Attributes, Integer>> quarkCpuCache; // (host, cpu, (attr, quark))
 
     /**
      * Instantiate a new state provider plugin.
@@ -77,7 +76,8 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
      */
     public ExecGraphStateProvider(ITmfTrace trace) {
         super(trace, CtfTmfEvent.class, "LTTng Kernel"); //$NON-NLS-1$
-        quarkCache = HashBasedTable.create();
+        quarkTidCache = HashBasedTable.create();
+        quarkCpuCache = HashBasedTable.create();
         initHandler();
     }
 
@@ -87,22 +87,27 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
             @Override
             public void stateChange(Ctx ctx, Task task, StateEnum state) {
                 try {
-                    doStateChange(ctx, task, state);
+                    updateCpuState(ctx, task, state);
+                    updateTaskState(ctx, task, state);
                 } catch (StateValueTypeException | AttributeNotFoundException e) {
+                    e.printStackTrace();
                     throw new RuntimeException("doStateChange() failed"); //$NON-NLS-1$
                 }
             }
 
-            /**
-             * @param ctx
-             * @param task
-             * @param start
-             * @param end
-             * @param state
-             */
-            private void doStateChange(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
-                Integer q = getOrCreateTaskQuark(task, Attributes.STATE);
+            private void updateCpuState(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
+                if (state == StateEnum.RUN) {
+                    Integer qCpuState = getOrCreateQuark(quarkCpuCache, ctx.hostId, LABEL_CPU, ctx.cpu.longValue(), Attributes.STATE);
+                    ITmfStateValue value = TmfStateValue.newValueInt(task.getTID().intValue());
+                    ss.modifyAttribute(ctx.ts, value, qCpuState);
+                }
+            }
 
+            /**
+             * @param state the next task state
+             */
+            private void updateTaskState(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
+                Integer qTaskState = getOrCreateQuark(quarkTidCache, ctx.hostId, LABEL_TASK, task.getTID(), Attributes.STATE);
                 long packed = 0;
                 switch (task.getState()) {
                 case BLOCKED:
@@ -117,30 +122,29 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                     packed = task.getState().value();
                     break;
                 }
-
                 ITmfStateValue value = TmfStateValue.newValueLong(packed);
-                ss.modifyAttribute(task.getLastUpdate(), value, q);
+                ss.modifyAttribute(task.getLastUpdate(), value, qTaskState);
 
                 // cleanup
                 if (state == StateEnum.EXIT) {
                     value = TmfStateValue.newValueLong(StateEnum.EXIT.value());
-                    ss.modifyAttribute(ctx.ts, value, q);
-                    quarkCache.remove(task.getHostID(), task.getTID());
+                    ss.modifyAttribute(ctx.ts, value, qTaskState);
+                    quarkTidCache.remove(task.getHostID(), task.getTID());
                 }
             }
 
-            private Integer getOrCreateTaskQuark(Task task, Attributes attribute) {
-                if (!quarkCache.contains(task.getHostID(), task.getTID())) {
-                    String host = task.getHostID().replaceAll("^\"|\"$", "");  //$NON-NLS-1$ //$NON-NLS-2$ // unquote
-                    // create all task attributes
+            private Integer getOrCreateQuark(Table<String, Long, EnumMap<Attributes, Integer>> cache, String host, String type, Long id, Attributes attribute) {
+                if (!cache.contains(host, id)) {
+                    String clean = host.replaceAll("^\"|\"$", "");  //$NON-NLS-1$ //$NON-NLS-2$ // unquote
+                    // create all attributes
                     EnumMap<Attributes, Integer> quarks = new EnumMap<>(Attributes.class);
                     for (Attributes attr: Attributes.values()) {
-                        int quark = ss.getQuarkAbsoluteAndAdd(host, task.getTID().toString(), attr.label());
+                        int quark = ss.getQuarkAbsoluteAndAdd(clean, type, id.toString(), attr.label());
                         quarks.put(attr, quark);
                     }
-                    quarkCache.put(task.getHostID(), task.getTID(), quarks);
+                    cache.put(host, id, quarks);
                 }
-                return quarkCache.get(task.getHostID(), task.getTID()).get(attribute);
+                return cache.get(host, id).get(attribute);
             }
         });
     }
