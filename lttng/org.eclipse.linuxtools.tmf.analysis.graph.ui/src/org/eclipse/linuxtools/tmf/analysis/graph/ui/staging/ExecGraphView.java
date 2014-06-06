@@ -13,6 +13,11 @@ import org.eclipse.linuxtools.tmf.ui.views.timegraph.AbstractTimeGraphPerObjectV
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.ITimeEvent;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.TimeEvent;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.TimeGraphEntry;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 
 public class ExecGraphView extends AbstractTimeGraphPerObjectView {
 
@@ -51,6 +56,21 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
         super(ID, new ExecGraphPresentationProvider());
         setTreeColumns(COLUMN_NAMES);
         setTreeLabelProvider(new ExecGraphTreeLabelProvider());
+    }
+
+    @Override
+    public void createPartControl(Composite parent) {
+        SashForm sash = new SashForm(parent, SWT.HORIZONTAL);
+        setWeight(new int[] { 3, 7 });
+        super.createPartControl(sash);
+
+        Composite right = new Composite(sash, SWT.BORDER);
+        right.setLayout(new FillLayout());
+
+        Label l = new Label(right, SWT.NONE);
+        l.setText("test");
+        sash.setWeights(new int[] { 10, 3 });
+
     }
 
     @Override
