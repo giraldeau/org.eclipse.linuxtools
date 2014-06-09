@@ -18,6 +18,11 @@ public class Task {
      */
     public enum StateEnum {
         /**
+         * Unkown state
+         */
+        UNKNOWN(-1),
+
+        /**
          * Running state
          */
         RUN(0),
@@ -38,12 +43,32 @@ public class Task {
         EXIT(3);
 
         private final Integer value;
-        private StateEnum(Integer value) { this.value = value; }
+        private StateEnum(Integer value) {
+            this.value = value;
+        }
         /**
          * Return the integer value of this label
          * @return integer value
          */
-        public Integer value() { return this.value; }
+        public Integer value() {
+            return this.value;
+        }
+
+        public static StateEnum fromValue(Integer v) {
+            switch(v) {
+            case 0:
+                return RUN;
+            case 1:
+                return PREEMPTED;
+            case 2:
+                return BLOCKED;
+            case 3:
+                return EXIT;
+            default:
+                break;
+            }
+            return UNKNOWN;
+        }
     }
 
 

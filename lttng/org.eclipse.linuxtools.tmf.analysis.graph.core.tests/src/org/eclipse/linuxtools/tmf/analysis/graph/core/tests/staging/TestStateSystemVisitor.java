@@ -1,6 +1,8 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,8 +14,7 @@ import org.eclipse.linuxtools.statesystem.core.exceptions.StateSystemDisposedExc
 import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.IntervalTraverse;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.IntervalVisitor;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -46,39 +47,17 @@ public class TestStateSystemVisitor {
         ht.toFile().delete();
     }
 
-    public class SimpleIntervalTraverse implements IntervalTraverse {
-
-        @Override
-        public void traverse(ITmfStateSystem s, int quark, long start, long end, IntervalVisitor visitor) {
-            try {
-                doTraverse(s, quark, start, end, visitor);
-            } catch (AttributeNotFoundException | StateSystemDisposedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void doTraverse(ITmfStateSystem s, int quark, long start, long end, IntervalVisitor visitor) throws AttributeNotFoundException, StateSystemDisposedException {
-            List<ITmfStateInterval> hist = s.queryHistoryRange(quark, start, end);
-            for (ITmfStateInterval i: hist) {
-                visitor.visit(i);
-            }
-        }
-
-    }
-
-    public class DumpIntervalVisitor implements IntervalVisitor {
-
-        @Override
-        public void visit(ITmfStateInterval interval) {
-            System.out.println(interval);
-        }
-
-    }
-
     @Test
     public void testMakeExecGraphSS() throws AttributeNotFoundException, StateSystemDisposedException {
-        int quark = ss.getQuarkAbsolute("1ac2304e-a4ce-4519-a289-067db4f955ec", "task", "22014", "state"); // OK
-        ss.queryHistoryRange(quark, 0, Long.MAX_VALUE); // BOOM
+        Task task = new Task("1ac2304e-a4ce-4519-a289-067db4f955ec", 22014, 0);
+        int quark = ss.getQuarkAbsolute(task.getHostID(), "task", task.getTID().toString(), "state");
+        List<ITmfStateInterval> range = ss.queryHistoryRange(quark, ss.getStartTime(), ss.getCurrentEndTime());
+        assertTrue(range.size() > 0);
+
+        CountIntervalVisitor visitor = new CountIntervalVisitor();
+        SeqIntervalTraverse traverse = new SeqIntervalTraverse();
+        traverse.traverse(ss, task, ss.getStartTime(), ss.getCurrentEndTime(), visitor);
+        assertEquals(range.size(), visitor.getCount());
     }
 
 }

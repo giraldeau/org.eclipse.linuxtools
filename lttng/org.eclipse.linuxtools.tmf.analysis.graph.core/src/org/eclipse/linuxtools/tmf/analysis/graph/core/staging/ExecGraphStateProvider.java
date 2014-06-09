@@ -118,6 +118,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                     break;
                 case EXIT:
                 case RUN:
+                case UNKNOWN:
                 default:
                     packed = task.getState().value();
                     break;

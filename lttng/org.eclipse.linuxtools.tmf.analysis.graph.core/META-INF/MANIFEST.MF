@@ -20,4 +20,5 @@ Export-Package: org.eclipse.linuxtools.tmf.analysis.graph.core,
  org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath,
  org.eclipse.linuxtools.tmf.analysis.graph.core.ctf,
  org.eclipse.linuxtools.tmf.analysis.graph.core.model,
- org.eclipse.linuxtools.tmf.analysis.graph.core.staging
+ org.eclipse.linuxtools.tmf.analysis.graph.core.staging,
+ org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo
