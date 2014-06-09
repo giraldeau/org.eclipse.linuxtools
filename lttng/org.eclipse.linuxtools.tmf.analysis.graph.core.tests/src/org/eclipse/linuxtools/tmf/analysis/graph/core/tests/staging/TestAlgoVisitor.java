@@ -7,7 +7,9 @@ import org.eclipse.linuxtools.statesystem.core.StateSystemFactory;
 import org.eclipse.linuxtools.statesystem.core.backend.IStateHistoryBackend;
 import org.eclipse.linuxtools.statesystem.core.backend.InMemoryBackend;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
+import org.eclipse.linuxtools.statesystem.core.exceptions.StateSystemDisposedException;
 import org.eclipse.linuxtools.statesystem.core.exceptions.StateValueTypeException;
+import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.statesystem.core.statevalue.TmfStateValue;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.PackedLongValue;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
@@ -29,7 +31,7 @@ public class TestAlgoVisitor {
     }
 
     @Test
-    public void testPreempt() throws StateValueTypeException, AttributeNotFoundException {
+    public void testPreempt() throws StateValueTypeException, AttributeNotFoundException, StateSystemDisposedException {
         String p1 = "1234";
         String p2 = "5678";
         String host = "host1";
@@ -60,6 +62,15 @@ public class TestAlgoVisitor {
         CountIntervalVisitor visitor = new CountIntervalVisitor();
         traverse.traverse(ss, t, ss.getStartTime(), ss.getCurrentEndTime(), visitor);
         assertEquals(3, visitor.getCount());
+
+        // reverse iteration
+        ITmfStateInterval i = null;
+        long cursor = ss.getCurrentEndTime();
+        do {
+            i = ss.querySingleState(cursor, p1q);
+            System.out.println(i);
+            cursor = i.getStartTime() - 1;
+        } while(!i.getStateValue().isNull() && cursor >= ss.getStartTime());
 
     }
 
