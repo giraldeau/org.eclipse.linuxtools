@@ -503,7 +503,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
         }
 
         private void zoom(TimeGraphEntry entry, IProgressMonitor monitor) {
-            if (fZoomStartTime <= fStartTime && fZoomEndTime >= fEndTime) {
+            if (fZoomStartTime < fStartTime && fZoomEndTime > fEndTime) {
                 entry.setZoomedEventList(null);
             } else {
                 List<ITimeEvent> zoomedEventList = getEventList(entry, fZoomStartTime, fZoomEndTime, fResolution, monitor);
