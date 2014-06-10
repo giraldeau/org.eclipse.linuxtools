@@ -82,6 +82,10 @@ public class Machine {
         return swappers.get(cpu);
     }
 
+    public Task getCurrentTask(Integer cpu, Long ts) {
+        return getOrCreateTask(cpu, getCurrentTid(cpu), ts);
+    }
+
     public Stack<Interrupt> getInterruptStack(Integer cpu) {
         update(cpu);
         return irq.get(cpu);

@@ -30,6 +30,7 @@ public class EventHandler {
         Long ts;
         Integer cpu;
         Machine machine;
+        Task wakeupSource;
 
         /**
          * Load current context from an event
@@ -44,6 +45,7 @@ public class EventHandler {
             ts = event.getTimestamp().getValue();
             cpu = event.getCPU();
             machine = self.getMachine(hostId);
+            wakeupSource = null;
         }
     }
 
@@ -184,8 +186,8 @@ public class EventHandler {
      * @param event
      */
     private void handleSchedWakeup(CtfTmfEvent event) {
-        Long target = Field.getLong(event, LttngStrings.TID);
-        Task targetTask = ctx.machine.getOrCreateTask(ctx.cpu, target, ctx.ts);
+        Long targetTid = Field.getLong(event, LttngStrings.TID);
+        Task targetTask = ctx.machine.getOrCreateTask(ctx.cpu, targetTid, ctx.ts);
         /*
          * Resolve the wake-up type. We change the task state only if the task
          * was blocked or unknown.
@@ -211,8 +213,8 @@ public class EventHandler {
                     break;
                 }
             } else {
-                // 1. Wake-up from task
-                //ctx.wakeSource = ctx.machine.getOrCreateTask(ctx.cpu, tid, ts);
+                // 1. Wake-up from the current task
+                ctx.wakeupSource = ctx.machine.getCurrentTask(ctx.cpu, ctx.ts);
                 targetTask.setStateRaw(StateEnum.WAIT_TASK);
             }
             //targetTask.setState(targetTask.getLastUpdate(), state);
@@ -225,7 +227,7 @@ public class EventHandler {
         Hardirq irq = Hardirq.fromValue(vec.intValue());
         switch (irq) {
         case RESCHED:
-            ret = StateEnum.RUNNING; // really, it's interrupted
+            ret = StateEnum.INTERRUPTED;
             break;
         case EHCI_HCD_1:
         case EHCI_HCD_2:
@@ -309,6 +311,15 @@ public class EventHandler {
      */
     public void addListener(ITaskListener listener) {
         stateListeners.add(listener);
+    }
+
+    public void handleDone() {
+        // flush pending state for all states
+        for (Machine machine: machines.values()) {
+            for (Task task: machine.tasks.values()) {
+                notifyStateChange(task, StateEnum.EXIT);
+            }
+        }
     }
 
 }

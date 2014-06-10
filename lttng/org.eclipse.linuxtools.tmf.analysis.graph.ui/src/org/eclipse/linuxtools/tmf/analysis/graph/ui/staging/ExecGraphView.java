@@ -14,8 +14,11 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
 import org.eclipse.linuxtools.statesystem.core.exceptions.StateSystemDisposedException;
+import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphStateProvider;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphStateProvider.Attributes;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.PackedLongValue;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
 import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -224,50 +227,38 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
         Display.getDefault().asyncExec(updateTableRunnable);
     }
 
-//    private static final int TASK_STATE = 0;
-//    private static final int PREEMPT_CPU = 1;
-//    private static final int TASK_WAIT = 1;
-
     private void makeEntryList(List<TimeGraphEntry> entryList, long start, long end) throws AttributeNotFoundException, StateSystemDisposedException {
         /*
          * /host/cpu/id/state
          * /host/task/id/state
          */
-        System.out.println(fCurrentTask);
-        TimeGraphEntry root = new ExecGraphEntry(fCurrentTask.getHostID(), getTrace(), start, end, null);
+        TimeGraphEntry root = new ExecGraphEntry(fCurrentTask.getHostID(), getTrace(), start, end, -1);
+        int q = fStateSystem.getQuarkAbsolute(fCurrentTask.getHostID(), ExecGraphStateProvider.LABEL_TASK, fCurrentTask.getTID().toString(), Attributes.STATE.label());
+        ExecGraphEntry child1 = new ExecGraphEntry(fCurrentTask.getTID().toString(), getTrace(), start, end, q);
+        root.addChild(child1);
         entryList.add(root);
-//
-//        HashSet<Integer> related = new HashSet<>();
-//        int taskQuark = fStateSystem.getQuarkAbsolute(fCurrentTask.getHostID(), ExecGraphStateProvider.LABEL_TASK, fCurrentTask.getTID().toString(), Attributes.STATE.label());
-//        List<ITmfStateInterval> hist = fStateSystem.queryHistoryRange(taskQuark, start, end);
-//        for (ITmfStateInterval interval : hist) {
-//            long value = interval.getStateValue().unboxLong();
-//            int state = PackedLongValue.unpack(TASK_STATE, value);
-//            if (state == StateEnum.PREEMPTED.value()) {
-//                int cpu = PackedLongValue.unpack(PREEMPT_CPU, value);
-//                int q = fStateSystem.getQuarkAbsolute(fCurrentTask.getHostID(), ExecGraphStateProvider.LABEL_CPU, String.valueOf(cpu), Attributes.STATE.label());
-//                List<ITmfStateInterval> preemptRange = fStateSystem.queryHistoryRange(q, interval.getStartTime(), interval.getEndTime());
-//                for (ITmfStateInterval preempt : preemptRange) {
-//                    int tid = preempt.getStateValue().unboxInt();
-//                    if (!related.contains(tid)) {
-//                        related.add(tid);
-//                        Task t = new Task(fCurrentTask.getHostID(), tid, 0);
-//                        entryList.add(new ExecGraphEntry(fCurrentTask.getHostID(), getTrace(), start, end, t));
-//                    }
-//                }
-//            } else if (state == StateEnum.BLOCKED.value()) {
-//            }
-//        }
     }
 
     @Override
     protected List<ITimeEvent> getEventList(TimeGraphEntry entry,
             long startTime, long endTime, long resolution,
             IProgressMonitor monitor) {
-        long off = entry.getStartTime();
+
         ArrayList<ITimeEvent> items = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            items.add(new TimeEvent(entry, off + i * 100, 100, i % 7));
+        ExecGraphEntry exGraphEntry = (ExecGraphEntry) entry;
+        int q = exGraphEntry.getQuark();
+        if (q == -1) {
+            return items;
+        }
+        try {
+            List<ITmfStateInterval> range = fStateSystem.queryHistoryRange(q, startTime, endTime, resolution, monitor);
+            for (ITmfStateInterval i: range) {
+                long v = i.getStateValue().unboxLong();
+                int stateVal = PackedLongValue.unpack(0, v);
+                items.add(new TimeEvent(entry, i.getStartTime(), i.getEndTime(), stateVal));
+            }
+        } catch (AttributeNotFoundException | StateSystemDisposedException e) {
+            e.printStackTrace();
         }
         return items;
     }

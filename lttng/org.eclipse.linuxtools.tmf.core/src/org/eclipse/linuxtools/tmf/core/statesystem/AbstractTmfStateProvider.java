@@ -240,4 +240,6 @@ public abstract class AbstractTmfStateProvider implements ITmfStateProvider {
      *            should check for its instance right at the beginning.
      */
     protected abstract void eventHandle(ITmfEvent event);
+
+    protected void handleDone() {  }
 }

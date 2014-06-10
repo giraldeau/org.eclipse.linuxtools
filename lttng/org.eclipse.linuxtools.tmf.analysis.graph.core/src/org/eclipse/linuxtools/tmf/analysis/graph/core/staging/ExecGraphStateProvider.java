@@ -118,8 +118,9 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                     packed = PackedLongValue.pack(task.getState().value(), qCPU);
                     break;
                 case WAIT_TASK:
-                    Integer qCurrentTask = getOrCreateQuark(quarkTidCache, ctx.hostId, LABEL_TASK, ctx.machine.getCurrentTid(ctx.cpu), Attributes.STATE);
-                    packed = PackedLongValue.pack(task.getState().value(), qCurrentTask);
+                    Task wup = ctx.wakeupSource;
+                    Integer qwup = getOrCreateQuark(quarkTidCache, wup.getHostID(), LABEL_TASK, wup.getTID(), Attributes.STATE);
+                    packed = PackedLongValue.pack(task.getState().value(), qwup);
                     break;
                 case EXIT:
                 case RUNNING:
@@ -182,6 +183,11 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
     @Override
     protected void eventHandle(ITmfEvent ev) {
         fHandler.eventHandle((CtfTmfEvent) ev);
+    }
+
+    @Override
+    protected void handleDone() {
+        fHandler.handleDone();
     }
 
 }

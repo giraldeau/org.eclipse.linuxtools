@@ -34,17 +34,17 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
         /** Worker is interrupted */
         INTERRUPTED     (new RGB(0xff, 0xdc, 0x00)),
         /** Worker has been preempted */
-        WAIT_CPU       (new RGB(0xc8, 0x64, 0x00)),
+        WAIT_CPU        (new RGB(0xc8, 0x64, 0x00)),
         /** Worker is waiting another task */
-        WAIT_TASK         (new RGB(0xcc, 0xff, 0x99)),
+        WAIT_TASK       (new RGB(0xcc, 0xff, 0x99)),
         /** Worker waiting on a timer */
-        WAIT_TIMER           (new RGB(0x33, 0x66, 0x99)),
+        WAIT_TIMER      (new RGB(0x33, 0x66, 0x99)),
         /** Worker is blocked, waiting on a device */
-        WAIT_BLOCK_DEV    (new RGB(0x66, 0x00, 0xcc)),
+        WAIT_BLOCK_DEV  (new RGB(0x66, 0x00, 0xcc)),
         /** Worker is waiting for user input */
-        WAIT_USER_INPUT      (new RGB(0x5a, 0x01, 0x01)),
+        WAIT_USER_INPUT (new RGB(0x5a, 0x01, 0x01)),
         /** Worker is waiting on network */
-        WAIT_NETWORK         (new RGB(0xff, 0x9b, 0xff)),
+        WAIT_NETWORK    (new RGB(0xff, 0x9b, 0xff)),
         /** Exit **/
         EXIT            (new RGB(0xff, 0xff, 0xff)),
         /** Any other reason */

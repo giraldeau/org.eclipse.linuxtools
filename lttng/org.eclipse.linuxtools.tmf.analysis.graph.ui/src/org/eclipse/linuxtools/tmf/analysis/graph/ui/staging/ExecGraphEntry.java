@@ -20,7 +20,7 @@ import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.TimeGraphEntry;
  */
 public class ExecGraphEntry extends TimeGraphEntry {
 
-    private Object fWorker;
+    private int fQuark;
 
     /**
      * Constructor
@@ -36,9 +36,9 @@ public class ExecGraphEntry extends TimeGraphEntry {
      * @param worker
      *            The worker object of this entry
      */
-    public ExecGraphEntry(String taskname, ITmfTrace trace, long startTime, long endTime, Object worker) {
+    public ExecGraphEntry(String taskname, ITmfTrace trace, long startTime, long endTime, int quark) {
         super(taskname, startTime, endTime);
-        fWorker = worker;
+        fQuark = quark;
     }
 
 	/**
@@ -46,8 +46,8 @@ public class ExecGraphEntry extends TimeGraphEntry {
 	 *
 	 * @return The worker object
 	 */
-	public Object getWorker() {
-	    return fWorker;
+	public int getQuark() {
+	    return fQuark;
 	}
 
 }
