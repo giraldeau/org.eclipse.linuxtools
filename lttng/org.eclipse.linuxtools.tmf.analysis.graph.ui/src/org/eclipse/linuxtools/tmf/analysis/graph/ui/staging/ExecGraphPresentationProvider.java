@@ -12,6 +12,7 @@
 
 package org.eclipse.linuxtools.tmf.analysis.graph.ui.staging;
 
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
 import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.Messages;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.StateItem;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.TimeGraphPresentationProvider;
@@ -33,15 +34,19 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
         /** Worker is interrupted */
         INTERRUPTED     (new RGB(0xff, 0xdc, 0x00)),
         /** Worker has been preempted */
-        PREEMPTED       (new RGB(0xc8, 0x64, 0x00)),
+        WAIT_CPU       (new RGB(0xc8, 0x64, 0x00)),
+        /** Worker is waiting another task */
+        WAIT_TASK         (new RGB(0xcc, 0xff, 0x99)),
         /** Worker waiting on a timer */
-        TIMER           (new RGB(0x33, 0x66, 0x99)),
+        WAIT_TIMER           (new RGB(0x33, 0x66, 0x99)),
         /** Worker is blocked, waiting on a device */
-        BLOCK_DEVICE    (new RGB(0x66, 0x00, 0xcc)),
+        WAIT_BLOCK_DEV    (new RGB(0x66, 0x00, 0xcc)),
         /** Worker is waiting for user input */
-        USER_INPUT      (new RGB(0x5a, 0x01, 0x01)),
+        WAIT_USER_INPUT      (new RGB(0x5a, 0x01, 0x01)),
         /** Worker is waiting on network */
-        NETWORK         (new RGB(0xff, 0x9b, 0xff)),
+        WAIT_NETWORK         (new RGB(0xff, 0x9b, 0xff)),
+        /** Exit **/
+        EXIT            (new RGB(0xff, 0xff, 0xff)),
         /** Any other reason */
         UNKNOWN         (new RGB(0x40, 0x3b, 0x33));
 
@@ -77,21 +82,29 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
     }
 
     private static State getMatchingState(int status) {
-        switch (status) {
-        case 0:
-            return State.RUNNING;
-        case 1:
+        StateEnum state = StateEnum.fromValue(status);
+        switch(state) {
+        case EXIT:
+            return State.EXIT;
+        case INTERRUPTED:
             return State.INTERRUPTED;
-        case 2:
-            return State.PREEMPTED;
-        case 3:
-            return State.TIMER;
-        case 4:
-            return State.BLOCK_DEVICE;
-        case 5:
-            return State.USER_INPUT;
-        case 6:
-            return State.NETWORK;
+        case RUNNING:
+            return State.RUNNING;
+        case WAIT_BLOCKED:
+            return State.UNKNOWN;
+        case WAIT_BLOCK_DEV:
+            return State.WAIT_BLOCK_DEV;
+        case WAIT_CPU:
+            return State.WAIT_CPU;
+        case WAIT_NETWORK:
+            return State.WAIT_NETWORK;
+        case WAIT_TASK:
+            return State.WAIT_TASK;
+        case WAIT_TIMER:
+            return State.WAIT_TIMER;
+        case WAIT_USER_INPUT:
+            return State.WAIT_USER_INPUT;
+        case UNKNOWN:
         default:
             return State.UNKNOWN;
         }

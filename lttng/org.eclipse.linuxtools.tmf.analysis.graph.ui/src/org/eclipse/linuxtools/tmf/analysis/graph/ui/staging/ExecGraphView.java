@@ -66,7 +66,9 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
     Runnable updateTableRunnable = new Runnable() {
         @Override
         public void run() {
-            tableViewer.setInput(fTasks);
+            if (fTasks != null) {
+                tableViewer.setInput(fTasks);
+            }
         }
     };
 

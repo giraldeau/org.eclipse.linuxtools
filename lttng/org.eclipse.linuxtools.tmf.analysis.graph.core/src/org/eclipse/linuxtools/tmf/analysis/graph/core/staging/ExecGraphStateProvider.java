@@ -96,7 +96,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
             }
 
             private void updateCpuState(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
-                if (state == StateEnum.RUN) {
+                if (state == StateEnum.RUNNING) {
                     Integer qCpuState = getOrCreateQuark(quarkCpuCache, ctx.hostId, LABEL_CPU, ctx.cpu.longValue(), Attributes.STATE);
                     ITmfStateValue value = TmfStateValue.newValueInt(task.getTID().intValue());
                     ss.modifyAttribute(ctx.ts, value, qCpuState);
@@ -110,15 +110,25 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                 Integer qTaskState = getOrCreateQuark(quarkTidCache, ctx.hostId, LABEL_TASK, task.getTID(), Attributes.STATE);
                 long packed = 0;
                 switch (task.getState()) {
-                case BLOCKED:
+                case WAIT_BLOCKED:
                     packed = PackedLongValue.pack(task.getState().value(), 0);
                     break;
-                case PREEMPTED:
-                    packed = PackedLongValue.pack(task.getState().value(), ctx.cpu);
+                case WAIT_CPU:
+                    Integer qCPU = getOrCreateQuark(quarkCpuCache, ctx.hostId, LABEL_CPU, ctx.cpu.longValue(), Attributes.STATE);
+                    packed = PackedLongValue.pack(task.getState().value(), qCPU);
+                    break;
+                case WAIT_TASK:
+                    Integer qCurrentTask = getOrCreateQuark(quarkTidCache, ctx.hostId, LABEL_TASK, ctx.machine.getCurrentTid(ctx.cpu), Attributes.STATE);
+                    packed = PackedLongValue.pack(task.getState().value(), qCurrentTask);
                     break;
                 case EXIT:
-                case RUN:
+                case RUNNING:
                 case UNKNOWN:
+                case WAIT_BLOCK_DEV:
+                case WAIT_NETWORK:
+                case WAIT_TIMER:
+                case WAIT_USER_INPUT:
+                case INTERRUPTED:
                 default:
                     packed = task.getState().value();
                     break;

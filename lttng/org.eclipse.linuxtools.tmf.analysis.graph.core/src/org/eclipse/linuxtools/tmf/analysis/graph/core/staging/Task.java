@@ -25,22 +25,52 @@ public class Task {
         /**
          * Running state
          */
-        RUN(0),
+        RUNNING(0),
 
         /**
          * Preempted state
          */
-        PREEMPTED(1),
+        INTERRUPTED(1),
 
         /**
-         * Blocked
+         * Preempted state (wait cpu)
          */
-        BLOCKED(2),
+        WAIT_CPU(2),
+
+        /**
+         * Wait blocked (generic)
+         */
+        WAIT_BLOCKED(3),
+
+        /**
+         * Waiting task
+         */
+        WAIT_TASK(4),
+
+        /**
+         * Network wait
+         */
+        WAIT_NETWORK(5),
+
+        /**
+         * Timer wait
+         */
+        WAIT_TIMER(6),
+
+        /**
+         * Block device
+         */
+        WAIT_BLOCK_DEV(7),
+
+        /**
+         * User input
+         */
+        WAIT_USER_INPUT(8),
 
         /**
          * Exit state
          */
-        EXIT(3);
+        EXIT(9);
 
         private final Integer value;
         private StateEnum(Integer value) {
@@ -55,17 +85,10 @@ public class Task {
         }
 
         public static StateEnum fromValue(Integer v) {
-            switch(v) {
-            case 0:
-                return RUN;
-            case 1:
-                return PREEMPTED;
-            case 2:
-                return BLOCKED;
-            case 3:
-                return EXIT;
-            default:
-                break;
+            for (StateEnum item: StateEnum.values()) {
+                if (item.value.equals(v)) {
+                    return item;
+                }
             }
             return UNKNOWN;
         }
@@ -83,7 +106,7 @@ public class Task {
 
     public Task(String host, long tid, long ts) {
         this.host = host; this.tid = tid; this.ts = ts;
-        this.state = StateEnum.RUN;
+        this.state = StateEnum.UNKNOWN;
         this.last = ts;
         this.hc = hf.newHasher()
                 .putLong(this.ts)
@@ -122,6 +145,10 @@ public class Task {
 
     public void setState(Long ts, StateEnum state) {
         this.last = ts; this.state = state;
+    }
+
+    public void setStateRaw(StateEnum state) {
+        this.state = state;
     }
 
     public StateEnum getState() {

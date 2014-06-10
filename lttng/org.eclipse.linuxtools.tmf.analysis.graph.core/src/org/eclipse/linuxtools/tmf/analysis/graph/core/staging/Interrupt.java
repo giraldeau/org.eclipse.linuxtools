@@ -1,5 +1,6 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
+
 /**
  * POJO object for efficiency
  *
@@ -7,17 +8,119 @@ package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
  */
 public class Interrupt {
 
-    public static final Integer IRQ = 0;
-    public static final Integer SOFTIRQ = 1;
-    public static final Integer HRTIMER = 2;
+    public enum Softirq {
+        UNKNOWN(-1),
+        HI(0),
+        TIMER(1),
+        NET_TX(2),
+        NET_RX(3),
+        BLOCK(4),
+        BLOCK_IOPOLL(5),
+        TASKLET(6),
+        SCHED(7),
+        HRTIMER(8),
+        RCU(9);
+        private final Integer value;
+        private Softirq(Integer value) {
+            this.value = value;
+        }
+        /**
+         * Return the integer value of this label
+         * @return integer value
+         */
+        public Integer value() {
+            return this.value;
+        }
 
-    public Integer cpu;
-    public Long ts;
-    public Integer type;
-    public Long vec;
+        public static Softirq fromValue(Integer v) {
+            for (Softirq item: Softirq.values()) {
+                if (item.value.equals(v)) {
+                    return item;
+                }
+            }
+            return Softirq.UNKNOWN;
+        }
 
-    public Interrupt(Integer cpu, Long ts, Integer type, Long vec) {
+    }
+
+    public enum Hardirq {
+        UNKNOWN(-1),
+        RESCHED(0),
+        EHCI_HCD_1(19),
+        EHCI_HCD_2(23);
+        private final Integer value;
+        private Hardirq(Integer value) {
+            this.value = value;
+        }
+        /**
+         * Return the integer value of this label
+         * @return integer value
+         */
+        public Integer value() {
+            return this.value;
+        }
+
+        public static Hardirq fromValue(Integer v) {
+            for (Hardirq item: Hardirq.values()) {
+                if (item.value.equals(v)) {
+                    return item;
+                }
+            }
+            return Hardirq.UNKNOWN;
+        }
+    }
+
+    public enum InterruptType {
+        UNKNOWN(-1),
+        HARDIRQ(0),
+        SOFTIRQ(1),
+        HRTIMER(2);
+        private final Integer value;
+        private InterruptType(Integer value) {
+            this.value = value;
+        }
+        /**
+         * Return the integer value of this label
+         * @return integer value
+         */
+        public Integer value() {
+            return this.value;
+        }
+
+        public static InterruptType fromValue(Integer v) {
+            for (InterruptType item: InterruptType.values()) {
+                if (item.value.equals(v)) {
+                    return item;
+                }
+            }
+            return InterruptType.UNKNOWN;
+        }
+    }
+
+
+    private final Integer cpu;
+    private final Long ts;
+    private final InterruptType type;
+    private final Long vec;
+
+    public Interrupt(Integer cpu, Long ts, InterruptType type, Long vec) {
         this.cpu = cpu; this.ts = ts; this.type = type; this.vec = vec;
+    }
+
+    public Integer getCpu() {
+        return cpu;
+    }
+
+    public Long getTs() {
+        return ts;
+    }
+
+    public InterruptType getType() {
+        return type;
+    }
+
+    public Long getVec() {
+        return vec;
     }
 
 }

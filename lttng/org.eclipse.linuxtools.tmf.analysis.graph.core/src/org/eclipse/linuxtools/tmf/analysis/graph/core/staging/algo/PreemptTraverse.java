@@ -33,18 +33,23 @@ public class PreemptTraverse implements IntervalTraverse {
                 StateEnum state = StateEnum.fromValue(PackedLongValue.unpack(0, val));
                 visitor.visit(task, state, i.getStartTime(), i.getEndTime());
                 switch(state) {
-                case BLOCKED:
-                    break;
                 case EXIT:
                     break;
-                case PREEMPTED:
+                case WAIT_CPU:
                     int cpuQuark = PackedLongValue.unpack(1, val);
                     resolvePreempt(s, task, i.getStartTime(), i.getEndTime(), cpuQuark, visitor);
                     break;
-                case RUN:
+                case RUNNING:
                     break;
                 case UNKNOWN:
                     break;
+                case WAIT_BLOCKED:
+                case WAIT_BLOCK_DEV:
+                case WAIT_NETWORK:
+                case WAIT_TASK:
+                case WAIT_TIMER:
+                case WAIT_USER_INPUT:
+                case INTERRUPTED:
                 default:
                     break;
                 }
@@ -59,7 +64,7 @@ public class PreemptTraverse implements IntervalTraverse {
             if (stateValue.getType() == Type.INTEGER) {
                 long tid = stateValue.unboxLong();
                 Task t = new Task(preemptedTask.getHostID(), tid, 0);
-                visitor.visit(t, StateEnum.RUN, preempt.getStartTime(), preempt.getEndTime());
+                visitor.visit(t, StateEnum.RUNNING, preempt.getStartTime(), preempt.getEndTime());
             }
         }
     }

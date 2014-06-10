@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Interrupt.Hardirq;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Interrupt.Softirq;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Interrupt.InterruptType;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEventField;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
@@ -95,18 +98,18 @@ public class EventHandler {
     private void pushInterrupt(CtfTmfEvent event) {
         ctx.load(this, event);
         Long attr = 0L;
-        Integer type = 0;
+        InterruptType type = InterruptType.UNKNOWN;
         switch(ctx.eventName) {
         case LttngStrings.SOFTIRQ_ENTRY:
-            type = Interrupt.SOFTIRQ;
+            type = InterruptType.SOFTIRQ;
             attr = Field.getLong(event, LttngStrings.VEC);
             break;
         case LttngStrings.IRQ_HANDLER_ENTRY:
-            type = Interrupt.IRQ;
+            type = InterruptType.HARDIRQ;
             attr = Field.getLong(event, LttngStrings.IRQ);
             break;
         case LttngStrings.HRTIMER_EXPIRE_ENTRY:
-            type = Interrupt.HRTIMER;
+            type = InterruptType.HRTIMER;
             attr = Field.getLong(event, LttngStrings.HRTIMER);
             break;
         default:
@@ -123,18 +126,18 @@ public class EventHandler {
     private Interrupt popInterrupt(CtfTmfEvent event) {
         ctx.load(this, event);
         Long attr = 0L;
-        Integer type = 0;
+        InterruptType type = InterruptType.UNKNOWN;
         switch(ctx.eventName) {
         case LttngStrings.SOFTIRQ_EXIT:
-            type = Interrupt.SOFTIRQ;
+            type = InterruptType.SOFTIRQ;
             attr = Field.getLong(event, LttngStrings.VEC);
             break;
         case LttngStrings.IRQ_HANDLER_EXIT:
-            type = Interrupt.IRQ;
+            type = InterruptType.HARDIRQ;
             attr = Field.getLong(event, LttngStrings.IRQ);
             break;
         case LttngStrings.HRTIMER_EXPIRE_EXIT:
-            type = Interrupt.HRTIMER;
+            type = InterruptType.HRTIMER;
             attr = Field.getLong(event, LttngStrings.HRTIMER);
             break;
         default:
@@ -144,7 +147,7 @@ public class EventHandler {
         Interrupt ret = null;
         if (!stack.isEmpty()) {
             Interrupt top = stack.peek();
-            if (top.type.equals(type) && top.vec.equals(attr)) {
+            if (top.getType().equals(type) && top.getVec().equals(attr)) {
                 ret = stack.pop();
             }
         }
@@ -160,16 +163,19 @@ public class EventHandler {
         Long prev = Field.getLong(event, LttngStrings.PREV_TID);
         int val = Field.getLong(event, LttngStrings.PREV_STATE).intValue();
 
-        StateEnum prevState = StateEnum.PREEMPTED;
+        StateEnum prevState = StateEnum.WAIT_CPU;
         if ((val & 0x3) != 0) {
-            prevState = StateEnum.BLOCKED;
+            /* the real wait type is known at wake-up only, assign generic
+             * WAIT_BLOCKED in mean time.
+             */
+            prevState = StateEnum.WAIT_BLOCKED;
         } else if ((val & 0x40) != 0) {
             prevState = StateEnum.EXIT;
         }
         ctx.machine.setCurrentTid(ctx.cpu, next);
         Task nextTask = ctx.machine.getOrCreateTask(ctx.cpu, next, ctx.ts);
         Task prevTask = ctx.machine.getOrCreateTask(ctx.cpu, prev, ctx.ts);
-        notifyStateChange(nextTask, StateEnum.RUN);
+        notifyStateChange(nextTask, StateEnum.RUNNING);
         notifyStateChange(prevTask, prevState);
     }
 
@@ -180,7 +186,87 @@ public class EventHandler {
     private void handleSchedWakeup(CtfTmfEvent event) {
         Long target = Field.getLong(event, LttngStrings.TID);
         Task targetTask = ctx.machine.getOrCreateTask(ctx.cpu, target, ctx.ts);
-        notifyStateChange(targetTask, StateEnum.PREEMPTED);
+        /*
+         * Resolve the wake-up type. We change the task state only if the task
+         * was blocked or unknown.
+         */
+        if (targetTask.getState() == StateEnum.WAIT_BLOCKED) {
+
+            // 1. Wake-up from interrupt
+            Stack<Interrupt> interruptStack = ctx.machine.getInterruptStack(ctx.cpu);
+            if (!interruptStack.isEmpty()) {
+                Interrupt top = interruptStack.peek();
+                switch(top.getType()) {
+                case HRTIMER:
+                    targetTask.setStateRaw(StateEnum.WAIT_TIMER);
+                    break;
+                case HARDIRQ:
+                    targetTask.setStateRaw(resolveIRQ(top.getVec()));
+                    break;
+                case SOFTIRQ:
+                    targetTask.setStateRaw(resolveSoftirq(top.getVec()));
+                    break;
+                case UNKNOWN:
+                default:
+                    break;
+                }
+            } else {
+                // 1. Wake-up from task
+                //ctx.wakeSource = ctx.machine.getOrCreateTask(ctx.cpu, tid, ts);
+                targetTask.setStateRaw(StateEnum.WAIT_TASK);
+            }
+            //targetTask.setState(targetTask.getLastUpdate(), state);
+            notifyStateChange(targetTask, StateEnum.WAIT_CPU);
+        }
+    }
+
+    private static StateEnum resolveIRQ(Long vec) {
+        StateEnum ret = StateEnum.WAIT_BLOCKED;
+        Hardirq irq = Hardirq.fromValue(vec.intValue());
+        switch (irq) {
+        case RESCHED:
+            ret = StateEnum.RUNNING; // really, it's interrupted
+            break;
+        case EHCI_HCD_1:
+        case EHCI_HCD_2:
+            ret = StateEnum.WAIT_USER_INPUT;
+            break;
+        case UNKNOWN:
+        default:
+            ret = StateEnum.WAIT_BLOCKED;
+            break;
+        }
+        return ret;
+    }
+
+    private static StateEnum resolveSoftirq(Long vec) {
+        StateEnum ret = StateEnum.WAIT_BLOCKED;
+        Softirq soft = Softirq.fromValue(vec.intValue());
+        switch (soft) {
+        case HRTIMER:
+        case TIMER:
+            ret = StateEnum.WAIT_TIMER;
+            break;
+        case BLOCK:
+        case BLOCK_IOPOLL:
+            ret = StateEnum.WAIT_BLOCK_DEV;
+            break;
+        case NET_RX:
+        case NET_TX:
+            ret = StateEnum.WAIT_NETWORK;
+            break;
+        case SCHED:
+            ret = StateEnum.INTERRUPTED;
+            break;
+        case HI:
+        case RCU:
+        case TASKLET:
+        case UNKNOWN:
+        default:
+            ret = StateEnum.WAIT_BLOCKED;
+            break;
+        }
+        return ret;
     }
 
     /**
@@ -191,12 +277,15 @@ public class EventHandler {
      * @param nextState
      */
     private void notifyStateChange(Task task, StateEnum nextState) {
-        for (ITaskListener listener: stateListeners) {
-            listener.stateChange(ctx, task, nextState);
-        }
-        task.setState(ctx.ts, nextState);
-        if (nextState == StateEnum.EXIT) {
-            ctx.machine.removeTask(task);
+        // make sure there is a state change
+        if (task.getState() != nextState) {
+            for (ITaskListener listener: stateListeners) {
+                listener.stateChange(ctx, task, nextState);
+            }
+            task.setState(ctx.ts, nextState);
+            if (nextState == StateEnum.EXIT) {
+                ctx.machine.removeTask(task);
+            }
         }
     }
 

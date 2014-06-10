@@ -44,17 +44,17 @@ public class TestAlgoVisitor {
         int cpu1q = ss.getQuarkAbsoluteAndAdd(host, cpu, cpu1, state);
 
         // p1 runs
-        ss.modifyAttribute(0, val(StateEnum.RUN.value(), 0), p1q);
+        ss.modifyAttribute(0, val(StateEnum.RUNNING.value(), 0), p1q);
         ss.modifyAttribute(0, val(Integer.parseInt(p1)), cpu1q);
 
         // p2 preempts p1
-        ss.modifyAttribute(10, val(StateEnum.PREEMPTED.value(), cpu1q), p1q);
-        ss.modifyAttribute(10, val(StateEnum.RUN.value(), 0), p2q);
+        ss.modifyAttribute(10, val(StateEnum.WAIT_CPU.value(), cpu1q), p1q);
+        ss.modifyAttribute(10, val(StateEnum.RUNNING.value(), 0), p2q);
         ss.modifyAttribute(10, val(Integer.parseInt(p2)), cpu1q);
 
         // p1 runs again
-        ss.modifyAttribute(20, val(StateEnum.RUN.value(), 0), p1q);
-        ss.modifyAttribute(20, val(StateEnum.PREEMPTED.value(), 0), p2q);
+        ss.modifyAttribute(20, val(StateEnum.RUNNING.value(), 0), p1q);
+        ss.modifyAttribute(20, val(StateEnum.WAIT_CPU.value(), 0), p2q);
         ss.modifyAttribute(20, val(Integer.parseInt(p1)), cpu1q);
 
         Task t = new Task(host, Integer.parseInt(p1), 0);

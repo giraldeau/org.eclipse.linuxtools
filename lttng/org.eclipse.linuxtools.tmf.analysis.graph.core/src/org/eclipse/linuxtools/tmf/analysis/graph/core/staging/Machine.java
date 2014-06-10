@@ -51,9 +51,9 @@ public class Machine {
             for (int i = 0; i < add; i++) {
                 current.add(-1L);
                 Task swapper = new Task(host, 0, 0);
-                swapper.setComm(String.format("swapper/%d", (cpu + i)));
+                swapper.setComm(String.format("swapper/%d", (cpu + i))); //$NON-NLS-1$
                 swappers.add(swapper);
-                Stack stack = new Stack();
+                Stack<Interrupt> stack = new Stack<>();
                 irq.add(stack);
             }
         }
