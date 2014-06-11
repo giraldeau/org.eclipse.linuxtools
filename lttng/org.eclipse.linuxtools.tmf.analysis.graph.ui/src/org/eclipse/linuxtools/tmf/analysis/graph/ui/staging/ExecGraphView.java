@@ -16,8 +16,7 @@ import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundExcep
 import org.eclipse.linuxtools.statesystem.core.exceptions.StateSystemDisposedException;
 import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphModule;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphStateProvider;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.ExecGraphStateProvider.Attributes;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.StateSystemTaskListener.Attributes;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.PackedLongValue;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
 import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
@@ -218,7 +217,7 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
         List<Integer> rootQuarks = fStateSystem.getQuarks(WILD_CARD);
         for (Integer hostQuark: rootQuarks) {
             String host = fStateSystem.getAttributeName(hostQuark);
-            List<Integer> taskQuarks = fStateSystem.getQuarks(host, ExecGraphStateProvider.LABEL_TASK , WILD_CARD);
+            List<Integer> taskQuarks = fStateSystem.getQuarks(host, Attributes.TASK.label(), WILD_CARD);
             for (Integer taskQuark: taskQuarks) {
                 String taskTid = fStateSystem.getAttributeName(taskQuark);
                 fTasks.add(new Task(host, Long.parseLong(taskTid), 0));
@@ -233,7 +232,7 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
          * /host/task/id/state
          */
         TimeGraphEntry root = new ExecGraphEntry(fCurrentTask.getHostID(), getTrace(), start, end, -1);
-        int q = fStateSystem.getQuarkAbsolute(fCurrentTask.getHostID(), ExecGraphStateProvider.LABEL_TASK, fCurrentTask.getTID().toString(), Attributes.STATE.label());
+        int q = fStateSystem.getQuarkAbsolute(fCurrentTask.getHostID(), Attributes.TASK.label(), fCurrentTask.getTID().toString(), Attributes.STATE.label());
         ExecGraphEntry child1 = new ExecGraphEntry(fCurrentTask.getTID().toString(), getTrace(), start, end, q);
         root.addChild(child1);
         entryList.add(root);

@@ -47,6 +47,11 @@ public class EventHandler {
             machine = self.getMachine(hostId);
             wakeupSource = null;
         }
+
+        public Ctx setHost(String hostId) { this.hostId = hostId; return this; }
+        public Ctx setCpu(Integer cpu) { this.cpu = cpu; return this; }
+        public Ctx setTs(Long ts) { this.ts = ts; return this; }
+        public Ctx setWup(Task wup) { this.wakeupSource = wup; return this; }
     }
 
     private Ctx ctx;

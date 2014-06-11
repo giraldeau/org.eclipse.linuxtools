@@ -12,7 +12,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.PackedLongValue;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
 
-public class PreemptTraverse implements IntervalTraverse {
+public class TaskFlowTraverse implements IntervalTraverse {
 
     @Override
     public void traverse(ITmfStateSystem s, Task task, long start, long end, IntervalVisitor visitor) {
@@ -47,6 +47,8 @@ public class PreemptTraverse implements IntervalTraverse {
                 case WAIT_BLOCK_DEV:
                 case WAIT_NETWORK:
                 case WAIT_TASK:
+                    //resolveBlocking(s, task, i, visitor);
+                    break;
                 case WAIT_TIMER:
                 case WAIT_USER_INPUT:
                 case INTERRUPTED:
@@ -56,6 +58,25 @@ public class PreemptTraverse implements IntervalTraverse {
             }
         }
     }
+
+    // reverse iteration
+//    ITmfStateInterval i = null;
+//    long cursor = ss.getCurrentEndTime();
+//    do {
+//        i = ss.querySingleState(cursor, p1q);
+//        System.out.println(i);
+//        cursor = i.getStartTime() - 1;
+//    } while(!i.getStateValue().isNull() && cursor >= ss.getStartTime());
+
+//    private static void resolveBlocking(ITmfStateSystem s, Task task, ITmfStateInterval i, IntervalVisitor visitor) {
+//        Stack<ITmfStateInterval> stack = new Stack<>();
+//        stack.push(i);
+//        while(!stack.isEmpty()) {
+//            ITmfStateInterval item = stack.pop();
+//            item.getStateValue().unboxLong();
+//            //s.querySingleState(endTime, subTaskQuark);
+//        }
+//    }
 
     private static void resolvePreempt(ITmfStateSystem s, Task preemptedTask, long t1, long t2, int cpuQuark, IntervalVisitor visitor) throws AttributeNotFoundException, StateSystemDisposedException {
         List<ITmfStateInterval> preemptRange = s.queryHistoryRange(cpuQuark, t1, t2);
