@@ -7,4 +7,6 @@ public interface ITaskListener {
 
     public void stateChange(Ctx ctx, Task task, StateEnum state);
 
+    public void stateFlush(Task task);
+
 }

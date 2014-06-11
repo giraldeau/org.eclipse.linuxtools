@@ -20,57 +20,57 @@ public class Task {
         /**
          * Unkown state
          */
-        UNKNOWN(-1),
+        UNKNOWN(0),
 
         /**
          * Running state
          */
-        RUNNING(0),
+        RUNNING(1),
 
         /**
          * Preempted state
          */
-        INTERRUPTED(1),
+        INTERRUPTED(2),
 
         /**
          * Preempted state (wait cpu)
          */
-        WAIT_CPU(2),
+        WAIT_CPU(3),
 
         /**
          * Wait blocked (generic)
          */
-        WAIT_BLOCKED(3),
+        WAIT_UNKNOWN(4),
 
         /**
          * Waiting task
          */
-        WAIT_TASK(4),
+        WAIT_TASK(5),
 
         /**
          * Network wait
          */
-        WAIT_NETWORK(5),
+        WAIT_NETWORK(6),
 
         /**
          * Timer wait
          */
-        WAIT_TIMER(6),
+        WAIT_TIMER(7),
 
         /**
          * Block device
          */
-        WAIT_BLOCK_DEV(7),
+        WAIT_BLOCK_DEV(8),
 
         /**
          * User input
          */
-        WAIT_USER_INPUT(8),
+        WAIT_USER_INPUT(9),
 
         /**
          * Exit state
          */
-        EXIT(9);
+        EXIT(10);
 
         private final Integer value;
         private StateEnum(Integer value) {
@@ -85,12 +85,10 @@ public class Task {
         }
 
         public static StateEnum fromValue(Integer v) {
-            for (StateEnum item: StateEnum.values()) {
-                if (item.value.equals(v)) {
-                    return item;
-                }
+            if (v < 0 || v > EXIT.value) {
+                return UNKNOWN;
             }
-            return UNKNOWN;
+            return values()[v];
         }
     }
 

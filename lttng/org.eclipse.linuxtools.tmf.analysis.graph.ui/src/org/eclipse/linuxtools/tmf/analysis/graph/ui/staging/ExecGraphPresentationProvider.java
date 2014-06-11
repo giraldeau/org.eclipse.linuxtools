@@ -30,32 +30,40 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
      */
     public static enum State {
         /** Worker is running */
-        RUNNING         (new RGB(0x33, 0x99, 0x00)),
+        RUNNING         (0, new RGB(0x33, 0x99, 0x00)),
         /** Worker is interrupted */
-        INTERRUPTED     (new RGB(0xff, 0xdc, 0x00)),
+        INTERRUPTED     (1, new RGB(0xff, 0xdc, 0x00)),
         /** Worker has been preempted */
-        WAIT_CPU        (new RGB(0xc8, 0x64, 0x00)),
+        WAIT_BLOCKED    (2, new RGB(0xf4, 0x48, 0x00)),
+        /** Worker has been preempted */
+        WAIT_CPU        (3, new RGB(0xc8, 0x64, 0x00)),
         /** Worker is waiting another task */
-        WAIT_TASK       (new RGB(0xcc, 0xff, 0x99)),
+        WAIT_TASK       (4, new RGB(0xcc, 0xff, 0x99)),
         /** Worker waiting on a timer */
-        WAIT_TIMER      (new RGB(0x33, 0x66, 0x99)),
+        WAIT_TIMER      (5, new RGB(0x33, 0x66, 0x99)),
         /** Worker is blocked, waiting on a device */
-        WAIT_BLOCK_DEV  (new RGB(0x66, 0x00, 0xcc)),
+        WAIT_BLOCK_DEV  (6, new RGB(0x66, 0x00, 0xcc)),
         /** Worker is waiting for user input */
-        WAIT_USER_INPUT (new RGB(0x5a, 0x01, 0x01)),
+        WAIT_USER_INPUT (7, new RGB(0x5a, 0x01, 0x01)),
         /** Worker is waiting on network */
-        WAIT_NETWORK    (new RGB(0xff, 0x9b, 0xff)),
+        WAIT_NETWORK    (8, new RGB(0xff, 0x9b, 0xff)),
         /** Exit **/
-        EXIT            (new RGB(0xff, 0xff, 0xff)),
+        EXIT            (9, new RGB(0xff, 0xff, 0xff)),
         /** Any other reason */
-        UNKNOWN         (new RGB(0x40, 0x3b, 0x33));
+        UNKNOWN         (10, new RGB(0x40, 0x3b, 0x33));
 
         /** RGB color associated with a state */
         public final RGB rgb;
-
-        private State (RGB rgb) {
+        private final Integer index;
+        private State (Integer index, RGB rgb) {
+            this.index = index;
             this.rgb = rgb;
         }
+
+        public Integer index() {
+            return index;
+        }
+
     }
 
     @Override
@@ -76,7 +84,7 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
     @Override
     public int getStateTableIndex(ITimeEvent event) {
         if (event instanceof TimeEvent && ((TimeEvent) event).hasValue()) {
-            return ((TimeEvent) event).getValue();
+            return getMatchingState(((TimeEvent) event).getValue()).index();
         }
         return TRANSPARENT;
     }
@@ -90,8 +98,8 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
             return State.INTERRUPTED;
         case RUNNING:
             return State.RUNNING;
-        case WAIT_BLOCKED:
-            return State.UNKNOWN;
+        case WAIT_UNKNOWN:
+            return State.WAIT_BLOCKED;
         case WAIT_BLOCK_DEV:
             return State.WAIT_BLOCK_DEV;
         case WAIT_CPU:

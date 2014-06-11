@@ -1,6 +1,5 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 
-
 /**
  * POJO object for efficiency
  *
@@ -9,7 +8,6 @@ package org.eclipse.linuxtools.tmf.analysis.graph.core.staging;
 public class Interrupt {
 
     public enum Softirq {
-        UNKNOWN(-1),
         HI(0),
         TIMER(1),
         NET_TX(2),
@@ -19,7 +17,8 @@ public class Interrupt {
         TASKLET(6),
         SCHED(7),
         HRTIMER(8),
-        RCU(9);
+        RCU(9),
+        UNKNOWN(-1);
         private final Integer value;
         private Softirq(Integer value) {
             this.value = value;
@@ -33,21 +32,19 @@ public class Interrupt {
         }
 
         public static Softirq fromValue(Integer v) {
-            for (Softirq item: Softirq.values()) {
-                if (item.value.equals(v)) {
-                    return item;
-                }
+            if (v < 0 || v > RCU.value) {
+                return UNKNOWN;
             }
-            return Softirq.UNKNOWN;
+            return values()[v];
         }
 
     }
 
     public enum Hardirq {
-        UNKNOWN(-1),
         RESCHED(0),
         EHCI_HCD_1(19),
-        EHCI_HCD_2(23);
+        EHCI_HCD_2(23),
+        UNKNOWN(-1);
         private final Integer value;
         private Hardirq(Integer value) {
             this.value = value;

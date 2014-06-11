@@ -43,7 +43,7 @@ public class PreemptTraverse implements IntervalTraverse {
                     break;
                 case UNKNOWN:
                     break;
-                case WAIT_BLOCKED:
+                case WAIT_UNKNOWN:
                 case WAIT_BLOCK_DEV:
                 case WAIT_NETWORK:
                 case WAIT_TASK:

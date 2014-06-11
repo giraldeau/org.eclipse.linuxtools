@@ -170,7 +170,7 @@ public class EventHandler {
             /* the real wait type is known at wake-up only, assign generic
              * WAIT_BLOCKED in mean time.
              */
-            prevState = StateEnum.WAIT_BLOCKED;
+            prevState = StateEnum.WAIT_UNKNOWN;
         } else if ((val & 0x40) != 0) {
             prevState = StateEnum.EXIT;
         }
@@ -192,7 +192,7 @@ public class EventHandler {
          * Resolve the wake-up type. We change the task state only if the task
          * was blocked or unknown.
          */
-        if (targetTask.getState() == StateEnum.WAIT_BLOCKED) {
+        if (targetTask.getState() == StateEnum.WAIT_UNKNOWN) {
 
             // 1. Wake-up from interrupt
             Stack<Interrupt> interruptStack = ctx.machine.getInterruptStack(ctx.cpu);
@@ -223,7 +223,7 @@ public class EventHandler {
     }
 
     private static StateEnum resolveIRQ(Long vec) {
-        StateEnum ret = StateEnum.WAIT_BLOCKED;
+        StateEnum ret = StateEnum.WAIT_UNKNOWN;
         Hardirq irq = Hardirq.fromValue(vec.intValue());
         switch (irq) {
         case RESCHED:
@@ -235,14 +235,14 @@ public class EventHandler {
             break;
         case UNKNOWN:
         default:
-            ret = StateEnum.WAIT_BLOCKED;
+            ret = StateEnum.WAIT_UNKNOWN;
             break;
         }
         return ret;
     }
 
     private static StateEnum resolveSoftirq(Long vec) {
-        StateEnum ret = StateEnum.WAIT_BLOCKED;
+        StateEnum ret = StateEnum.WAIT_UNKNOWN;
         Softirq soft = Softirq.fromValue(vec.intValue());
         switch (soft) {
         case HRTIMER:
@@ -265,7 +265,7 @@ public class EventHandler {
         case TASKLET:
         case UNKNOWN:
         default:
-            ret = StateEnum.WAIT_BLOCKED;
+            ret = StateEnum.WAIT_UNKNOWN;
             break;
         }
         return ret;
@@ -314,10 +314,14 @@ public class EventHandler {
     }
 
     public void handleDone() {
-        // flush pending state for all states
+        /*
+         * flush pending state for all tasks
+         */
         for (Machine machine: machines.values()) {
             for (Task task: machine.tasks.values()) {
-                notifyStateChange(task, StateEnum.EXIT);
+                for (ITaskListener listener: stateListeners) {
+                    listener.stateFlush(task);
+                }
             }
         }
     }

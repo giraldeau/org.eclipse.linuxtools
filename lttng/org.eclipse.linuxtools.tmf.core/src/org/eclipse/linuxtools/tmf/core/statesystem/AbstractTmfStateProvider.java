@@ -207,6 +207,7 @@ public abstract class AbstractTmfStateProvider implements ITmfStateProvider {
                     event = eventsQueue.take();
                 }
                 /* We've received the last event, clean up */
+                handleDone();
                 closeStateSystem();
             } catch (InterruptedException e) {
                 /* We've been interrupted abnormally */
@@ -241,5 +242,8 @@ public abstract class AbstractTmfStateProvider implements ITmfStateProvider {
      */
     protected abstract void eventHandle(ITmfEvent event);
 
+    /**
+     * Callback when the end event is reached. Called prior to closing the state system.
+     */
     protected void handleDone() {  }
 }

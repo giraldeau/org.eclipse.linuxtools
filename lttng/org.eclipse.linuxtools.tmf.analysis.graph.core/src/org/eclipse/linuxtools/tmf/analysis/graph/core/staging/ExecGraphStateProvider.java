@@ -110,7 +110,7 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                 Integer qTaskState = getOrCreateQuark(quarkTidCache, ctx.hostId, LABEL_TASK, task.getTID(), Attributes.STATE);
                 long packed = 0;
                 switch (task.getState()) {
-                case WAIT_BLOCKED:
+                case WAIT_UNKNOWN:
                     packed = PackedLongValue.pack(task.getState().value(), 0);
                     break;
                 case WAIT_CPU:
@@ -157,6 +157,18 @@ public class ExecGraphStateProvider extends AbstractTmfStateProvider {
                     cache.put(host, id, quarks);
                 }
                 return cache.get(host, id).get(attribute);
+            }
+
+            @Override
+            public void stateFlush(Task task) {
+                Integer qTaskState = getOrCreateQuark(quarkTidCache, task.getHostID(), LABEL_TASK, task.getTID(), Attributes.STATE);
+                ITmfStateValue value = TmfStateValue.newValueLong(task.getState().value());
+                try {
+                    ss.modifyAttribute(task.getLastUpdate(), value, qTaskState);
+                } catch (StateValueTypeException | AttributeNotFoundException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
