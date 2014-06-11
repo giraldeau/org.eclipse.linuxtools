@@ -34,7 +34,7 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
         /** Worker is interrupted */
         INTERRUPTED     (1, new RGB(0xff, 0xdc, 0x00)),
         /** Worker has been preempted */
-        WAIT_BLOCKED    (2, new RGB(0xf4, 0x48, 0x00)),
+        WAIT_UNKOWN     (2, new RGB(0xf4, 0x48, 0x00)),
         /** Worker has been preempted */
         WAIT_CPU        (3, new RGB(0xc8, 0x64, 0x00)),
         /** Worker is waiting another task */
@@ -50,7 +50,7 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
         /** Exit **/
         EXIT            (9, new RGB(0xff, 0xff, 0xff)),
         /** Any other reason */
-        UNKNOWN         (10, new RGB(0x40, 0x3b, 0x33));
+        UNKNOWN         (10, new RGB(0x88, 0x88, 0x88));
 
         /** RGB color associated with a state */
         public final RGB rgb;
@@ -99,7 +99,7 @@ public class ExecGraphPresentationProvider extends TimeGraphPresentationProvider
         case RUNNING:
             return State.RUNNING;
         case WAIT_UNKNOWN:
-            return State.WAIT_BLOCKED;
+            return State.WAIT_UNKOWN;
         case WAIT_BLOCK_DEV:
             return State.WAIT_BLOCK_DEV;
         case WAIT_CPU:

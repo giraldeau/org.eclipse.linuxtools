@@ -255,7 +255,10 @@ public class ExecGraphView extends AbstractTimeGraphPerObjectView {
             for (ITmfStateInterval i: range) {
                 long v = i.getStateValue().unboxLong();
                 int stateVal = PackedLongValue.unpack(0, v);
-                items.add(new TimeEvent(entry, i.getStartTime(), i.getEndTime(), stateVal));
+                if (stateVal >= 0) {
+                    long duration = i.getEndTime() - i.getStartTime();
+                    items.add(new TimeEvent(entry, i.getStartTime(), duration, stateVal));
+                }
             }
         } catch (AttributeNotFoundException | StateSystemDisposedException e) {
             e.printStackTrace();

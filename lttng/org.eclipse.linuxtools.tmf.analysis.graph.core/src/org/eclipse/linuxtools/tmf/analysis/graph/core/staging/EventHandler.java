@@ -177,6 +177,7 @@ public class EventHandler {
         ctx.machine.setCurrentTid(ctx.cpu, next);
         Task nextTask = ctx.machine.getOrCreateTask(ctx.cpu, next, ctx.ts);
         Task prevTask = ctx.machine.getOrCreateTask(ctx.cpu, prev, ctx.ts);
+        nextTask.setStateRaw(StateEnum.WAIT_CPU); // a task that is scheduled was necessarily waiting the CPU
         notifyStateChange(nextTask, StateEnum.RUNNING);
         notifyStateChange(prevTask, prevState);
     }
