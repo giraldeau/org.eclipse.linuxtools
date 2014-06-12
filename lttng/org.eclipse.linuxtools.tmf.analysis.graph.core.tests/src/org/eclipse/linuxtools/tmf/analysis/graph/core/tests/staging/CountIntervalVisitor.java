@@ -14,6 +14,7 @@ public class CountIntervalVisitor implements IntervalVisitor {
 
     @Override
     public void visit(Task task, StateEnum state, long t1, long t2) {
+        System.out.println(task + " " + state + " [" + t1 + "," + t2 + "]");
         count++;
     }
 

@@ -1,6 +1,7 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo;
 
 import java.util.List;
+import java.util.Stack;
 
 import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
 import org.eclipse.linuxtools.statesystem.core.exceptions.AttributeNotFoundException;
@@ -47,7 +48,7 @@ public class TaskFlowTraverse implements IntervalTraverse {
                 case WAIT_BLOCK_DEV:
                 case WAIT_NETWORK:
                 case WAIT_TASK:
-                    //resolveBlocking(s, task, i, visitor);
+                    resolveBlocking(s, task, i, visitor);
                     break;
                 case WAIT_TIMER:
                 case WAIT_USER_INPUT:
@@ -68,15 +69,27 @@ public class TaskFlowTraverse implements IntervalTraverse {
 //        cursor = i.getStartTime() - 1;
 //    } while(!i.getStateValue().isNull() && cursor >= ss.getStartTime());
 
-//    private static void resolveBlocking(ITmfStateSystem s, Task task, ITmfStateInterval i, IntervalVisitor visitor) {
-//        Stack<ITmfStateInterval> stack = new Stack<>();
-//        stack.push(i);
-//        while(!stack.isEmpty()) {
-//            ITmfStateInterval item = stack.pop();
-//            item.getStateValue().unboxLong();
-//            //s.querySingleState(endTime, subTaskQuark);
+    /**
+     * @param s
+     * @param task
+     * @param visitor
+     */
+    private static void resolveBlocking(ITmfStateSystem s, Task task, ITmfStateInterval i, IntervalVisitor visitor) {
+//        Queue<ITmfStateInterval> queue = new LinkedList<>();
+        Stack<ITmfStateInterval> stack = new Stack<>();
+        stack.push(i);
+        while(!stack.isEmpty()) {
+            ITmfStateInterval item = stack.pop();
+            long val = item.getStateValue().unboxLong();
+            StateEnum state = StateEnum.fromValue(PackedLongValue.unpack(0, val));
+            System.out.println(state);
+            //queue.add()
+            //s.querySingleState(endTime, subTaskQuark);
+        }
+//        for (ITmfStateInterval item: queue) {
+//            visitor.visit(task, state, t1, t2);
 //        }
-//    }
+    }
 
     private static void resolvePreempt(ITmfStateSystem s, Task preemptedTask, long t1, long t2, int cpuQuark, IntervalVisitor visitor) throws AttributeNotFoundException, StateSystemDisposedException {
         List<ITmfStateInterval> preemptRange = s.queryHistoryRange(cpuQuark, t1, t2);

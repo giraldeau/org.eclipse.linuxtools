@@ -23,14 +23,14 @@ public class EventHandler {
      * Processing state using POJO objects for efficiency
      */
     public static class Ctx {
-        CtfTmfEvent event;
-        ITmfEventField content;
-        String eventName;
-        String hostId;
-        Long ts;
-        Integer cpu;
-        Machine machine;
-        Task wakeupSource;
+        public CtfTmfEvent event;
+        public ITmfEventField content;
+        public String eventName;
+        public String hostId;
+        public Long ts;
+        public Integer cpu;
+        public Machine machine;
+        public Task wakeupSource;
 
         /**
          * Load current context from an event

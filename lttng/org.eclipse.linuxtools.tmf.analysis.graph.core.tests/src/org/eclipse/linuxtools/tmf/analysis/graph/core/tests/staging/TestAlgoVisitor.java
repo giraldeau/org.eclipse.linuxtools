@@ -28,11 +28,13 @@ public class TestAlgoVisitor {
     int p2q;
     int cpu1q;
 
+    private StateSystemTaskListener listener;
+
     @Before
     public void setup() throws StateValueTypeException {
         IStateHistoryBackend backend = new InMemoryBackend(0);
         ss = StateSystemFactory.newStateSystem("foo", backend);
-        StateSystemTaskListener listener = new StateSystemTaskListener(ss);
+        listener = new StateSystemTaskListener(ss);
         long now = 0;
         Ctx ctx = new Ctx();
         ctx.setHost(host).setCpu(cpu1).setTs(now);
@@ -40,22 +42,44 @@ public class TestAlgoVisitor {
         p2 = new Task(host, 222L, now);
         p3 = new Task(host, 333L, now);
 
-        // p2 preempts p1
+        // initial state
         p1.setStateRaw(StateEnum.WAIT_CPU);
         p2.setStateRaw(StateEnum.RUNNING);
-        listener.stateChange(ctx, p1, StateEnum.RUNNING);
-        listener.stateChange(ctx, p2, StateEnum.WAIT_CPU);
+        p3.setStateRaw(StateEnum.WAIT_UNKNOWN);
+
+        // p2 preempts p1
+        notifyStateChange(ctx, p1, StateEnum.RUNNING);
+        notifyStateChange(ctx, p2, StateEnum.WAIT_CPU);
 
         // p1 preempts p2
         ctx.setTs(10L);
-        listener.stateChange(ctx, p2, StateEnum.RUNNING);
-        listener.stateChange(ctx, p1, StateEnum.WAIT_CPU);
+        notifyStateChange(ctx, p2, StateEnum.RUNNING);
+        notifyStateChange(ctx, p1, StateEnum.WAIT_CPU);
 
         // again
         ctx.setTs(20L);
-        listener.stateChange(ctx, p1, StateEnum.RUNNING);
-        listener.stateChange(ctx, p2, StateEnum.WAIT_CPU);
+        notifyStateChange(ctx, p1, StateEnum.RUNNING);
+        notifyStateChange(ctx, p2, StateEnum.WAIT_CPU);
 
+        // p1 wakes p3
+        ctx.setTs(30L);
+        ctx.setWup(p1);
+        notifyStateChange(ctx, p3, StateEnum.WAIT_CPU);
+
+        // p3 runs
+        ctx.setTs(40L);
+        notifyStateChange(ctx, p3, StateEnum.RUNNING);
+        notifyStateChange(ctx, p1, StateEnum.WAIT_CPU);
+
+        listener.stateFlush(p1);
+        listener.stateFlush(p2);
+        listener.stateFlush(p3);
+
+    }
+
+    private void notifyStateChange(Ctx ctx, Task task, StateEnum nextState) {
+        listener.stateChange(ctx, task, nextState);
+        task.setState(ctx.ts, nextState);
     }
 
     @Test
@@ -63,7 +87,7 @@ public class TestAlgoVisitor {
         IntervalTraverse traverse = new TaskFlowTraverse();
         CountIntervalVisitor visitor = new CountIntervalVisitor();
         traverse.traverse(ss, p1, ss.getStartTime(), ss.getCurrentEndTime(), visitor);
-        assertEquals(3, visitor.getCount());
+        assertEquals(4, visitor.getCount());
     }
 
 }
