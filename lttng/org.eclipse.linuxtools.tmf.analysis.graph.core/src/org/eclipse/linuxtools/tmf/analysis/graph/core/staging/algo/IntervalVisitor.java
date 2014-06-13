@@ -1,10 +1,10 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo;
 
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
+import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
+import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 
 public interface IntervalVisitor {
 
-    public void visit(Task task, StateEnum state, long t1, long t2);
+    public void visit(ITmfStateSystem ss, int quark, ITmfStateInterval interval);
 
 }

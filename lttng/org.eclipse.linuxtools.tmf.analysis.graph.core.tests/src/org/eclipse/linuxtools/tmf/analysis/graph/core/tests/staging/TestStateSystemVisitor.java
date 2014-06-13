@@ -56,7 +56,7 @@ public class TestStateSystemVisitor {
 
         CountIntervalVisitor visitor = new CountIntervalVisitor();
         SeqIntervalTraverse traverse = new SeqIntervalTraverse();
-        traverse.traverse(ss, task, ss.getStartTime(), ss.getCurrentEndTime(), visitor);
+        traverse.traverse(ss, quark, ss.getStartTime(), ss.getCurrentEndTime(), visitor);
         assertEquals(range.size(), visitor.getCount());
     }
 

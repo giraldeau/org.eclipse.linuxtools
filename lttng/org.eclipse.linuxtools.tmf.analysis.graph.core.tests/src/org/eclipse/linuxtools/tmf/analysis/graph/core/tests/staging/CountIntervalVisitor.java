@@ -1,7 +1,7 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.Task.StateEnum;
+import org.eclipse.linuxtools.statesystem.core.ITmfStateSystem;
+import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo.IntervalVisitor;
 
 public class CountIntervalVisitor implements IntervalVisitor {
@@ -13,8 +13,7 @@ public class CountIntervalVisitor implements IntervalVisitor {
     }
 
     @Override
-    public void visit(Task task, StateEnum state, long t1, long t2) {
-        System.out.println(task + " " + state + " [" + t1 + "," + t2 + "]");
+    public void visit(ITmfStateSystem ss, int quark, ITmfStateInterval interval) {
         count++;
     }
 

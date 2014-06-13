@@ -57,10 +57,12 @@ public class StateSystemTaskListener implements ITaskListener {
         }
     }
 
+    // store directly the quark of the task (instead of it's TID)
     private void updateCpuState(Ctx ctx, Task task, StateEnum state) throws StateValueTypeException, AttributeNotFoundException {
         if (state == StateEnum.RUNNING) {
+            Integer qTask = getOrCreateQuark(quarkTidCache, ctx.hostId, Attributes.TASK, task.getTID(), Attributes.STATE);
             Integer qCpuState = getOrCreateQuark(quarkCpuCache, ctx.hostId, Attributes.CPU, ctx.cpu.longValue(), Attributes.STATE);
-            ITmfStateValue value = TmfStateValue.newValueInt(task.getTID().intValue());
+            ITmfStateValue value = TmfStateValue.newValueInt(qTask);
             ss.modifyAttribute(ctx.ts, value, qCpuState);
         }
     }
