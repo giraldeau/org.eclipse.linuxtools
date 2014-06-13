@@ -206,6 +206,34 @@ public final class TmfTraceManager {
     }
 
     /**
+     * Get the full trace set of a given trace. For a standard trace, this is
+     * simply an array with only that trace in it. For experiments, this is an
+     * array of all the traces contained in this experiment, including the
+     * experiment.
+     *
+     * @param trace
+     *            The trace or experiment
+     * @return The corresponding trace set
+     * @since 3.1
+     */
+    public static ITmfTrace[] getFullTraceSet(ITmfTrace trace) {
+        if (trace == null) {
+            return null;
+        }
+        if (trace instanceof TmfExperiment) {
+            TmfExperiment exp = (TmfExperiment) trace;
+            ITmfTrace[] traces = exp.getTraces();
+            ITmfTrace[] alltraces = new ITmfTrace[traces.length + 1];
+            alltraces[0] = exp;
+            for (int i = 0; i < traces.length; i++) {
+                alltraces[i + 1] = traces[i];
+            }
+            return alltraces;
+        }
+        return new ITmfTrace[] { trace };
+    }
+
+    /**
      * Return the path (as a string) to the directory for supplementary files to
      * use with a given trace. If no supplementary file directory has been
      * configured, a temporary directory based on the trace's name will be
