@@ -79,7 +79,8 @@ import org.eclipse.ui.IActionBars;
  * An abstract view all time graph views can inherit
  *
  * This view contains either a time graph viewer, or a time graph combo which is
- * divided between a tree viewer on the left and a time graph viewer on the right.
+ * divided between a tree viewer on the left and a time graph viewer on the
+ * right.
  *
  * @since 2.1
  */
@@ -102,14 +103,16 @@ public abstract class AbstractTimeGraphView extends TmfView {
     /** The selected trace */
     private ITmfTrace fTrace;
 
-    /** The timegraph entry list */
-    private List<TimeGraphEntry> fEntryList;
+    /** The timegraph entry list
+     * @since 3.1*/
+    protected List<TimeGraphEntry> fEntryList;
 
     /** The trace to entry list hash map */
     private final Map<ITmfTrace, List<TimeGraphEntry>> fEntryListMap = new HashMap<>();
 
-    /** The trace to build thread hash map */
-    private final Map<ITmfTrace, BuildThread> fBuildThreadMap = new HashMap<>();
+    /** The trace to build thread hash map
+     * @since 3.1*/
+    protected final Map<ITmfTrace, BuildThread> fBuildThreadMap = new HashMap<>();
 
     /** The start time */
     private long fStartTime;
@@ -424,11 +427,23 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
     }
 
-    private class BuildThread extends Thread {
-        private final ITmfTrace fBuildTrace;
-        private final ITmfTrace fParentTrace;
-        private final IProgressMonitor fMonitor;
+    /**
+     * Build thread class for time graph views
+     * @since 3.1
+     */
+    protected class BuildThread extends Thread {
 
+        protected final ITmfTrace fBuildTrace;
+        private final ITmfTrace fParentTrace;
+        protected final IProgressMonitor fMonitor;
+
+        /**
+         * Constructor
+         *
+         * @param trace The trace
+         * @param parentTrace The parent trace
+         * @param name The build thread name
+         */
         public BuildThread(final ITmfTrace trace, final ITmfTrace parentTrace, final String name) {
             super(name + " build"); //$NON-NLS-1$
             fBuildTrace = trace;
@@ -444,6 +459,9 @@ public abstract class AbstractTimeGraphView extends TmfView {
             }
         }
 
+        /**
+         * Cancel the thread
+         */
         public void cancel() {
             fMonitor.setCanceled(true);
         }
@@ -577,8 +595,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
     }
 
     /**
-     * Sets the tree label provider.
-     * This should be called from the constructor.
+     * Sets the tree label provider. This should be called from the constructor.
      *
      * @param tlp
      *            The tree label provider
@@ -588,19 +605,20 @@ public abstract class AbstractTimeGraphView extends TmfView {
     }
 
     /**
-     * Sets the relative weight of each part of the time graph combo.
-     * This should be called from the constructor.
+     * Sets the relative weight of each part of the time graph combo. This
+     * should be called from the constructor.
      *
      * @param weights
-     *            The array (length 2) of relative weights of each part of the combo
+     *            The array (length 2) of relative weights of each part of the
+     *            combo
      */
     protected void setWeight(final int[] weights) {
         fWeight = weights;
     }
 
     /**
-     * Sets the filter column labels.
-     * This should be called from the constructor.
+     * Sets the filter column labels. This should be called from the
+     * constructor.
      *
      * @param filterColumns
      *            The array of filter column labels
@@ -1002,11 +1020,12 @@ public abstract class AbstractTimeGraphView extends TmfView {
     }
 
     /**
-     * @param signal the format of the timestamps was updated.
+     * @param signal
+     *            the format of the timestamps was updated.
      * @since 2.1
      */
     @TmfSignalHandler
-    public void updateTimeFormat( final TmfTimestampFormatUpdateSignal signal){
+    public void updateTimeFormat(final TmfTimestampFormatUpdateSignal signal) {
         fTimeGraphWrapper.refresh();
     }
 
@@ -1014,7 +1033,10 @@ public abstract class AbstractTimeGraphView extends TmfView {
     // Internal
     // ------------------------------------------------------------------------
 
-    private void loadTrace() {
+    /**
+     * @since 3.1
+     */
+    protected void loadTrace() {
         synchronized (fEntryListMap) {
             fEntryList = fEntryListMap.get(fTrace);
             if (fEntryList == null) {
@@ -1107,7 +1129,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
     /**
      * Gets the list of links (displayed as arrows) for a trace in a given
-     * timerange.  Default implementation returns an empty list.
+     * timerange. Default implementation returns an empty list.
      *
      * @param startTime
      *            Start of the time range
@@ -1125,6 +1147,24 @@ public abstract class AbstractTimeGraphView extends TmfView {
         return new ArrayList<>();
     }
 
+    /**
+     * Sets the entry list field
+     * @since 3.1
+     */
+    protected void updateEntryList() {
+        synchronized (fEntryListMap) {
+            fEntryList = fEntryListMap.get(fTrace);
+            if (fEntryList == null) {
+                fEntryList = new CopyOnWriteArrayList<>();
+            } else if (fEntryComparator != null) {
+                List<TimeGraphEntry> list = new ArrayList<>(fEntryList);
+                Collections.sort(list, fEntryComparator);
+                fEntryList.clear();
+                fEntryList.addAll(list);
+            }
+
+        }
+    }
 
     /**
      * Refresh the display
@@ -1137,23 +1177,20 @@ public abstract class AbstractTimeGraphView extends TmfView {
                     return;
                 }
                 boolean hasEntries = false;
-                synchronized (fEntryListMap) {
-                    fEntryList = fEntryListMap.get(fTrace);
-                    if (fEntryList == null) {
-                        fEntryList = new CopyOnWriteArrayList<>();
-                    } else if (fEntryComparator != null) {
-                        List<TimeGraphEntry> list = new ArrayList<>(fEntryList);
-                        Collections.sort(list, fEntryComparator);
-                        fEntryList.clear();
-                        fEntryList.addAll(list);
-                    }
-                    hasEntries = fEntryList.size() != 0;
+                updateEntryList();
+                hasEntries = fEntryList.size() != 0;
+
+                ITimeGraphEntry[] entries = fEntryList.toArray(new ITimeGraphEntry[0]);
+                if (fEntryComparator != null) {
+                    Arrays.sort(entries, fEntryComparator);
                 }
+
                 if (fEntryList != fTimeGraphWrapper.getInput()) {
                     fTimeGraphWrapper.setInput(fEntryList);
                 } else {
                     fTimeGraphWrapper.refresh();
                 }
+
                 fTimeGraphWrapper.getTimeGraphViewer().setTimeBounds(fStartTime, fEndTime);
 
                 long selectionBeginTime = fTrace == null ? 0 : fTraceManager.getSelectionBeginTime().normalize(0, ITmfTimestamp.NANOSECOND_SCALE).getValue();
@@ -1236,7 +1273,8 @@ public abstract class AbstractTimeGraphView extends TmfView {
     /**
      * Add actions to local tool bar manager
      *
-     * @param manager the tool bar manager
+     * @param manager
+     *            the tool bar manager
      */
     protected void fillLocalToolBar(IToolBarManager manager) {
         if (fTimeGraphWrapper instanceof TimeGraphComboWrapper) {
@@ -1255,4 +1293,5 @@ public abstract class AbstractTimeGraphView extends TmfView {
         manager.add(fTimeGraphWrapper.getTimeGraphViewer().getZoomOutAction());
         manager.add(new Separator());
     }
+
 }
