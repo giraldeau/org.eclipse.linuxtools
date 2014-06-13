@@ -1,0 +1,45 @@
+/*******************************************************************************
+ * Copyright (c) 2013, 2014 École Polytechnique de Montréal
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Geneviève Bastien - Initial API and implementation
+ *******************************************************************************/
+
+package org.eclipse.linuxtools.tmf.analysis.graph.ui.tests;
+
+import static org.junit.Assert.assertEquals;
+
+import org.eclipse.linuxtools.tmf.analysis.graph.ui.Activator;
+import org.junit.Test;
+
+/**
+ * Test the XML Analysis UI plug-in activator
+ *
+ * @author Geneviève Bastien
+ */
+public class GraphAnalysisUiPluginTest {
+    // ------------------------------------------------------------------------
+    // Attributes
+    // ------------------------------------------------------------------------
+
+    // Plug-in instantiation
+    static final Activator fPlugin = new Activator();
+
+    // ------------------------------------------------------------------------
+    // Test cases
+    // ------------------------------------------------------------------------
+
+    /**
+     * Test the plugin ID.
+     */
+    @Test
+    public void testTmfCorePluginId() {
+        assertEquals("Plugin ID", "org.eclipse.linuxtools.tmf.analysis.graph.ui", Activator.PLUGIN_ID);
+    }
+
+}

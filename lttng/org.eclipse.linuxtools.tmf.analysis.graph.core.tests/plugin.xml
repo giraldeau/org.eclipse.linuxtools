@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.linuxtools.tmf.core.analysis">
+      <module
+            analysis_module="org.eclipse.linuxtools.tmf.analysis.graph.core.stubs.module.GraphBuilderModuleStub"
+            automatic="false"
+            id="org.eclipse.linuxtools.tmf.analysis.graph.tests.stub"
+            name="Graph builder stub">
+         <tracetype
+               class="org.eclipse.linuxtools.tmf.ctf.core.tests.stubs.CtfTmfTraceStub">
+         </tracetype>
+      </module>
+   </extension>
+
+</plugin>

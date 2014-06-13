@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+      <extension
+         point="org.eclipse.linuxtools.tmf.core.analysis">
+      <module
+            analysis_module="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.CriticalPathModule"
+            id="org.eclipse.linuxtools.lttng2.kernel.ui.criticalpath"
+            name="Critical Path">
+         <parameter
+               name="graph">
+         </parameter>
+         <parameter
+               name="workerid">
+         </parameter>
+         <parameter
+               name="algorithm">
+         </parameter>
+         <tracetype
+               class="org.eclipse.linuxtools.tmf.core.trace.TmfTrace">
+         </tracetype>
+      </module>
+   </extension>
+   <extension
+            point="org.eclipse.ui.views">
+            <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng2.ui.views.category"
+            class="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.CriticalPathView"
+            id="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.criticalpathview"
+            name="Critical Flow View"
+            restorable="true">
+      </view>
+            <view
+                  class="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.ExecutionGraphView"
+                  id="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.executiongraphview"
+                  name="Execution Graph View"
+                  restorable="true">
+            </view>
+   </extension>
+</plugin>
