@@ -544,6 +544,7 @@ public class ControlFlowView extends AbstractTimeGraphView {
                 if (end < start) {
                     continue;
                 }
+
                 List<Integer> currentThreadQuarks = ssq.getQuarks(Attributes.CPUS, "*", Attributes.CURRENT_THREAD); //$NON-NLS-1$
                 for (int currentThreadQuark : currentThreadQuarks) {
                     // adjust the query range to include the previous and following intervals

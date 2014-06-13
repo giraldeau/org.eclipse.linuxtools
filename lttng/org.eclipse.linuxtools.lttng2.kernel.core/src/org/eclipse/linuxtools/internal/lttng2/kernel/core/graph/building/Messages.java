@@ -10,23 +10,20 @@
  *   Geneviève Bastien - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng2.kernel.core.analysis;
+package org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building;
 
 import org.eclipse.osgi.util.NLS;
 
 /**
- * Externalized message strings from the LTTng Kernel Analysis
- *
- * @author Geneviève Bastien
- * @since 3.0
+ * Externalized string for the o.e.l.lttng2.kernel.core.graph.building package
+ * @since 3.1
  */
-@SuppressWarnings("javadoc")
 public class Messages extends NLS {
-
-    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.lttng2.kernel.core.analysis.messages"; //$NON-NLS-1$
-
-    public static String LttngKernelAnalysisModule_Help;
-
+    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.lttng2.kernel.core.graph.building.messages"; //$NON-NLS-1$
+    /** Phase 1 title */
+    public static String LttngKernelExecGraphProvider_AnalysePhase1;
+    /** Phase 2 title */
+    public static String LttngKernelExecGraphProvider_AnalysePhase2;
     static {
         // initialize resource bundle
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);

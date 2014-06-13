@@ -16,6 +16,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.linuxtools.internal.lttng2.kernel.ui.criticalpath.CriticalPathParameterProvider;
+import org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.CriticalPathModule;
+import org.eclipse.linuxtools.tmf.core.analysis.TmfAnalysisManager;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -70,6 +73,9 @@ public class Activator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        TmfAnalysisManager.registerParameterProvider(CriticalPathModule.ANALYSIS_ID, CriticalPathParameterProvider.class);
+//        TmfAnalysisManager.getAnalysisModule("org.eclipse.linuxtools.lttng2.kernel.core.VirtualMachineAnalysisModule") //$NON-NLS-1$
+//            .registerOutput(new TmfAnalysisViewOutput(VirtualMachineView.ID));
     }
 
     @Override

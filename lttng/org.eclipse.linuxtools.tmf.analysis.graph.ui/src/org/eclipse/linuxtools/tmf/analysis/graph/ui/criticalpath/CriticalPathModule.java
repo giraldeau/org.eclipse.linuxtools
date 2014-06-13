@@ -106,6 +106,19 @@ public class CriticalPathModule extends TmfAbstractAnalysisModule {
     }
 
     @Override
+    public Object getParameter(String name) {
+        if (name.equals(PARAM_GRAPH)) {
+            try {
+                return getGraph();
+            } catch (TmfAnalysisException e) {
+                Activator.getDefault().logError("Error getting the graph for critical path", e); //$NON-NLS-1$
+                return null;
+            }
+        }
+        return super.getParameter(name);
+    }
+
+    @Override
     public synchronized void setParameter(String name, Object value) throws RuntimeException {
         if (name.equals(PARAM_GRAPH) && (value instanceof String)) {
             setGraph((String) value);
@@ -138,10 +151,14 @@ public class CriticalPathModule extends TmfAbstractAnalysisModule {
         /* The graph module is null, take the first available graph if any */
         if (fGraphModule == null) {
             Object paramGraph = super.getParameter(PARAM_GRAPH);
-            if (!(paramGraph instanceof TmfGraphBuilderModule)) {
-                throw new TmfAnalysisException(String.format("CriticalPathModule: getParameter(%s) is of the wrong type (expected TmfGraphBuilderModule but was %s)", PARAM_GRAPH, (paramGraph == null) ? "null" : paramGraph.getClass())); //$NON-NLS-1$ //$NON-NLS-2$
+            if (paramGraph instanceof String) {
+                IAnalysisModule module = getTrace().getAnalysisModule((String) paramGraph);
+                if (module instanceof TmfGraphBuilderModule) {
+                    fGraphModule = (TmfGraphBuilderModule) module;
+                }
+                throw new TmfAnalysisException(String.format("CriticalPathModule: getParameter(%s) is of the wrong type (expected TmfGraphBuilderModule but was %s)", PARAM_GRAPH, (module == null) ? "null" : module.getClass())); //$NON-NLS-1$ //$NON-NLS-2$
             }
-            fGraphModule = (TmfGraphBuilderModule) paramGraph;
+            throw new TmfAnalysisException(String.format("CriticalPathModule: getParameter(%s) is of the wrong type (expected the ID of a graph analysis, but got %s)", PARAM_GRAPH, paramGraph)); //$NON-NLS-1$
         }
         return fGraphModule;
     }

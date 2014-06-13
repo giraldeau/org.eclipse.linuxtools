@@ -13,13 +13,17 @@
 
 package org.eclipse.linuxtools.lttng2.kernel.core.trace;
 
+import java.lang.reflect.Field;
 import java.nio.BufferOverflowException;
+import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
+import org.eclipse.linuxtools.ctf.core.trace.CTFStreamInputReader;
 import org.eclipse.linuxtools.ctf.core.trace.CTFTrace;
+import org.eclipse.linuxtools.ctf.core.trace.CTFTraceReader;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.Activator;
 import org.eclipse.linuxtools.tmf.core.trace.TraceValidationStatus;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
@@ -69,6 +73,42 @@ public class LttngKernelTrace extends CtfTmfTrace {
         } catch (final BufferOverflowException e) {
             return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngKernelTrace_TraceReadError + ": " + Messages.LttngKernelTrace_MalformedTrace); //$NON-NLS-1$
         }
+    }
+
+    /**
+     * Gets the number of cpus this trace has. For lttng kernel traces, each
+     * stream comes from a cpu
+     *
+     * @return The number of cpus
+     * @since 3.1
+     */
+    public int getNbCpus() {
+        int streams = 0;
+
+        CTFTraceReader reader;
+        try {
+            reader = new CTFTraceReader(getCTFTrace());
+            Field field;
+            List<CTFStreamInputReader> v;
+            try {
+                field = reader.getClass().getDeclaredField("fStreamInputReaders"); //$NON-NLS-1$
+                field.setAccessible(true);
+                v = (List<CTFStreamInputReader>) field.get(reader);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Error trying to retreive the number of CPUs of the trace"); //$NON-NLS-1$
+            }
+            for (CTFStreamInputReader input : v) {
+                int cpu = input.getCPU();
+                streams = Math.max(streams, cpu + 1);
+            }
+            streams = Math.max(streams, v.size());
+        } catch (CTFReaderException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        return streams;
     }
 
 }

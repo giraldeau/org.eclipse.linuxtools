@@ -32,5 +32,14 @@
                class="org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace">
          </tracetype>
       </module>
+      <module
+            analysis_module="org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph"
+            id="org.eclipse.linuxtools.lttng2.kernel.core.execgraph"
+            name="LTTng Kernel Execution Graph">
+         <tracetype
+               applies_experiment="true"
+               class="org.eclipse.linuxtools.lttng2.kernel.core.trace.LttngKernelTrace">
+         </tracetype>
+      </module>
    </extension>
 </plugin>
