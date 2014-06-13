@@ -147,6 +147,13 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="applies_experiment" type="boolean">
+            <annotation>
+               <documentation>
+                  Does this tracetype element mean the class applies to an experiment containing this tracetype or not (default false)
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

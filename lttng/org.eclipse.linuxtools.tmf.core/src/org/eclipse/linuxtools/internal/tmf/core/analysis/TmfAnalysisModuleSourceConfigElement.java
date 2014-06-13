@@ -67,6 +67,9 @@ public final class TmfAnalysisModuleSourceConfigElement implements IAnalysisModu
     /** Extension point attribute 'applies' */
     public static final String APPLIES_ATTR = "applies"; //$NON-NLS-1$
 
+    /** Extension point attribute 'applies_experiment' */
+    public static final String APPLIES_EXP_ATTR = "applies_experiment"; //$NON-NLS-1$
+
     /**
      * The mapping of available analysis ID to their corresponding helper
      */

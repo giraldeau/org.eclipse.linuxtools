@@ -28,6 +28,7 @@ import org.eclipse.linuxtools.tmf.core.exceptions.TmfAnalysisException;
 import org.eclipse.linuxtools.tmf.core.project.model.TmfTraceType;
 import org.eclipse.linuxtools.tmf.core.project.model.TraceTypeHelper;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
+import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.Bundle;
 
@@ -110,9 +111,14 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
                 } else {
                     applies = !applyclass.isAssignableFrom(traceclass);
                 }
-            } catch (ClassNotFoundException e) {
-                Activator.logError("Error in applies to trace", e); //$NON-NLS-1$
-            } catch (InvalidRegistryObjectException e) {
+
+                if (!applies && TmfExperiment.class.isAssignableFrom(traceclass)) {
+                    classAppliesVal = element.getAttribute(TmfAnalysisModuleSourceConfigElement.APPLIES_EXP_ATTR);
+                    if (classAppliesVal != null) {
+                        applies = Boolean.parseBoolean(classAppliesVal);
+                    }
+                }
+            } catch (ClassNotFoundException | InvalidRegistryObjectException e) {
                 Activator.logError("Error in applies to trace", e); //$NON-NLS-1$
             }
         }
@@ -160,8 +166,21 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
     @Override
     public IAnalysisModule newModule(ITmfTrace trace) throws TmfAnalysisException {
 
+        boolean applies = appliesToTraceType(trace.getClass());
+        /* Check if trace is an experiment and if the modules applies to it */
+        if (!applies && (trace instanceof TmfExperiment)) {
+            ITmfTrace[] traces = ((TmfExperiment) trace).getTraces();
+            for (int i = 0; i < traces.length; i++) {
+                ITmfTrace expTrace = traces[i];
+                if (appliesToTraceType(expTrace.getClass())) {
+                    applies = true;
+                    break;
+                }
+            }
+        }
+
         /* Check that analysis can be executed */
-        if (!appliesToTraceType(trace.getClass())) {
+        if (!applies) {
             throw new TmfAnalysisException(NLS.bind(Messages.TmfAnalysisModuleHelper_AnalysisDoesNotApply, getName()));
         }
 
