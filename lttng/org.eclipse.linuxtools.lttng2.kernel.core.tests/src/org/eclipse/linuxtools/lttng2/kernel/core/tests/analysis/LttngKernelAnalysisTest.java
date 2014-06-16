@@ -70,7 +70,6 @@ public class LttngKernelAnalysisTest {
 
     /**
      * Test the LTTng kernel analysis execution
-     * @throws Throwable
      */
     @Test
     public void testAnalysisExecution() {

@@ -82,7 +82,7 @@
             class="org.eclipse.linuxtools.tmf.ui.analysis.TmfAnalysisViewOutput"
             id="org.eclipse.linuxtools.tmf.analysis.graph.ui.criticalpath.view.executiongraphview">
          <analysisModuleClass
-               class="org.eclipse.linuxtools.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph">
+               class="org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecutionGraph">
          </analysisModuleClass>
       </output>
    </extension>
