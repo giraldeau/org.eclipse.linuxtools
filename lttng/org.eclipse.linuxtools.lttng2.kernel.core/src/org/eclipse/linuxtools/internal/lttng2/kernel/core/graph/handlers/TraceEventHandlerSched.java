@@ -81,6 +81,7 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
             }
             curr.setField(LttngStrings.MODE, execution_mode_enum.SYSCALL);
         }
+        system.setCurrentCPU(event.getCPU(), event.getTrace().getHostId());
         String eventName = event.getType().getName();
         if (LttngStrings.SCHED_SWITCH.equals(eventName)) {
             handleSchedSwitch(event);
