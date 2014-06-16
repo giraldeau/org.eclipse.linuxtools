@@ -297,6 +297,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
          * and approximation of the synchronization at this time
          */
         private void approximateSync() {
+
             /**
              * Line slopes functions
              *
@@ -320,10 +321,68 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     /* Lines intersect, not good */
                     fQuality = SyncQuality.FAIL;
                 }
+            } else if ( (fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1) ) {
+                /* There is no slope but at least one of the bounds is present */
+                LinkedList<SyncPoint> boundList, otherBoundList;
+                int inversionFactor;
+                if (fUpperBoundList.size() > 1) {
+                    boundList = fUpperBoundList;
+                    otherBoundList = fLowerBoundList;
+                    inversionFactor = 1;
+                } else {
+                    boundList = fLowerBoundList;
+                    otherBoundList = fUpperBoundList;
+                    inversionFactor = -1;
+                }
+                BigDecimal alpha = boundList.get(1).getAlpha(boundList.get(0));
+
+                for (int i = 1; i < boundList.size() - 1; i++) {
+                    alpha = (alpha.multiply(new BigDecimal(boundList.get(i).getTimeX() - boundList.get(0).getTimeX())).
+                            add( (boundList.get(i+1).getAlpha(boundList.get(i))).multiply(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(i).getTimeX())))).
+                            divide(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(0).getTimeX()), fMc);
+                }
+                BigDecimal beta = boundList.get(0).getBeta(alpha);
+                BigDecimal betatemp = beta;
+                for (int i = 1; i < boundList.size(); i++) {
+                    betatemp = boundList.get(i).getBeta(alpha);
+                    if (betatemp.compareTo(beta) * inversionFactor > 0) {
+                        beta = betatemp;
+                    }
+                }
+                /* Is there a point in the other hull?  If so, move the line so it is between the 2 */
+                if (otherBoundList.size() > 0) {
+                    BigDecimal betaother = otherBoundList.get(0).getBeta(alpha);
+                    if (betaother.compareTo(beta) * inversionFactor < 0) {
+                        fQuality = SyncQuality.FAIL;
+                    } else {
+                        fAlpha = alpha;
+                        fBeta = beta.add(betaother).divide(BigDecimal.valueOf(2), fMc);
+                    }
+                    System.out.println("Beta for one point hull: " + betaother + " beta for full hull " + beta + " alpha " + fAlpha + " beta " + fBeta + " Quality: " + fQuality);
+                    System.out.println("Value for point Y: " + ((new BigDecimal(otherBoundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
+                    System.out.println("Value for point latest Y: going to: " + BigDecimal.valueOf(boundList.get(0).getTimeX()) + " transformed " + ((BigDecimal.valueOf(boundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
+                } else {
+                    SyncPoint last = boundList.get(boundList.size() - 1);
+                    SyncPoint previous = boundList.get(boundList.size() - 2);
+                    System.out.println("Difference with previous (" + (last.getTimeX() - previous.getTimeX()) + ", " + (last.getTimeY() - previous.getTimeY()) + ") last timeX " + last.getTimeX() + " last timey " + last.getTimeY());
+                    System.out.println("Beta for one single hull: " + beta + " alpha " + alpha);
+                    fAlpha = alpha;
+                    fBeta = beta;
+                }
             } else if (((fLmax[0] == null) && (fLmin[1] == null))
                     || ((fLmax[1] == null) && (fLmin[0] == null))) {
                 /* Either there is no upper hull point or no lower hull */
                 fQuality = SyncQuality.INCOMPLETE;
+                SyncPoint onlyPoint = null;
+                if (fLmin[1] != null) {
+                    onlyPoint = fLmin[1];
+                } else if (fLmax[1] != null) {
+                    onlyPoint = fLmax[1];
+                }
+                if (onlyPoint != null) {
+                    fBeta = BigDecimal.valueOf(onlyPoint.getTimeY() - onlyPoint.getTimeX());
+//                    System.out.println("Value for point Y: " + (BigDecimal.valueOf(onlyPoint.getTimeY()).subtract(fBeta)).divide(fAlpha, fMc));
+                }
             }
         }
 
@@ -504,6 +563,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             return x.getValue();
         }
 
+        public long getTimeY() {
+            return y.getValue();
+        }
+
         /**
          * Calculate a cross product of 3 points:
          *
@@ -546,6 +609,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             return BigDecimal.valueOf(y.getValue()).subtract(alpha.multiply(BigDecimal.valueOf(x.getValue()), fMc));
         }
 
+        @Override
+        public String toString() {
+            return String.format("%s (%s,  %s)", this.getClass().getCanonicalName(), x, y); //$NON-NLS-1$
+        }
     }
 
 }
