@@ -15,9 +15,11 @@
 
 package org.eclipse.linuxtools.ctf.core.event.io;
 
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
 
 /**
@@ -50,6 +52,10 @@ public final class BitBuffer {
     // ------------------------------------------------------------------------
 
     private ByteBuffer fBuffer;
+
+    /**
+     * Bit-buffer's position, maximum value = Integer.MAX_VALUE * 8
+     */
     private long fPosition;
     private ByteOrder fByteOrder;
 
@@ -170,6 +176,28 @@ public final class BitBuffer {
     }
 
     /**
+     * Relative bulk <i>get</i> method.
+     *
+     * <p>
+     * This method transfers <strong>bytes</strong> from this buffer into the
+     * given destination array. This method currently only supports reads
+     * aligned to 8 bytes. It is up to the developer to shift the bits in
+     * post-processing to do unaligned reads.
+     *
+     * @param dst
+     *            the bytes to write to
+     * @throws BufferUnderflowException
+     *             - If there are fewer than length bytes remaining in this
+     *             buffer
+     * @since 3.1
+     */
+    public void get(@NonNull byte[] dst) {
+        fBuffer.position((int) (fPosition / 8));
+        fBuffer.get(dst);
+        fPosition += dst.length * 8;
+    }
+
+    /**
      * Relative <i>get</i> method for reading integer of <i>length</i> bits.
      *
      * Reads <i>length</i> bits starting at the current position. The result is
@@ -257,7 +285,9 @@ public final class BitBuffer {
     }
 
     private int getIntBE(long index, int length, boolean signed) {
-        assert ((length > 0) && (length <= BIT_INT));
+        if ((length <= 0) || (length > BIT_INT)) {
+            throw new IllegalArgumentException("Length must be between 1-32 bits"); //$NON-NLS-1$
+        }
         long end = index + length;
         int startByte = (int) (index / BIT_CHAR);
         int endByte = (int) ((end + (BIT_CHAR - 1)) / BIT_CHAR);
@@ -309,7 +339,9 @@ public final class BitBuffer {
     }
 
     private int getIntLE(long index, int length, boolean signed) {
-        assert ((length > 0) && (length <= BIT_INT));
+        if ((length <= 0) || (length > BIT_INT)) {
+            throw new IllegalArgumentException("Length must be between 1-32 bits"); //$NON-NLS-1$
+        }
         long end = index + length;
         int startByte = (int) (index / BIT_CHAR);
         int endByte = (int) ((end + (BIT_CHAR - 1)) / BIT_CHAR);
@@ -418,7 +450,9 @@ public final class BitBuffer {
     }
 
     private void putIntBE(long index, int length, int value) {
-        assert ((length > 0) && (length <= BIT_INT));
+        if ((length <= 0) || (length > BIT_INT)) {
+            throw new IllegalArgumentException("Length must be between 1-32 bits"); //$NON-NLS-1$
+        }
         long end = index + length;
         int startByte = (int) (index / BIT_CHAR);
         int endByte = (int) ((end + (BIT_CHAR - 1)) / BIT_CHAR);
@@ -483,7 +517,9 @@ public final class BitBuffer {
     }
 
     private void putIntLE(long index, int length, int value) {
-        assert ((length > 0) && (length <= BIT_INT));
+        if ((length <= 0) || (length > BIT_INT)) {
+            throw new IllegalArgumentException("Length must be between 1-32 bits"); //$NON-NLS-1$
+        }
         long end = index + length;
         int startByte = (int) (index / BIT_CHAR);
         int endByte = (int) ((end + (BIT_CHAR - 1)) / BIT_CHAR);
