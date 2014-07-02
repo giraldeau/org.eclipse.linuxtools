@@ -12,10 +12,9 @@
 
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
-import java.util.List;
-
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching.MatchingType;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
 /**
@@ -33,8 +32,9 @@ public interface ITmfMatchEventDefinition {
      * @param event
      *            The event for which to compute the key
      * @return the unique key for this event
+     * @since 3.1
      */
-    List<Object> getUniqueField(ITmfEvent event);
+    PacketKey getUniqueField(ITmfEvent event);
 
     /**
      * Verifies whether a trace has all required events to match using this
