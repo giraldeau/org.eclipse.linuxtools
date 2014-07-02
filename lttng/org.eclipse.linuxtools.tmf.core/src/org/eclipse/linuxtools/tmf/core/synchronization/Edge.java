@@ -1,5 +1,8 @@
 package org.eclipse.linuxtools.tmf.core.synchronization;
 
+/**
+ * @since 3.1
+ */
 public class Edge<V, E> {
 
     private final V from;
