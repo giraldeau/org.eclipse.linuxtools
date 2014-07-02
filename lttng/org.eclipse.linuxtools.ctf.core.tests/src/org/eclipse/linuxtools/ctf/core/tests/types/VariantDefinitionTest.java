@@ -21,8 +21,7 @@ import java.nio.ByteOrder;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.event.scope.IDefinitionScope;
-import org.eclipse.linuxtools.ctf.core.event.types.ArrayDeclaration;
-import org.eclipse.linuxtools.ctf.core.event.types.ArrayDefinition;
+import org.eclipse.linuxtools.ctf.core.event.types.AbstractArrayDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.Definition;
 import org.eclipse.linuxtools.ctf.core.event.types.Encoding;
 import org.eclipse.linuxtools.ctf.core.event.types.EnumDeclaration;
@@ -30,14 +29,15 @@ import org.eclipse.linuxtools.ctf.core.event.types.EnumDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.FloatDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
-import org.eclipse.linuxtools.ctf.core.event.types.SequenceDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.VariantDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.VariantDefinition;
+import org.eclipse.linuxtools.ctf.core.tests.io.Util;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.ArrayDeclaration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -108,7 +108,7 @@ public class VariantDefinitionTest {
         sDec.addField(VAR_FIELD_NAME, varDec);
         varDec.setTag(TAG_ID);
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate(100);
+        final ByteBuffer byteBuffer = Util.testMemory(ByteBuffer.allocate(100));
         BitBuffer bb = new BitBuffer(byteBuffer);
         byteBuffer.mark();
         byteBuffer.putInt(1);
@@ -219,7 +219,7 @@ public class VariantDefinitionTest {
      */
     @Test
     public void testLookupArray() {
-        ArrayDefinition result = fixture.lookupArray(ENUM_3);
+        AbstractArrayDefinition result = fixture.lookupArray2(ENUM_3);
         assertNull(result);
     }
 
@@ -248,15 +248,6 @@ public class VariantDefinitionTest {
     @Test
     public void testLookupInteger() {
         IntegerDefinition result = fixture.lookupInteger(ENUM_2);
-        assertNull(result);
-    }
-
-    /**
-     * Run the SequenceDefinition lookupSequence(String) method test.
-     */
-    @Test
-    public void testLookupSequence_1() {
-        SequenceDefinition result = fixture.lookupSequence(ENUM_4);
         assertNull(result);
     }
 

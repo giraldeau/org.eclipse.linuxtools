@@ -28,6 +28,8 @@ public class ConnectResponse implements IRelayResponse, IRelayCommand {
 
     /**
      * Response or command size
+     *
+     * fViewerSessionId + fMajor + fMinor + fType
      */
     public static final int SIZE = (Long.SIZE + Integer.SIZE + Integer.SIZE + Integer.SIZE) / 8;
     /** session id, counts from 1 and increments by session */
@@ -61,17 +63,8 @@ public class ConnectResponse implements IRelayResponse, IRelayCommand {
         fViewerSessionId = bb.getLong();
         fMajor = bb.getInt();
         fMinor = bb.getInt();
-        int connectType = bb.getInt();
-        switch (connectType) {
-        case 1:
-            fType = ConnectionType.VIEWER_CLIENT_COMMAND;
-            break;
-        case 2:
-            fType = ConnectionType.VIEWER_CLIENT_NOTIFICATION;
-            break;
-        default:
-            throw new IOException("Invalid connection type " + connectType); //$NON-NLS-1$
-        }
+        bb.getInt(); // Should not be used, see http://bugs.lttng.org/issues/728
+        fType = ConnectionType.VIEWER_CLIENT_COMMAND;
     }
 
     /**

@@ -31,22 +31,23 @@ import org.antlr.runtime.tree.CommonTree;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.CTFClock;
-import org.eclipse.linuxtools.ctf.core.event.types.ArrayDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.Encoding;
 import org.eclipse.linuxtools.ctf.core.event.types.EnumDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.FloatDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDeclaration;
-import org.eclipse.linuxtools.ctf.core.event.types.SequenceDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.VariantDeclaration;
-import org.eclipse.linuxtools.ctf.core.trace.CTFTrace;
 import org.eclipse.linuxtools.ctf.core.trace.CTFStream;
+import org.eclipse.linuxtools.ctf.core.trace.CTFTrace;
 import org.eclipse.linuxtools.ctf.parser.CTFParser;
 import org.eclipse.linuxtools.internal.ctf.core.Activator;
 import org.eclipse.linuxtools.internal.ctf.core.event.EventDeclaration;
 import org.eclipse.linuxtools.internal.ctf.core.event.metadata.exceptions.ParseException;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.ArrayDeclaration;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.SequenceDeclaration;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.StructDeclarationFlattener;
 
 /**
  * IOStructGen
@@ -576,14 +577,13 @@ public class IOStructGen {
             ByteOrder byteOrder) throws ParseException {
 
         for (String s : sd.getFieldsList()) {
-            IDeclaration d = sd.getFields().get(s);
+            IDeclaration d = sd.getField(s);
 
             if (d instanceof StructDeclaration) {
                 setAlign(parentScope, (StructDeclaration) d, byteOrder);
 
             } else if (d instanceof VariantDeclaration) {
                 setAlign(parentScope, (VariantDeclaration) d, byteOrder);
-
             } else if (d instanceof IntegerDeclaration) {
                 IntegerDeclaration decl = (IntegerDeclaration) d;
                 if (decl.getByteOrder() != byteOrder) {
@@ -1695,8 +1695,7 @@ public class IOStructGen {
                 throw new ParseException("struct with no name and no body"); //$NON-NLS-1$
             }
         }
-
-        return structDeclaration;
+        return StructDeclarationFlattener.tryFlattenStruct(structDeclaration);
     }
 
     /**

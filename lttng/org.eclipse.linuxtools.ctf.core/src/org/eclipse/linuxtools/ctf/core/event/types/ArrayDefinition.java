@@ -30,11 +30,13 @@ import com.google.common.collect.ImmutableList;
  * can refer to any type not containing the type of the array being declared (no
  * circular dependency). The length is the number of elements in an array.
  *
+ * @deprecated use {@link AbstractArrayDefinition}
  * @version 1.0
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
 @NonNullByDefault
+@Deprecated
 public final class ArrayDefinition extends Definition {
 
     // ------------------------------------------------------------------------

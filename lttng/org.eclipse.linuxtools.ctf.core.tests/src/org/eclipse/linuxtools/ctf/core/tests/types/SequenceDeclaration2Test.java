@@ -19,17 +19,17 @@ import java.nio.ByteOrder;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
+import org.eclipse.linuxtools.ctf.core.event.types.AbstractArrayDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.Definition;
 import org.eclipse.linuxtools.ctf.core.event.types.Encoding;
 import org.eclipse.linuxtools.ctf.core.event.types.IDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
-import org.eclipse.linuxtools.ctf.core.event.types.SequenceDeclaration;
-import org.eclipse.linuxtools.ctf.core.event.types.SequenceDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDefinition;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.SequenceDeclaration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableList;
  * @version $Revision: 1.0 $
  */
 @SuppressWarnings("javadoc")
-public class SequenceDeclarationTest {
+public class SequenceDeclaration2Test {
 
     @NonNull private static final String FIELD_NAME = "LengthName";
 
@@ -55,6 +55,9 @@ public class SequenceDeclarationTest {
         fixture = new SequenceDeclaration(FIELD_NAME, new StringDeclaration());
         byte array[] = { 't', 'e', 's', 't', '\0', 't', 'h', 'i', 's', '\0' };
         ByteBuffer byb = ByteBuffer.wrap(array);
+        if( byb == null){
+            throw new IllegalStateException("Failed to allocate memory");
+        }
         input = new BitBuffer(byb);
     }
 
@@ -98,7 +101,7 @@ public class SequenceDeclarationTest {
                                 FIELD_NAME,
                                 seqLen)
                 });
-        SequenceDefinition result = fixture.createDefinition(structDef, FIELD_NAME, input);
+        AbstractArrayDefinition result = fixture.createDefinition(structDef, FIELD_NAME, input);
         assertNotNull(result);
     }
 

@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.UUID;
@@ -25,7 +26,6 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.event.scope.IDefinitionScope;
 import org.eclipse.linuxtools.ctf.core.event.scope.LexicalScope;
-import org.eclipse.linuxtools.ctf.core.event.types.ArrayDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.Definition;
 import org.eclipse.linuxtools.ctf.core.event.types.EnumDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.FloatDefinition;
@@ -33,6 +33,7 @@ import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDefinition;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.ArrayDefinition;
 import org.eclipse.linuxtools.internal.ctf.core.trace.StreamInputPacketIndex;
 import org.eclipse.linuxtools.internal.ctf.core.trace.StreamInputPacketIndexEntry;
 
@@ -221,7 +222,9 @@ public class CTFStreamInput implements IDefinitionScope, AutoCloseable {
     /**
      * Adds the next packet header index entry to the index of a stream input.
      *
-     * <strong>This method is slow and can corrupt data if not used properly</strong>
+     * <strong>This method is slow and can corrupt data if not used
+     * properly</strong>
+     *
      * @return true if there are more packets to add
      * @throws CTFReaderException
      *             If there was a problem reading the packed header
@@ -234,12 +237,11 @@ public class CTFStreamInput implements IDefinitionScope, AutoCloseable {
         }
         long fileSize = getStreamSize();
         if (currentPos < fileSize) {
-            BitBuffer bitBuffer = new BitBuffer();
-            bitBuffer.setByteOrder(getStream().getTrace().getByteOrder());
+
             StreamInputPacketIndexEntry packetIndex = new StreamInputPacketIndexEntry(
                     currentPos);
             createPacketIndexEntry(fileSize, currentPos, packetIndex,
-                    fTracePacketHeaderDecl, fStreamPacketContextDecl, bitBuffer);
+                    fTracePacketHeaderDecl, fStreamPacketContextDecl);
             fIndex.addEntry(packetIndex);
             return true;
         }
@@ -253,15 +255,14 @@ public class CTFStreamInput implements IDefinitionScope, AutoCloseable {
     private long createPacketIndexEntry(long fileSizeBytes,
             long packetOffsetBytes, StreamInputPacketIndexEntry packetIndex,
             StructDeclaration tracePacketHeaderDecl,
-            StructDeclaration streamPacketContextDecl, @NonNull BitBuffer bitBuffer)
+            StructDeclaration streamPacketContextDecl)
             throws CTFReaderException {
 
         /*
-         * Ignoring the return value, but this call is needed to initialize the
-         * input
+         * create a packet bit buffer to read the packet header
          */
-        createPacketBitBuffer(fileSizeBytes, packetOffsetBytes, packetIndex, bitBuffer);
-
+        BitBuffer bitBuffer = new BitBuffer(createPacketBitBuffer(fileSizeBytes, packetOffsetBytes, packetIndex));
+        bitBuffer.setByteOrder(getStream().getTrace().getByteOrder());
         /*
          * Read the trace packet header if it exists.
          */
@@ -310,21 +311,18 @@ public class CTFStreamInput implements IDefinitionScope, AutoCloseable {
                 + ((packetIndex.getPacketSizeBits() + 7) / 8);
     }
 
-    ByteBuffer getByteBufferAt(long position, long size) throws IOException {
-        return fFileChannel.map(MapMode.READ_ONLY, position, size);
+    @NonNull
+    ByteBuffer getByteBufferAt(long position, long size) throws CTFReaderException, IOException {
+        MappedByteBuffer map = fFileChannel.map(MapMode.READ_ONLY, position, size);
+        if (map == null) {
+            throw new CTFReaderException("Failed to allocate mapped byte buffer"); //$NON-NLS-1$
+        }
+        return map;
     }
 
-    /**
-     * @param fileSizeBytes
-     * @param packetOffsetBytes
-     * @param packetIndex
-     * @param bitBuffer
-     * @return
-     * @throws CTFReaderException
-     */
+    @NonNull
     private ByteBuffer createPacketBitBuffer(long fileSizeBytes,
-            long packetOffsetBytes, StreamInputPacketIndexEntry packetIndex,
-            BitBuffer bitBuffer) throws CTFReaderException {
+            long packetOffsetBytes, StreamInputPacketIndexEntry packetIndex) throws CTFReaderException {
         /*
          * Initial size, it should map at least the packet header + context
          * size.
@@ -343,15 +341,11 @@ public class CTFStreamInput implements IDefinitionScope, AutoCloseable {
         /*
          * Map the packet.
          */
-        ByteBuffer bb;
-
         try {
-            bb = getByteBufferAt(packetOffsetBytes, mapSize);
+            return getByteBufferAt(packetOffsetBytes, mapSize);
         } catch (IOException e) {
             throw new CTFReaderException(e);
         }
-        bitBuffer.setByteBuffer(bb);
-        return bb;
     }
 
     private void parseTracePacketHeader(StructDeclaration tracePacketHeaderDecl,
