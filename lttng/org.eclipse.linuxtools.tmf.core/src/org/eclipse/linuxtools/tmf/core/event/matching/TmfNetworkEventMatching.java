@@ -13,6 +13,7 @@
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
@@ -41,6 +42,8 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      */
     private final Table<ITmfTrace, PacketKey, ITmfEvent> fUnmatchedOut = HashBasedTable.create();
 
+    private final LinkedList<PacketKey> queue = new LinkedList<>();
+
     /**
      * @since 3.1
      */
@@ -68,6 +71,8 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         OUT,
     }
 
+    CleanUpStrategy fCleanUpClass = null;
+
     /**
      * Constructor with multiple traces and match processing object
      *
@@ -88,6 +93,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      */
     public TmfNetworkEventMatching(Collection<ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
         super(traces, tmfEventMatches);
+        fCleanUpClass = new CleanUpStrategy();
     }
 
     /**
@@ -98,6 +104,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         // Initialize the matching infrastructure (unmatched event lists)
         fUnmatchedIn.clear();
         fUnmatchedOut.clear();
+        queue.clear();
         super.initMatching();
     }
 
@@ -196,12 +203,20 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
              */
             if (!unmatchedTbl.contains(event.getTrace(), eventKey)) {
                 unmatchedTbl.put(event.getTrace(), eventKey, event);
+                queue.add(eventKey);
+                cleanUp();
             }
         }
         if (event instanceof TmfEvent) {
             ((TmfEvent) event).compress();
         }
 
+    }
+
+    @Override
+    protected void finalizeMatching() {
+        super.finalizeMatching();
+        System.out.println(this);
     }
 
     /**
@@ -223,6 +238,44 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         }
 
         return b.toString();
+    }
+
+    /**
+     * @since 3.1
+     */
+    public synchronized void cleanUp() {
+        if (fCleanUpClass != null) {
+            fCleanUpClass.doClean();
+        }
+    }
+
+    private class CleanUpStrategy {
+
+        private static final int threshold = 100;
+        private int count;
+        private long delay = 1000000000;
+
+        public CleanUpStrategy() {
+            count = 0;
+        }
+
+        public void doClean() {
+            count = count++ % threshold;
+            if (count == 0) {
+                PacketKey last = queue.getLast();
+                while((last.getTs() - queue.peek().getTs()) > delay) {
+                    PacketKey key = queue.poll();
+                    for (ITmfTrace mTrace: fUnmatchedIn.rowKeySet()) {
+                        fUnmatchedIn.remove(mTrace, key);
+                    }
+                    for (ITmfTrace mTrace: fUnmatchedOut.rowKeySet()) {
+                        fUnmatchedOut.remove(mTrace, key);
+                    }
+                }
+
+            }
+        }
+
     }
 
 }
