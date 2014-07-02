@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -42,13 +40,13 @@ import org.eclipse.linuxtools.ctf.core.event.IEventDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.event.scope.IDefinitionScope;
 import org.eclipse.linuxtools.ctf.core.event.scope.LexicalScope;
-import org.eclipse.linuxtools.ctf.core.event.types.ArrayDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.Definition;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDefinition;
 import org.eclipse.linuxtools.internal.ctf.core.event.CTFCallsiteComparator;
 import org.eclipse.linuxtools.internal.ctf.core.event.metadata.exceptions.ParseException;
+import org.eclipse.linuxtools.internal.ctf.core.event.types.ArrayDefinition;
 
 /**
  * A CTF trace on the file system.
@@ -127,9 +125,6 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
      * Collection of all the clocks in a system.
      */
     private final Map<String, CTFClock> fClocks = new HashMap<>();
-
-    /** FileInputStreams to the streams */
-    private final List<FileInputStream> fFileInputStreams = new LinkedList<>();
 
     /** Handlers for the metadata files */
     private static final FileFilter METADATA_FILE_FILTER = new MetadataFileFilter();
@@ -221,19 +216,12 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
     /**
      * Dispose the trace
      *
+     * FIXME Not needed anymore, class doesn't need to be AutoCloseable.
+     *
      * @since 3.0
      */
     @Override
     public void close() {
-        for (FileInputStream fis : fFileInputStreams) {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    // do nothing it's ok, we tried to close it.
-                }
-            }
-        }
     }
 
     // ------------------------------------------------------------------------
@@ -506,26 +494,20 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
         MappedByteBuffer byteBuffer;
         BitBuffer streamBitBuffer;
         CTFStream stream;
-        FileChannel fc;
 
         if (!streamFile.canRead()) {
             throw new CTFReaderException("Unreadable file : " //$NON-NLS-1$
                     + streamFile.getPath());
         }
 
-        FileInputStream fis = null;
-        try {
-            /* Open the file and get the FileChannel */
-            fis = new FileInputStream(streamFile);
-            fFileInputStreams.add(fis);
-            fc = fis.getChannel();
-
+        try (FileInputStream fis = new FileInputStream(streamFile);
+                FileChannel fc = fis.getChannel()) {
             /* Map one memory page of 4 kiB */
             byteBuffer = fc.map(MapMode.READ_ONLY, 0, (int) Math.min(fc.size(), 4096L));
-        } catch (IOException e) {
-            if (fis != null) {
-                fFileInputStreams.remove(fis);
+            if( byteBuffer == null){
+                throw new IllegalStateException("Failed to allocate memory"); //$NON-NLS-1$
             }
+        } catch (IOException e) {
             /* Shouldn't happen at this stage if every other check passed */
             throw new CTFReaderException(e);
         }

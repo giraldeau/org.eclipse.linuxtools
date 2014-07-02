@@ -34,7 +34,7 @@ import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
  * @author Simon Marchi
  */
 @NonNullByDefault
-public class IntegerDeclaration extends Declaration {
+public class IntegerDeclaration extends Declaration implements ISimpleDatatypeDeclaration {
 
     // ------------------------------------------------------------------------
     // Helpers
@@ -199,7 +199,8 @@ public class IntegerDeclaration extends Declaration {
         fBase = base;
 
         @SuppressWarnings("null")
-        @NonNull ByteOrder actualByteOrder = (byteOrder == null ? ByteOrder.nativeOrder() : byteOrder);
+        @NonNull
+        ByteOrder actualByteOrder = (byteOrder == null ? ByteOrder.nativeOrder() : byteOrder);
         fByteOrder = actualByteOrder;
 
         fEncoding = encoding;
@@ -261,6 +262,16 @@ public class IntegerDeclaration extends Declaration {
     }
 
     /**
+     * Is the integer an unsigned byte (8 bits and no sign)?
+     *
+     * @return is the integer an unsigned byte
+     * @since 3.1
+     */
+    public boolean isUnsignedByte() {
+        return (fLength == 8) && (!fSigned);
+    }
+
+    /**
      * Get the length in bits for this integer
      *
      * @return the length of the integer
@@ -301,7 +312,10 @@ public class IntegerDeclaration extends Declaration {
     @Override
     public IntegerDefinition createDefinition(@Nullable IDefinitionScope definitionScope,
             String fieldName, BitBuffer input) throws CTFReaderException {
+        ByteOrder byteOrder = input.getByteOrder();
+        input.setByteOrder(fByteOrder);
         long value = read(input);
+        input.setByteOrder(byteOrder);
         return new IntegerDefinition(this, definitionScope, fieldName, value);
     }
 
@@ -329,7 +343,8 @@ public class IntegerDeclaration extends Declaration {
          */
 
         @SuppressWarnings("null")
-        @NonNull BigInteger ret = BigInteger.ONE.shiftLeft(significantBits).subtract(BigInteger.ONE);
+        @NonNull
+        BigInteger ret = BigInteger.ONE.shiftLeft(significantBits).subtract(BigInteger.ONE);
         return ret;
     }
 
@@ -342,7 +357,8 @@ public class IntegerDeclaration extends Declaration {
     public BigInteger getMinValue() {
         if (!fSigned) {
             @SuppressWarnings("null")
-            @NonNull BigInteger ret = BigInteger.ZERO;
+            @NonNull
+            BigInteger ret = BigInteger.ZERO;
             return ret;
         }
 
@@ -356,7 +372,8 @@ public class IntegerDeclaration extends Declaration {
          * (1 << N).
          */
         @SuppressWarnings("null")
-        @NonNull BigInteger ret = BigInteger.ONE.shiftLeft(significantBits).negate();
+        @NonNull
+        BigInteger ret = BigInteger.ONE.shiftLeft(significantBits).negate();
         return ret;
     }
 

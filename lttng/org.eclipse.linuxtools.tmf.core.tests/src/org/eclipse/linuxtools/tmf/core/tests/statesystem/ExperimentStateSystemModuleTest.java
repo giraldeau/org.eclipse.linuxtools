@@ -43,7 +43,7 @@ import org.junit.rules.Timeout;
  */
 public class ExperimentStateSystemModuleTest {
 
-    /** Time-out tests after 20 seconds */
+    /** Time-out tests after some time */
     @Rule
     public TestRule globalTimeout = new Timeout(60000);
 

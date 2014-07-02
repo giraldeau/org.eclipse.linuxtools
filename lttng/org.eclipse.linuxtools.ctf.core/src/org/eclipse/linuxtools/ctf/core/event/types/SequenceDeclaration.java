@@ -29,11 +29,12 @@ import com.google.common.collect.Multimap;
  *
  * An array where the size is fixed but declared in the trace, unlike array
  * where it is declared with a literal
- *
+ * @deprecated use {@link org.eclipse.linuxtools.internal.ctf.core.event.types.SequenceDeclaration}
  * @version 1.0
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
+@Deprecated
 public class SequenceDeclaration extends Declaration {
 
     // ------------------------------------------------------------------------

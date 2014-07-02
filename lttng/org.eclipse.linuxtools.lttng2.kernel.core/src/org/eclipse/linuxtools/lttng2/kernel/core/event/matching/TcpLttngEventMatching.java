@@ -12,17 +12,17 @@
 
 package org.eclipse.linuxtools.lttng2.kernel.core.event.matching;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.TcpEventStrings;
+import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching.TcpPacketKey;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEventField;
 import org.eclipse.linuxtools.tmf.core.event.TmfEventField;
 import org.eclipse.linuxtools.tmf.core.event.matching.ITmfNetworkMatchDefinition;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching.MatchingType;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.Direction;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfEventTypeCollectionHelper;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
@@ -68,28 +68,36 @@ public class TcpLttngEventMatching implements ITmfNetworkMatchDefinition {
      * @param event
      *            The event for which to compute the key
      * @return the unique key for this event
+     * @since 3.0
      */
     @Override
-    public List<Object> getUniqueField(ITmfEvent event) {
-        List<Object> keys = new ArrayList<>();
-
+    public PacketKey getUniqueField(ITmfEvent event) {
         TmfEventField field = (TmfEventField) event.getContent();
         ITmfEventField data;
 
+        long seq = -1, ackseq = -1, flags = -1;
         data = field.getSubField(key_seq);
         if (data != null) {
-            keys.add(data.getValue());
+            seq = (long) data.getValue();
+        } else {
+            return null;
         }
         data = field.getSubField(key_ackseq);
         if (data != null) {
-            keys.add(data.getValue());
+            ackseq = (long) data.getValue();
+        } else {
+            return null;
         }
         data = field.getSubField(key_flags);
         if (data != null) {
-            keys.add(data.getValue());
+            flags = (long) data.getValue();
+        } else {
+            return null;
         }
 
-        return keys;
+        PacketKey key = new TcpPacketKey(event.getTimestamp().getValue(), seq, ackseq, flags);
+
+        return key;
     }
 
     @Override

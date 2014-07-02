@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableMap.Builder;
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
-public final class StructDefinition extends Definition implements IDefinitionScope {
+public final class StructDefinition extends ScopedDefinition {
 
     // ------------------------------------------------------------------------
     // Attributes
@@ -51,6 +51,33 @@ public final class StructDefinition extends Definition implements IDefinitionSco
     // ------------------------------------------------------------------------
 
     /**
+     * *DEPRECATED* TODO: To remove once we break the API...
+     *
+     * Not marked with the annotation to not annoy callers using a List, which
+     * is still as valid with the new constructor. But the compiler gives an
+     * error even though a Iterable is a List too...
+     *
+     * @param declaration
+     *            the parent declaration
+     * @param definitionScope
+     *            the parent scope
+     * @param structFieldName
+     *            the field name
+     * @param fieldNames
+     *            the list of fields
+     * @param definitions
+     *            the definitions
+     * @since 3.1
+     */
+    public StructDefinition(@NonNull StructDeclaration declaration,
+            IDefinitionScope definitionScope,
+            @NonNull String structFieldName,
+            List<String> fieldNames,
+            Definition[] definitions) {
+        this(declaration, definitionScope, structFieldName, (Iterable<String>) fieldNames, definitions);
+    }
+
+    /**
      * Constructor
      *
      * @param declaration
@@ -63,10 +90,13 @@ public final class StructDefinition extends Definition implements IDefinitionSco
      *            the list of fields
      * @param definitions
      *            the definitions
-     * @since 3.0
+     * @since 3.1
      */
     public StructDefinition(@NonNull StructDeclaration declaration,
-            IDefinitionScope definitionScope, @NonNull String structFieldName, List<String> fieldNames, Definition[] definitions) {
+            IDefinitionScope definitionScope,
+            @NonNull String structFieldName,
+            Iterable<String> fieldNames,
+            Definition[] definitions) {
         super(declaration, definitionScope, structFieldName);
         fFieldNames = ImmutableList.copyOf(fieldNames);
         fDefinitions = definitions;
@@ -89,19 +119,17 @@ public final class StructDefinition extends Definition implements IDefinitionSco
      */
     public Definition getDefinition(String fieldName) {
         if (fDefinitionsMap == null) {
-            buildFieldsMap();
-        }
-        return fDefinitionsMap.get(fieldName);
-    }
-
-    private void buildFieldsMap() {
-        Builder<String, Definition> mapBuilder = new ImmutableMap.Builder<>();
-        for (int i = 0; i < fFieldNames.size(); i++) {
-            if (fDefinitions[i] != null) {
-                mapBuilder.put(fFieldNames.get(i), fDefinitions[i]);
+            /* Build the definitions map */
+            Builder<String, Definition> mapBuilder = new ImmutableMap.Builder<>();
+            for (int i = 0; i < fFieldNames.size(); i++) {
+                if (fDefinitions[i] != null) {
+                    mapBuilder.put(fFieldNames.get(i), fDefinitions[i]);
+                }
             }
+            fDefinitionsMap = mapBuilder.build();
         }
-        fDefinitionsMap = mapBuilder.build();
+
+        return fDefinitionsMap.get(fieldName);
     }
 
     /**
@@ -140,102 +168,6 @@ public final class StructDefinition extends Definition implements IDefinitionSco
             return fDefinitions[val];
         }
         return null;
-    }
-
-    /**
-     * Lookup an array in a struct. If the name returns a non-array (like an
-     * int) than the method returns null
-     *
-     * @param name
-     *            the name of the array
-     * @return the array or null.
-     */
-    public ArrayDefinition lookupArray(String name) {
-        Definition def = lookupDefinition(name);
-        return (ArrayDefinition) ((def instanceof ArrayDefinition) ? def : null);
-    }
-
-    /**
-     * Lookup an enum in a struct. If the name returns a non-enum (like an int)
-     * than the method returns null
-     *
-     * @param name
-     *            the name of the enum
-     * @return the enum or null.
-     */
-    public EnumDefinition lookupEnum(String name) {
-        Definition def = lookupDefinition(name);
-        return (EnumDefinition) ((def instanceof EnumDefinition) ? def : null);
-    }
-
-    /**
-     * Lookup an integer in a struct. If the name returns a non-integer (like an
-     * float) than the method returns null
-     *
-     * @param name
-     *            the name of the integer
-     * @return the integer or null.
-     */
-    public IntegerDefinition lookupInteger(String name) {
-        Definition def = lookupDefinition(name);
-        return (IntegerDefinition) ((def instanceof IntegerDefinition) ? def
-                : null);
-    }
-
-    /**
-     * Lookup a sequence in a struct. If the name returns a non-sequence (like
-     * an int) than the method returns null
-     *
-     * @param name
-     *            the name of the sequence
-     * @return the sequence or null.
-     */
-    public SequenceDefinition lookupSequence(String name) {
-        Definition def = lookupDefinition(name);
-        return (SequenceDefinition) ((def instanceof SequenceDefinition) ? def
-                : null);
-    }
-
-    /**
-     * Lookup a string in a struct. If the name returns a non-string (like an
-     * int) than the method returns null
-     *
-     * @param name
-     *            the name of the string
-     * @return the string or null.
-     */
-    public StringDefinition lookupString(String name) {
-        Definition def = lookupDefinition(name);
-        return (StringDefinition) ((def instanceof StringDefinition) ? def
-                : null);
-    }
-
-    /**
-     * Lookup a struct in a struct. If the name returns a non-struct (like an
-     * int) than the method returns null
-     *
-     * @param name
-     *            the name of the struct
-     * @return the struct or null.
-     */
-    public StructDefinition lookupStruct(String name) {
-        Definition def = lookupDefinition(name);
-        return (StructDefinition) ((def instanceof StructDefinition) ? def
-                : null);
-    }
-
-    /**
-     * Lookup a variant in a struct. If the name returns a non-variant (like an
-     * int) than the method returns null
-     *
-     * @param name
-     *            the name of the variant
-     * @return the variant or null.
-     */
-    public VariantDefinition lookupVariant(String name) {
-        Definition def = lookupDefinition(name);
-        return (VariantDefinition) ((def instanceof VariantDefinition) ? def
-                : null);
     }
 
     @Override

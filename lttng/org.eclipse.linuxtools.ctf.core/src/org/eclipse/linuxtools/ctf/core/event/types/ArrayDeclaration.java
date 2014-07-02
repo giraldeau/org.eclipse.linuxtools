@@ -32,10 +32,12 @@ import com.google.common.collect.Multimap;
  * can refer to any type not containing the type of the array being declared (no
  * circular dependency). The length is the number of elements in an array.
  *
+ * @deprecated use {@link org.eclipse.linuxtools.internal.ctf.core.event.types.ArrayDeclaration}
  * @version 1.0
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
+@Deprecated
 public class ArrayDeclaration extends Declaration {
 
     // ------------------------------------------------------------------------
@@ -128,6 +130,7 @@ public class ArrayDeclaration extends Declaration {
     /**
      * @since 3.0
      */
+    @Deprecated
     @Override
     public ArrayDefinition createDefinition(IDefinitionScope definitionScope,
             @NonNull String fieldName, BitBuffer input) throws CTFReaderException {

@@ -17,6 +17,7 @@ import static org.junit.Assert.assertNotNull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.trace.CTFReaderException;
 import org.junit.Before;
@@ -35,13 +36,14 @@ public class BitBufferTest {
 
     /**
      * Perform pre-test initialization.
-     * @throws CTFReaderException An error that cannot happen (position is under 128)
+     *
+     * @throws CTFReaderException
+     *             An error that cannot happen (position is under 128)
      */
     @Before
     public void setUp() throws CTFReaderException {
-        fixture = new BitBuffer(java.nio.ByteBuffer.allocateDirect(128));
+        fixture = new BitBuffer(Util.testMemory(ByteBuffer.allocateDirect(1)));
         fixture.setByteOrder(ByteOrder.BIG_ENDIAN);
-        fixture.setByteBuffer(ByteBuffer.allocate(0));
         fixture.position(1);
     }
 
@@ -54,7 +56,7 @@ public class BitBufferTest {
 
         assertNotNull(result);
         assertEquals(0, result.position());
-        assertEquals(null, result.getByteBuffer());
+        assertNotNull(result.getByteBuffer());
     }
 
     /**
@@ -62,9 +64,7 @@ public class BitBufferTest {
      */
     @Test
     public void testBitBuffer_fromByteBuffer() {
-        ByteBuffer buf = ByteBuffer.allocate(0);
-        BitBuffer result = new BitBuffer(buf);
-
+        BitBuffer result = new BitBuffer(Util.testMemory(ByteBuffer.allocate(0)));
         assertNotNull(result);
         assertEquals(0, result.position());
     }
@@ -77,7 +77,7 @@ public class BitBufferTest {
         int length = 1;
         boolean result = fixture.canRead(length);
 
-        assertEquals(false, result);
+        assertEquals(true, result);
     }
 
     /**
@@ -96,15 +96,14 @@ public class BitBufferTest {
         ByteBuffer result = fixture.getByteBuffer();
 
         assertNotNull(result);
-        assertEquals("java.nio.HeapByteBuffer[pos=0 lim=0 cap=0]", result.toString());
-        assertEquals(false, result.isDirect());
-        assertEquals(true, result.hasArray());
-        assertEquals(0, result.arrayOffset());
-        assertEquals(0, result.limit());
-        assertEquals(0, result.remaining());
+        assertEquals("java.nio.DirectByteBuffer[pos=0 lim=1 cap=1]", result.toString());
+        assertEquals(true, result.isDirect());
+        assertEquals(false, result.hasArray());
+        assertEquals(1, result.limit());
+        assertEquals(1, result.remaining());
         assertEquals(0, result.position());
-        assertEquals(0, result.capacity());
-        assertEquals(false, result.hasRemaining());
+        assertEquals(1, result.capacity());
+        assertEquals(true, result.hasRemaining());
         assertEquals(false, result.isReadOnly());
     }
 
@@ -163,29 +162,51 @@ public class BitBufferTest {
     }
 
     /**
-     * Run the void setByteBuffer(ByteBuffer) method test.
-     */
-    @Test
-    public void testSetByteBuffer() {
-        ByteBuffer buf = ByteBuffer.allocate(0);
-        fixture.setByteBuffer(buf);
-    }
-
-    /**
-     * Run the void setByteBuffer(ByteBuffer) method test.
-     */
-    @Test
-    public void testSetByteBuffer_null() {
-        ByteBuffer buf = null;
-        fixture.setByteBuffer(buf);
-    }
-
-    /**
      * Run the void setByteOrder(ByteOrder) method test.
      */
     @Test
     public void testSetByteOrder() {
         ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
         fixture.setByteOrder(byteOrder);
+    }
+
+    /**
+     * Test the get function
+     */
+    @Test
+    public void testGetBytes() {
+        @NonNull
+        byte[] data = new byte[2];
+        ByteBuffer bb = ByteBuffer.allocate(10);
+        bb.put((byte) 0);
+        bb.put((byte) 1);
+        bb.put((byte) 1);
+        bb.put((byte) 0);
+        fixture = new BitBuffer(bb);
+        fixture.get(data);
+        assertEquals(0, data[0]);
+        assertEquals(1, data[1]);
+        fixture.get(data);
+        assertEquals(1, data[0]);
+        assertEquals(0, data[1]);
+    }
+
+    /**
+     * Test the get function
+     *
+     * @throws CTFReaderException
+     *             won't happen but we seek in a buffer
+     */
+    @Test
+    public void testGetBytesMiddle() throws CTFReaderException {
+        @NonNull
+        byte[] data = new byte[5];
+        // this string has been carefully selected and tested... don't change
+        // the string and expect the result to be the same.
+        fixture = new BitBuffer(Util.testMemory(ByteBuffer.wrap(new String("hello world").getBytes())));
+        fixture.position(6 * 8);
+        fixture.get(data);
+        String actual = new String(data);
+        assertEquals("world", actual);
     }
 }

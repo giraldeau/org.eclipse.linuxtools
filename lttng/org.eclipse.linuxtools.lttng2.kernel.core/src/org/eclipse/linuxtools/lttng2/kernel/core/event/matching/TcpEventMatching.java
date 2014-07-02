@@ -12,8 +12,6 @@
 
 package org.eclipse.linuxtools.lttng2.kernel.core.event.matching;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.TcpEventStrings;
@@ -22,11 +20,14 @@ import org.eclipse.linuxtools.tmf.core.event.ITmfEventField;
 import org.eclipse.linuxtools.tmf.core.event.matching.ITmfNetworkMatchDefinition;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching.MatchingType;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.Direction;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfEventTypeCollectionHelper;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 /**
  * Class to match tcp type events. This matching class applies to traces
@@ -45,6 +46,67 @@ public class TcpEventMatching implements ITmfNetworkMatchDefinition {
     private static final ImmutableSet<String> REQUIRED_EVENTS = ImmutableSet.of(
             TcpEventStrings.INET_SOCK_LOCAL_IN,
             TcpEventStrings.INET_SOCK_LOCAL_OUT);
+
+    /**
+     * @since 3.0
+     */
+    public static class TcpPacketKey extends PacketKey {
+        private static HashFunction hf = Hashing.goodFastHash(32);
+        private long seq;
+        private long ackseq;
+        private long flags;
+
+        /**
+         * @param ts
+         * @param s
+         * @param a
+         * @param f
+         */
+        public TcpPacketKey(long ts, long s, long a, long f) {
+            super(ts);
+            this.seq = s;
+            this.ackseq = a;
+            this.flags = f;
+        }
+
+        public long getSeq() {
+            return seq;
+        }
+
+        public long getAckseq() {
+            return ackseq;
+        }
+
+        public long getFlags() {
+            return flags;
+        }
+
+        public void setFlags(long flags) {
+            this.flags = flags;
+        }
+
+        @Override
+        public int hashCode() {
+            return hf.newHasher(32)
+                    .putLong(seq)
+                    .putLong(ackseq)
+                    .putLong(flags).hash().asInt();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof TcpPacketKey) {
+                TcpPacketKey key = (TcpPacketKey) o;
+                if (key.seq == this.seq &&
+                        key.ackseq == this.ackseq &&
+                        key.flags == this.flags) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    }
 
     private static boolean canMatchPacket(final ITmfEvent event) {
         /* Make sure all required fields are present to match with this event */
@@ -80,16 +142,17 @@ public class TcpEventMatching implements ITmfNetworkMatchDefinition {
      * @param event
      *            The event for which to compute the key
      * @return the unique key for this event
+     * @since 3.0
      */
     @Override
-    public List<Object> getUniqueField(ITmfEvent event) {
-        List<Object> keys = new ArrayList<>();
+    public PacketKey getUniqueField(ITmfEvent event) {
 
-        keys.add(event.getContent().getField(TcpEventStrings.SEQ).getValue());
-        keys.add(event.getContent().getField(TcpEventStrings.ACKSEQ).getValue());
-        keys.add(event.getContent().getField(TcpEventStrings.FLAGS).getValue());
+        PacketKey key = new TcpPacketKey(event.getTimestamp().getValue(),
+                (long) event.getContent().getField(TcpEventStrings.SEQ).getValue(),
+                (long) event.getContent().getField(TcpEventStrings.ACKSEQ).getValue(),
+                (long) event.getContent().getField(TcpEventStrings.FLAGS).getValue());
 
-        return keys;
+        return key;
     }
 
     @Override
