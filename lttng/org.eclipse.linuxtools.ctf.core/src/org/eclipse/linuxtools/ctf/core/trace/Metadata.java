@@ -250,7 +250,7 @@ public class Metadata {
         CTFParser ctfParser = new CTFParser(tokens, false);
 
         parse_return pr = ctfParser.parse();
-        return pr.getTree();
+        return (CommonTree) pr.getTree();
     }
 
     /**
