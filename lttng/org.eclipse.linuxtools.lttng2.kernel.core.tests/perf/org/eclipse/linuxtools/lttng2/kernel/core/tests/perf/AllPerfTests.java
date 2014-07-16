@@ -22,7 +22,8 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.analysis.AllPerfTests.class
+        org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.analysis.AllPerfTests.class,
+        org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.event.matching.AllPerfTests.class
 })
 public class AllPerfTests {
 

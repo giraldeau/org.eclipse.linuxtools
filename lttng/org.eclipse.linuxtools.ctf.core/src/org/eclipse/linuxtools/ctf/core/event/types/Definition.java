@@ -31,7 +31,7 @@ import org.eclipse.linuxtools.ctf.core.event.scope.LexicalScope;
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
-public abstract class Definition {
+public abstract class Definition implements IDefinition {
 
     // ------------------------------------------------------------------------
     // Attributes
@@ -40,7 +40,7 @@ public abstract class Definition {
     private final String fFieldName;
 
     /** The complete path of this field */
-    private final LexicalScope fPath;
+    private final @NonNull LexicalScope fPath;
 
     private final IDefinitionScope fDefinitionScope;
 
@@ -65,10 +65,32 @@ public abstract class Definition {
      * @since 3.0
      */
     public Definition(@NonNull IDeclaration declaration, IDefinitionScope definitionScope, @NonNull String fieldName) {
+        this(declaration, definitionScope, fieldName, declaration.getPath(definitionScope, fieldName));
+    }
+
+    /**
+     * Constructor This one takes the scope and thus speeds up definition
+     * creation
+     *
+     *
+     * @param declaration
+     *            the event declaration
+     *
+     * @param definitionScope
+     *            the definition is in a scope, (normally a struct) what is it?
+     *
+     * @param fieldName
+     *            the name of the defintions. it is a field in the parent scope.
+     *
+     * @param scope
+     *            the scope
+     * @since 3.1
+     */
+    public Definition(@NonNull IDeclaration declaration, IDefinitionScope definitionScope, @NonNull String fieldName, @NonNull LexicalScope scope) {
         fDeclaration = declaration;
         fDefinitionScope = definitionScope;
         fFieldName = fieldName;
-        fPath = fDeclaration.getPath(definitionScope, fieldName);
+        fPath = scope;
     }
 
     // ------------------------------------------------------------------------
@@ -85,12 +107,7 @@ public abstract class Definition {
         return fFieldName;
     }
 
-    /**
-     * Get the complete path of this field.
-     *
-     * @return The path
-     * @since 3.0
-     */
+    @Override
     public LexicalScope getScopePath() {
         return fPath;
     }
@@ -112,12 +129,7 @@ public abstract class Definition {
     // Operations
     // ------------------------------------------------------------------------
 
-    /**
-     *
-     * @return gets the declaration of a datatype
-     *
-     */
-    @NonNull
+    @Override
     public IDeclaration getDeclaration() {
         return fDeclaration;
     }

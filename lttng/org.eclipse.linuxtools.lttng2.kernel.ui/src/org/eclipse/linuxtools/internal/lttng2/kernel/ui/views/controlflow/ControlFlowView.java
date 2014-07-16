@@ -35,8 +35,10 @@ import org.eclipse.linuxtools.statesystem.core.exceptions.StateValueTypeExceptio
 import org.eclipse.linuxtools.statesystem.core.exceptions.TimeRangeException;
 import org.eclipse.linuxtools.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.linuxtools.statesystem.core.statevalue.ITmfStateValue;
+import org.eclipse.linuxtools.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
+import org.eclipse.linuxtools.tmf.ui.TmfUiRefreshHandler;
 import org.eclipse.linuxtools.tmf.ui.views.timegraph.AbstractTimeGraphView;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.ILinkEvent;
 import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.ITimeEvent;
@@ -81,9 +83,6 @@ public class ControlFlowView extends AbstractTimeGraphView {
             PROCESS_COLUMN,
             TID_COLUMN
     };
-
-    // Timeout between updates in the build thread in ms
-    private static final long BUILD_UPDATE_TIMEOUT = 500;
 
     // ------------------------------------------------------------------------
     // Constructors
@@ -221,13 +220,10 @@ public class ControlFlowView extends AbstractTimeGraphView {
 
     @Override
     protected void buildEventList(final ITmfTrace trace, ITmfTrace parentTrace, IProgressMonitor monitor) {
-        LttngKernelAnalysisModule module = trace.getAnalysisModuleOfClass(LttngKernelAnalysisModule.class, LttngKernelAnalysisModule.ID);
-        if (module == null) {
+        if (trace == null) {
             return;
         }
-        module.schedule();
-        module.waitForInitialization();
-        ITmfStateSystem ssq = module.getStateSystem();
+        ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(trace, LttngKernelAnalysisModule.ID);
         if (ssq == null) {
             return;
         }
@@ -243,7 +239,7 @@ public class ControlFlowView extends AbstractTimeGraphView {
             if (monitor.isCanceled()) {
                 return;
             }
-            complete = ssq.waitUntilBuilt(BUILD_UPDATE_TIMEOUT);
+            complete = ssq.waitUntilBuilt(TmfUiRefreshHandler.UPDATE_PERIOD);
             if (ssq.isCancelled()) {
                 return;
             }
@@ -370,11 +366,7 @@ public class ControlFlowView extends AbstractTimeGraphView {
 
     private void buildStatusEvents(ITmfTrace trace, ControlFlowEntry entry, IProgressMonitor monitor, long start, long end) {
         if (start < entry.getEndTime() && end > entry.getStartTime()) {
-            LttngKernelAnalysisModule module = entry.getTrace().getAnalysisModuleOfClass(LttngKernelAnalysisModule.class, LttngKernelAnalysisModule.ID);
-            if (module == null) {
-                return;
-            }
-            ITmfStateSystem ssq = module.getStateSystem();
+            ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(entry.getTrace(), LttngKernelAnalysisModule.ID);
             if (ssq == null) {
                 return;
             }
@@ -413,11 +405,7 @@ public class ControlFlowView extends AbstractTimeGraphView {
         if (realEnd <= realStart) {
             return null;
         }
-        LttngKernelAnalysisModule module = entry.getTrace().getAnalysisModuleOfClass(LttngKernelAnalysisModule.class, LttngKernelAnalysisModule.ID);
-        if (module == null) {
-            return null;
-        }
-        ITmfStateSystem ssq = module.getStateSystem();
+        ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(entry.getTrace(), LttngKernelAnalysisModule.ID);
         if (ssq == null) {
             return null;
         }
@@ -472,11 +460,10 @@ public class ControlFlowView extends AbstractTimeGraphView {
             if (thread > 0) {
                 break;
             }
-            LttngKernelAnalysisModule module = trace.getAnalysisModuleOfClass(LttngKernelAnalysisModule.class, LttngKernelAnalysisModule.ID);
-            if (module == null) {
+            if (trace == null) {
                 continue;
             }
-            ITmfStateSystem ssq = module.getStateSystem();
+            ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(trace, LttngKernelAnalysisModule.ID);
             if (ssq == null) {
                 continue;
             }
@@ -530,11 +517,10 @@ public class ControlFlowView extends AbstractTimeGraphView {
             return list;
         }
         for (ITmfTrace trace : traces) {
-            LttngKernelAnalysisModule module = trace.getAnalysisModuleOfClass(LttngKernelAnalysisModule.class, LttngKernelAnalysisModule.ID);
-            if (module == null) {
+            if (trace == null) {
                 continue;
             }
-            ITmfStateSystem ssq = module.getStateSystem();
+            ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(trace, LttngKernelAnalysisModule.ID);
             if (ssq == null) {
                 continue;
             }

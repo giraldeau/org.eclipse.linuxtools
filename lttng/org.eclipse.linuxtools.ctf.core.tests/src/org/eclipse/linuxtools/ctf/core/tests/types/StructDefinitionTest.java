@@ -20,9 +20,9 @@ import java.nio.ByteBuffer;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.event.types.AbstractArrayDefinition;
-import org.eclipse.linuxtools.ctf.core.event.types.Definition;
 import org.eclipse.linuxtools.ctf.core.event.types.EnumDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.EnumDefinition;
+import org.eclipse.linuxtools.ctf.core.event.types.IDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StringDeclaration;
@@ -124,7 +124,7 @@ public class StructDefinitionTest {
      */
     @Test
     public void testGetDefinitions_1() {
-        Definition result = fixture.getDefinition("_id");
+        IDefinition result = fixture.getDefinition("_id");
         assertNotNull(result);
     }
 
@@ -134,7 +134,7 @@ public class StructDefinitionTest {
     @Test
     public void testLookupArray() {
         String name = INT_ID;
-        AbstractArrayDefinition result = fixture.lookupArray2(name);
+        AbstractArrayDefinition result = fixture.lookupArrayDefinition(name);
         assertNull(result);
     }
 
@@ -144,7 +144,7 @@ public class StructDefinitionTest {
     @Test
     public void testLookupDefinition() {
         String lookupPath = "args";
-        Definition result = fixture.lookupDefinition(lookupPath);
+        IDefinition result = fixture.lookupDefinition(lookupPath);
 
         assertNotNull(result);
     }
@@ -185,7 +185,7 @@ public class StructDefinitionTest {
     @Test
     public void testLookupFixedStringDefinition() {
         String name = SEQUENCE_ID;
-        AbstractArrayDefinition result = fixture.lookupArray2(name);
+        AbstractArrayDefinition result = fixture.lookupArrayDefinition(name);
         assertNotNull(result);
     }
 
