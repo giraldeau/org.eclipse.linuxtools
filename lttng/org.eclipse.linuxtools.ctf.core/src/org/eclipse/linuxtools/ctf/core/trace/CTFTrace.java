@@ -41,6 +41,7 @@ import org.eclipse.linuxtools.ctf.core.event.io.BitBuffer;
 import org.eclipse.linuxtools.ctf.core.event.scope.IDefinitionScope;
 import org.eclipse.linuxtools.ctf.core.event.scope.LexicalScope;
 import org.eclipse.linuxtools.ctf.core.event.types.Definition;
+import org.eclipse.linuxtools.ctf.core.event.types.IDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.IntegerDefinition;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDeclaration;
 import org.eclipse.linuxtools.ctf.core.event.types.StructDefinition;
@@ -446,13 +447,6 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
         return (fPath != null) ? fPath.getPath() : ""; //$NON-NLS-1$
     }
 
-    /**
-     * @since 3.0
-     */
-    @Override
-    public LexicalScope getScopePath() {
-        return LexicalScope.TRACE;
-    }
 
     // ------------------------------------------------------------------------
     // Operations
@@ -517,7 +511,7 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
 
         if (fPacketHeaderDecl != null) {
             /* Read the packet header */
-            fPacketHeaderDef = fPacketHeaderDecl.createDefinition(null, LexicalScope.PACKET_HEADER.getName(), streamBitBuffer);
+            fPacketHeaderDef = fPacketHeaderDecl.createDefinition(this, LexicalScope.PACKET_HEADER, streamBitBuffer);
 
             /* Check the magic number */
             IntegerDefinition magicDef = (IntegerDefinition) fPacketHeaderDef.lookupDefinition("magic"); //$NON-NLS-1$
@@ -527,7 +521,7 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
             }
 
             /* Check UUID */
-            Definition lookupDefinition = fPacketHeaderDef.lookupDefinition("uuid"); //$NON-NLS-1$
+            IDefinition lookupDefinition = fPacketHeaderDef.lookupDefinition("uuid"); //$NON-NLS-1$
             ArrayDefinition uuidDef = (ArrayDefinition) lookupDefinition;
             if (uuidDef != null) {
                 UUID otheruuid = Utils.getUUIDfromDefinition(uuidDef);
@@ -538,7 +532,7 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
             }
 
             /* Read the stream ID */
-            Definition streamIDDef = fPacketHeaderDef.lookupDefinition("stream_id"); //$NON-NLS-1$
+            IDefinition streamIDDef = fPacketHeaderDef.lookupDefinition("stream_id"); //$NON-NLS-1$
 
             if (streamIDDef instanceof IntegerDefinition) { // this doubles as a
                                                             // null check
@@ -567,6 +561,18 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
         return stream;
     }
 
+    // ------------------------------------------------------------------------
+    // IDefinitionScope
+    // ------------------------------------------------------------------------
+
+    /**
+     * @since 3.0
+     */
+    @Override
+    public LexicalScope getScopePath() {
+        return LexicalScope.TRACE;
+    }
+
     /**
      * Looks up a definition from packet
      *
@@ -577,11 +583,15 @@ public class CTFTrace implements IDefinitionScope, AutoCloseable {
      */
     @Override
     public Definition lookupDefinition(String lookupPath) {
-        if (lookupPath.equals("trace.packet.header")) { //$NON-NLS-1$
+        if (lookupPath.equals(LexicalScope.TRACE_PACKET_HEADER.toString())) {
             return fPacketHeaderDef;
         }
         return null;
     }
+
+    // ------------------------------------------------------------------------
+    // Live trace reading
+    // ------------------------------------------------------------------------
 
     /**
      * Add a new stream file to support new streams while the trace is being

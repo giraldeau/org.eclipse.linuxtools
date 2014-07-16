@@ -35,6 +35,11 @@ public abstract class TmfAbstractAnalysisParamProvider implements IAnalysisParam
             throw new IllegalArgumentException();
         }
         ITmfTrace selectedTrace = TmfTraceManager.getInstance().getActiveTrace();
+        /* If no trace is active, just register the module */
+        if (selectedTrace == null) {
+            fModule = module;
+            return;
+        }
         IAnalysisModule selectedModule = selectedTrace.getAnalysisModule(module.getId());
         /* register only if the module is for the currently selected trace */
         if (selectedModule == module) {
