@@ -16,11 +16,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMatching;
+import org.eclipse.linuxtools.tmf.core.event.matching.IMatchProcessingUnit;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -38,10 +40,10 @@ public class MatchAndSyncTest {
 
     /**
      * Testing the packet matching
+     * @throws Exception exception
      */
     @Test
-    public void testMatching() {
-        final String cr = System.getProperty("line.separator");
+    public void testMatching() throws Exception {
         assumeTrue(CtfTmfTestTrace.SYNC_SRC.exists());
         assumeTrue(CtfTmfTestTrace.SYNC_DEST.exists());
         try (CtfTmfTrace trace1 = CtfTmfTestTrace.SYNC_SRC.getTrace();
@@ -57,16 +59,16 @@ public class MatchAndSyncTest {
             TmfNetworkEventMatching twoTraceMatch = new TmfNetworkEventMatching(tracearr);
             assertTrue(twoTraceMatch.matchEvents());
 
-            String stats = twoTraceMatch.toString();
-            assertEquals("TmfEventMatches [ Number of matches found: 46 ]" +
-                    "Trace 0:" + cr +
-                    "  2 unmatched incoming events" + cr +
-                    "  1 unmatched outgoing events" + cr +
-                    "Trace 1:" + cr +
-                    "  3 unmatched incoming events" + cr +
-                    "  2 unmatched outgoing events" + cr, stats);
-
+            // Access protected method of parent class to get the number of matches
+            Method m = twoTraceMatch
+                    .getClass()
+                    .getSuperclass()
+                    .getDeclaredMethod("getProcessingUnit");
+            m.setAccessible(true);
+            IMatchProcessingUnit unit = (IMatchProcessingUnit) m.invoke(twoTraceMatch);
+            assertEquals(46, unit.countMatches());
         }
+
     }
 
 }
