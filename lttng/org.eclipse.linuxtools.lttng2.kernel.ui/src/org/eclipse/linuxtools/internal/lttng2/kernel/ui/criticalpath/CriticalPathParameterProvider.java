@@ -162,7 +162,7 @@ public class CriticalPathParameterProvider extends TmfAbstractAnalysisParamProvi
 
     @Override
     public boolean appliesToTrace(ITmfTrace trace) {
-        for (ITmfTrace aTrace : TmfTraceManager.getFullTraceSet(trace)) {
+        for (ITmfTrace aTrace : TmfTraceManager.getTraceSetWithExperiment(trace)) {
             if (aTrace instanceof LttngKernelTrace) {
                 return true;
             }
