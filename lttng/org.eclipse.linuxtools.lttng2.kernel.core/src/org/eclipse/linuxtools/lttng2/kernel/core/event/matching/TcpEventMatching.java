@@ -48,7 +48,7 @@ public class TcpEventMatching implements ITmfNetworkMatchDefinition {
             TcpEventStrings.INET_SOCK_LOCAL_OUT);
 
     /**
-     * @since 3.0
+     * @since 3.1
      */
     public static class TcpPacketKey extends PacketKey {
         private static HashFunction hf = Hashing.goodFastHash(32);

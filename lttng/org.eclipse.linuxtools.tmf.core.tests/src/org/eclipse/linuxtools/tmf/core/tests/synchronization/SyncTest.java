@@ -186,7 +186,7 @@ public class SyncTest {
                         new TmfSyncEventStub(t2, new TmfTimestamp(7)))
                 );
         assertEquals(SyncQuality.INCOMPLETE, syncAlgo.getSynchronizationQuality(t1, t2));
-        assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1 beta 0 ]]", syncAlgo.toString());
+        assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1.333333333333333333333333333333333 beta 1.000000000000000000000000000000001 ]]", syncAlgo.toString());
 
     }
 
@@ -228,7 +228,7 @@ public class SyncTest {
                         new TmfSyncEventStub(t2, new TmfTimestamp(7)))
                 );
         assertEquals(SyncQuality.INCOMPLETE, syncAlgo.getSynchronizationQuality(t1, t2));
-        assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1 beta 0 ]]", syncAlgo.toString());
+        assertEquals("SyncAlgorithmFullyIncremental [Between t1 and t2 [ alpha 1.333333333333333333333333333333333 beta 1.000000000000000000000000000000001 ]]", syncAlgo.toString());
 
         syncAlgo.addMatch(
                 new TmfEventDependency(new TmfSyncEventStub(t2, new TmfTimestamp(7)),

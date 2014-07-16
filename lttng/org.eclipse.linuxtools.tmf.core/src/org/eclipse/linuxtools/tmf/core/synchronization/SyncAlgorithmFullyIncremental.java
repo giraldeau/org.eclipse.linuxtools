@@ -176,6 +176,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
      * @param hostId
      *            the host string
      * @return the timestamps transform
+     * @since 3.1
      */
     public ITmfTimestampTransform getOldTimestampTransform(String hostId) {
         for (ConvexHull traceSync : fSyncs) {
