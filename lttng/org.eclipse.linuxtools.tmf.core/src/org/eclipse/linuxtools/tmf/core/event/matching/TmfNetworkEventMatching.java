@@ -204,7 +204,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
             if (!unmatchedTbl.contains(event.getTrace(), eventKey)) {
                 unmatchedTbl.put(event.getTrace(), eventKey, event);
                 queue.add(eventKey);
-                cleanUp();
+                //cleanUp();
             }
         }
         if (event instanceof TmfEvent) {
