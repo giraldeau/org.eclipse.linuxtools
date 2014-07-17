@@ -109,7 +109,7 @@ public class Task {
         this.hc = hf.newHasher()
                 .putLong(this.ts)
                 .putLong(this.tid)
-                .putString(this.host)
+                .putUnencodedChars(this.host)
                 .hashCode();
     }
 
