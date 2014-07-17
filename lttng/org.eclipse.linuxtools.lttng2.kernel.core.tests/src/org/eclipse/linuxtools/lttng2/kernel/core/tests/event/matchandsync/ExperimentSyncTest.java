@@ -21,10 +21,14 @@ import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMat
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
+import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 import org.eclipse.linuxtools.tmf.ctf.core.tests.shared.CtfTmfTestTrace;
 import org.junit.After;
@@ -91,7 +95,9 @@ public class ExperimentSyncTest {
             fTraces[1].setTimestampTransform(tt2);
 
             assertEquals(tt2, TmfTimestampTransform.IDENTITY);
-            assertEquals("TmfTimestampLinear [ alpha = 0.9999413783703139011056845831168394, beta = 79796507913179.33347660124688298171 ]", tt1.toString());
+            TmfTimestampTransformLinear tt1x = (TmfTimestampTransformLinear) tt1;
+            assertEquals(1.0, tt1x.getAlpha().doubleValue(), 0.001);
+            assertEquals(79796507913179.0, tt1x.getBeta().doubleValue(), 1);
 
             assertEquals(syncAlgo.getTimestampTransform(fTraces[0].getHostId()),fTraces[0].getTimestampTransform());
             assertEquals(syncAlgo.getTimestampTransform(fTraces[1].getHostId()),fTraces[1].getTimestampTransform());
@@ -100,4 +106,26 @@ public class ExperimentSyncTest {
             fail("Exception thrown in experiment synchronization " + e.getMessage());
         }
     }
+
+    /**
+     * Test sync traces on Django experiment
+     * @throws TmfTraceException forward exception thrown by the synchronize method
+     */
+    @Test
+    public void testDjangoSync() throws TmfTraceException {
+        assumeTrue(CtfTmfTestTrace.DJANGO_CLIENT.exists());
+        assumeTrue(CtfTmfTestTrace.DJANGO_DB.exists());
+        assumeTrue(CtfTmfTestTrace.DJANGO_HTTPD.exists());
+        try (CtfTmfTrace client = CtfTmfTestTrace.DJANGO_CLIENT.getTrace();
+                CtfTmfTrace db = CtfTmfTestTrace.DJANGO_DB.getTrace();
+                CtfTmfTrace httpd = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
+            TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class,
+                    "Test experiment", new CtfTmfTrace[] { client, db, httpd }, 1000);
+            SyncAlgorithmFullyIncremental syncAlgo = (SyncAlgorithmFullyIncremental) experiment.synchronizeTraces(true);
+            assertEquals(SyncQuality.ABSENT, syncAlgo.getSynchronizationQuality(client, db));
+            assertEquals(SyncQuality.ACCURATE, syncAlgo.getSynchronizationQuality(client, httpd));
+            assertEquals(SyncQuality.ACCURATE, syncAlgo.getSynchronizationQuality(httpd, db));
+        }
+    }
+
 }
