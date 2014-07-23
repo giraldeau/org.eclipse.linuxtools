@@ -148,6 +148,10 @@ public class TsTransformTest {
      */
     @Test
     public void testInverseComposition() {
-        // TODO: implement inverse transform
+        ITmfTimestampTransform xform = new TmfTimestampTransformLinear(BigDecimal.valueOf(2.0), BigDecimal.valueOf(3));
+        ITmfTimestampTransform inv = xform.inverse();
+        TmfTimestampTransformLinear identity = (TmfTimestampTransformLinear) xform.composeWith(inv);
+        assertEquals(1.0, identity.getAlpha().doubleValue(), 0.001);
+        assertEquals(0.0, identity.getBeta().doubleValue(), 0.001);
     }
 }
