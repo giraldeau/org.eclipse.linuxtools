@@ -20,6 +20,7 @@ Export-Package: org.eclipse.linuxtools.tmf.analysis.graph.core,
  org.eclipse.linuxtools.tmf.analysis.graph.core.ctf,
  org.eclipse.linuxtools.tmf.analysis.graph.core.model,
  org.eclipse.linuxtools.tmf.analysis.graph.core.staging,
- org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo
+ org.eclipse.linuxtools.tmf.analysis.graph.core.staging.algo,
+ org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli
 Import-Package: com.google.common.collect,
  com.google.common.hash

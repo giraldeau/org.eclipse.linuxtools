@@ -13,5 +13,17 @@
          </tracetype>
       </module>
    </extension>
+   <extension
+         id="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli.main"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli.MainCLI">
+         </run>
+      </application>
+   </extension>
 
 </plugin>
