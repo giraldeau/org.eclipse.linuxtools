@@ -3,11 +3,12 @@
 
 <product name="CLI Trace Analyzer" uid="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli.main.product" id="org.eclipse.linuxtools.tracing.rcp.branding.product" application="org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli.main" version="1.0.0.qualifier" useFeatures="false" includeLaunchers="true">
 
+
    <configIni use="default">
    </configIni>
 
    <launcherArgs>
-      <programArgs>-consoleLog -consolelog blah
+      <programArgs>-consoleLog -consolelog
       </programArgs>
       <vmArgs>-Xms40m
 -Xmx512M
@@ -17,9 +18,21 @@
       </vmArgsMac>
    </launcherArgs>
 
+   <windowImages/>
+
+
+   <launcher>
+      <solaris/>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+
    <vm>
       <linux include="false">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7</linux>
    </vm>
+
 
    <plugins>
       <plugin id="com.google.guava"/>
@@ -32,6 +45,9 @@
       <plugin id="org.apache.batik.css"/>
       <plugin id="org.apache.batik.util"/>
       <plugin id="org.apache.batik.util.gui"/>
+      <plugin id="org.apache.commons.cli"/>
+      <plugin id="org.apache.commons.lang"/>
+      <plugin id="org.apache.commons.logging"/>
       <plugin id="org.eclipse.ant.core"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.contenttype"/>

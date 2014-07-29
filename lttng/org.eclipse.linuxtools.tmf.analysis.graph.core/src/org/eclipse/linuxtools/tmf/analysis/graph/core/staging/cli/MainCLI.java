@@ -19,6 +19,7 @@ public class MainCLI implements IApplication {
     private static final Map<String, ICommand> commands = new HashMap<>();
     static {
         commands.put("base", new BaseCommand());
+        commands.put("list", new ListTaskCommand());
     }
 
     public static final String ARGS_KEY = "application.args";
@@ -52,8 +53,9 @@ public class MainCLI implements IApplication {
         Options opts = new Options();
         ICommand cmdHandler = commands.get(cmdName);
         cmdHandler.createOptions(opts);
+        String[] cleanArgs = Arrays.copyOfRange(arguments, 1, arguments.length);
         try {
-            CommandLine line = parser.parse(opts, arguments);
+            CommandLine line = parser.parse(opts, cleanArgs);
             cmdHandler.handle(line);
         } catch (ParseException exp) {
             System.out.println(exp.getMessage());
