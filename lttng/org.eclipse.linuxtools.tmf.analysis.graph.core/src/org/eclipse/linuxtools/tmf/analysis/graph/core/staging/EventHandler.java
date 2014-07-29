@@ -168,6 +168,8 @@ public class EventHandler {
     private void handleSchedSwitch(CtfTmfEvent event) {
         Long next = Field.getLong(event, LttngStrings.NEXT_TID);
         Long prev = Field.getLong(event, LttngStrings.PREV_TID);
+        String prevComm = Field.getString(event, LttngStrings.PREV_COMM);
+        String nextComm = Field.getString(event, LttngStrings.NEXT_COMM);
         int val = Field.getLong(event, LttngStrings.PREV_STATE).intValue();
 
         StateEnum prevState = StateEnum.WAIT_CPU;
@@ -182,6 +184,8 @@ public class EventHandler {
         ctx.machine.setCurrentTid(ctx.cpu, next);
         Task nextTask = ctx.machine.getOrCreateTask(ctx.cpu, next, ctx.ts);
         Task prevTask = ctx.machine.getOrCreateTask(ctx.cpu, prev, ctx.ts);
+        prevTask.setComm(prevComm);
+        nextTask.setComm(nextComm);
         nextTask.setStateRaw(StateEnum.WAIT_CPU); // a task that is scheduled was necessarily waiting the CPU
         notifyStateChange(nextTask, StateEnum.RUNNING);
         notifyStateChange(prevTask, prevState);
