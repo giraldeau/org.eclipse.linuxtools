@@ -212,7 +212,6 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
              * experiment.
              */
             trace.sendRequest(request);
-            System.out.println("Sending request for trace " + trace);
             try {
                 request.waitForCompletion();
             } catch (InterruptedException e) {

@@ -817,6 +817,10 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace {
      */
     @Override
     public void setTimestampTransform(final ITmfTimestampTransform tt) {
+        if (fTsTransform != null && fTsTransform.equals(tt)) {
+            return;
+        }
+
         fTsTransform = tt;
 
         /* Save the timestamp transform to a file */
@@ -835,6 +839,7 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace {
                 Activator.logError("Error writing timestamp transform for trace", e1); //$NON-NLS-1$
             }
         }
+        // FIXME: reindex the trace here
     }
 
     /**

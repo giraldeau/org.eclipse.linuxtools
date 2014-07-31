@@ -13,9 +13,9 @@
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -42,7 +42,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      */
     private final Table<ITmfTrace, PacketKey, ITmfEvent> fUnmatchedOut = HashBasedTable.create();
 
-    private final LinkedList<PacketKey> queue = new LinkedList<>();
+    private long maxUnmatchedCount = 0;
 
     /**
      * @since 3.1
@@ -71,7 +71,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         OUT,
     }
 
-    CleanUpStrategy fCleanUpClass = null;
+    ICleanupStrategy fCleanUpClass = null;
 
     /**
      * Constructor with multiple traces and match processing object
@@ -93,7 +93,6 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      */
     public TmfNetworkEventMatching(Collection<? extends ITmfTrace> traces, IMatchProcessingUnit tmfEventMatches) {
         super(traces, tmfEventMatches);
-        fCleanUpClass = new CleanUpStrategy();
     }
 
     /**
@@ -104,8 +103,10 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         // Initialize the matching infrastructure (unmatched event lists)
         fUnmatchedIn.clear();
         fUnmatchedOut.clear();
-        queue.clear();
         super.initMatching();
+        if (fCleanUpClass != null) {
+            fCleanUpClass.init();
+        }
     }
 
     /**
@@ -203,20 +204,50 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
              */
             if (!unmatchedTbl.contains(event.getTrace(), eventKey)) {
                 unmatchedTbl.put(event.getTrace(), eventKey, event);
-                queue.add(eventKey);
-                //cleanUp();
+                cleanUp(eventKey);
             }
         }
         if (event instanceof TmfEvent) {
             ((TmfEvent) event).compress();
         }
+        updateMaxCount();
 
+    }
+
+    /**
+     * @since 3.1
+     */
+    public void removeKey(PacketKey key) {
+        Collection<? extends ITmfTrace> traces = getTraces();
+        for (ITmfTrace mTrace: traces) {
+            fUnmatchedIn.remove(mTrace, key);
+            fUnmatchedOut.remove(mTrace, key);
+        }
+    }
+
+    private void updateMaxCount() {
+        long currentCount = fUnmatchedIn.size() + fUnmatchedOut.size();
+        this.maxUnmatchedCount = Math.max(currentCount, maxUnmatchedCount);
+    }
+
+    /**
+     * @return the max count
+     * @since 3.1
+     */
+    public long getMaxUnmatchedCount() {
+        return maxUnmatchedCount;
+    }
+
+    /**
+     * @since 3.1
+     */
+    public long getMatchedCount() {
+        return getProcessingUnit().countMatches();
     }
 
     @Override
     protected void finalizeMatching() {
         super.finalizeMatching();
-        System.out.println(this);
     }
 
     /**
@@ -241,41 +272,21 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
+     * @param eventKey
      * @since 3.1
      */
-    public synchronized void cleanUp() {
+    public synchronized void cleanUp(PacketKey eventKey) {
         if (fCleanUpClass != null) {
-            fCleanUpClass.doClean();
+            fCleanUpClass.doClean(eventKey);
         }
     }
 
-    private class CleanUpStrategy {
-
-        private static final int threshold = 100;
-        private int count;
-        private long delay = 1000000000;
-
-        public CleanUpStrategy() {
-            count = 0;
-        }
-
-        public void doClean() {
-            count = count++ % threshold;
-            if (count == 0) {
-                PacketKey last = queue.getLast();
-                while((last.getTs() - queue.peek().getTs()) > delay) {
-                    PacketKey key = queue.poll();
-                    for (ITmfTrace mTrace: fUnmatchedIn.rowKeySet()) {
-                        fUnmatchedIn.remove(mTrace, key);
-                    }
-                    for (ITmfTrace mTrace: fUnmatchedOut.rowKeySet()) {
-                        fUnmatchedOut.remove(mTrace, key);
-                    }
-                }
-
-            }
-        }
-
+    /**
+     * @since 3.1
+     */
+    public void setCleanupStrategy(@NonNull ICleanupStrategy obj) {
+        fCleanUpClass = obj;
+        fCleanUpClass.setParent(this);
     }
 
 }

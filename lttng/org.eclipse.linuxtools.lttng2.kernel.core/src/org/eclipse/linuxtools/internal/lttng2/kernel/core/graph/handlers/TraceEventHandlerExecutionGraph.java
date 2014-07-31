@@ -84,7 +84,7 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
             }
 
             @Override
-            public void init(Collection<ITmfTrace> trace) {
+            public void init(Collection<? extends ITmfTrace> trace) {
             }
 
             @Override
