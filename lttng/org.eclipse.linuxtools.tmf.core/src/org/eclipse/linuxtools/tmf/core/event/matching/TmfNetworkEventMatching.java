@@ -71,7 +71,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         OUT,
     }
 
-    ICleanupStrategy fCleanUpClass = null;
+    IMatchMonitor fMonitorClass = new NullCleanupStrategy();
 
     /**
      * Constructor with multiple traces and match processing object
@@ -104,9 +104,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         fUnmatchedIn.clear();
         fUnmatchedOut.clear();
         super.initMatching();
-        if (fCleanUpClass != null) {
-            fCleanUpClass.init();
-        }
+        fMonitorClass.init();
     }
 
     /**
@@ -190,6 +188,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
          */
         if (found) {
             getProcessingUnit().addMatch(dep);
+            fMonitorClass.cacheHit(dep);
         } else {
             /*
              * If an event is already associated with this key, do not add it
@@ -204,14 +203,13 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
              */
             if (!unmatchedTbl.contains(event.getTrace(), eventKey)) {
                 unmatchedTbl.put(event.getTrace(), eventKey, event);
-                cleanUp(eventKey);
+                fMonitorClass.cacheMiss(eventKey);
             }
         }
         if (event instanceof TmfEvent) {
             ((TmfEvent) event).compress();
         }
         updateMaxCount();
-
     }
 
     /**
@@ -231,7 +229,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @return the max count
+     * @return the maximum number of unmatched count (these unmached events are
+     *         using memory, and is therefore a good measure of the peak memory
+     *         usage)
      * @since 3.1
      */
     public long getMaxUnmatchedCount() {
@@ -239,6 +239,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
+     * @return the total number of matches found at this point
      * @since 3.1
      */
     public long getMatchedCount() {
@@ -272,20 +273,11 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @since 4.0
-     */
-    public synchronized void cleanUp(PacketKey eventKey) {
-        if (fCleanUpClass != null) {
-            fCleanUpClass.doClean(eventKey);
-        }
-    }
-
-    /**
      * @since 3.1
      */
-    public void setCleanupStrategy(@NonNull ICleanupStrategy obj) {
-        fCleanUpClass = obj;
-        fCleanUpClass.setParent(this);
+    public void setMatchMonitor(@NonNull IMatchMonitor obj) {
+        fMonitorClass = obj;
+        fMonitorClass.setParent(this);
     }
 
 }
