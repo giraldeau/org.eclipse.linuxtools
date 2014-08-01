@@ -16,30 +16,26 @@ import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.Pa
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 
 /**
+ * The match monitor is responsible for cleanup of packet matching and to stop
+ * the request if some condition occurs.
+ *
  * @since 3.1
  */
-public class NullCleanupStrategy implements IMatchMonitor {
+public interface IMatchMonitor {
+    public void init();
 
-    public NullCleanupStrategy() {
-    }
+    /**
+     * Item is queued for match
+     * @param key the packet key enqueued
+     */
+    public void cacheMiss(PacketKey key);
 
-    @Override
-    public void init() {
-    }
+    /**
+     * A match was found
+     */
+    public void cacheHit(TmfEventDependency dep);
 
-    @Override
-    public void cacheMiss(PacketKey key) {
-    }
+    public void setParent(TmfNetworkEventMatching tmfNetworkEventMatching);
 
-    @Override
-    public void setParent(TmfNetworkEventMatching parent) {
-    }
-
-    @Override
-    public void cacheHit(TmfEventDependency dep) {
-    }
-
-    @Override
-    public void setRequest(TmfEventRequest request) {
-    }
+    public void setRequest(TmfEventRequest request);
 }

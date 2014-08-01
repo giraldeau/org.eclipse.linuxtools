@@ -18,6 +18,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -25,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
+import org.eclipse.linuxtools.tmf.core.event.matching.InternalizeMap;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventDependency;
+import org.eclipse.linuxtools.tmf.core.event.matching.WeightedQuickUnion;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
@@ -58,6 +61,24 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     private String fRootNode;
 
+    private InternalizeMap fInternHostId;
+
+    private WeightedQuickUnion fUnionFind;
+
+    private IQualityListener fUpdatePartitions = new IQualityListener() {
+
+        @Override
+        public void qualityChanged(ConvexHull hull, SyncQuality quality) {
+            if (quality == SyncQuality.ABSENT || quality == SyncQuality.INCOMPLETE) {
+                return;
+            }
+            int p = fInternHostId.get(hull.getReferenceHost());
+            int q = fInternHostId.get(hull.getOtherHost());
+            fUnionFind.union(p, q);
+        }
+
+    };
+
     /**
      * Initialization of the attributes
      */
@@ -86,7 +107,13 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             for (int j = i + 1; j < traceArr.length; j++) {
                 ConvexHull algo = new ConvexHull(traceArr[i].getHostId(), traceArr[j].getHostId());
                 fSyncs.add(algo);
+                algo.addQualityListener(fUpdatePartitions);
             }
+        }
+        fUnionFind = new WeightedQuickUnion(traceArr.length);
+        fInternHostId = new InternalizeMap();
+        for (ITmfTrace trace: traces) {
+            fInternHostId.put(trace.getHostId());
         }
     }
 
@@ -110,6 +137,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         if (algo == null) {
             algo = new ConvexHull(host1, host2);
             fSyncs.add(algo);
+            algo.addQualityListener(fUpdatePartitions);
         }
         algo.processMatch(match);
         invalidateSyncGraph();
@@ -220,6 +248,17 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         return statmap;
     }
 
+    /**
+     * Returns the number of partitions in the host graph. When the processing
+     * begins, the number of partitions is equal to the number of hosts and
+     * decrease. When the number of partitions reaches 1, then there exists a
+     * relation between each traces in the set.
+     * @return the number of partitions
+     */
+    public int getNumPartitions() {
+        return fUnionFind.count();
+    }
+
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
@@ -266,6 +305,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
         private Map<String, Object> fStats = new LinkedHashMap<>();
 
+        private List<IQualityListener> fQualityListeners;
+
         /**
          * Initialization of the attributes
          *
@@ -292,7 +333,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             fBetamin = BigDecimal.ZERO;
             fNbMatches = 0;
             fNbAccurateMatches = 0;
-            fQuality = SyncQuality.ABSENT;
+            fQuality = SyncQuality.ABSENT; // default quality
+            fQualityListeners = new ArrayList<>();
         }
 
         protected void processMatch(TmfEventDependency match) {
@@ -377,13 +419,13 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 fAlpha = fAlphamax.add(fAlphamin).divide(BigDecimal.valueOf(2), fMc);
                 fBeta = fBetamin.add(fBetamax).divide(BigDecimal.valueOf(2), fMc);
                 if ((fLmax[0] == null) || (fLmin[0] == null)) {
-                    fQuality = SyncQuality.APPROXIMATE;
+                    setQuality(SyncQuality.APPROXIMATE);
                 }
                 else if (fAlphamax.compareTo(fAlphamin) > 0) {
-                    fQuality = SyncQuality.ACCURATE;
+                    setQuality(SyncQuality.ACCURATE);
                 } else {
                     /* Lines intersect, not good */
-                    fQuality = SyncQuality.FAIL;
+                    setQuality(SyncQuality.FAIL);
                 }
             } else if ( (fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1) ) {
                 /* There is no slope but at least one of the bounds is present */
@@ -417,12 +459,12 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 if (otherBoundList.size() > 0) {
                     BigDecimal betaother = otherBoundList.get(0).getBeta(alpha);
                     if (betaother.compareTo(beta) * inversionFactor < 0) {
-                        fQuality = SyncQuality.FAIL;
+                        setQuality(SyncQuality.FAIL);
                     } else {
                         fAlpha = alpha;
                         fBeta = beta.add(betaother).divide(BigDecimal.valueOf(2), fMc);
                     }
-                    System.out.println("Beta for one point hull: " + betaother + " beta for full hull " + beta + " alpha " + fAlpha + " beta " + fBeta + " Quality: " + fQuality);
+                    System.out.println("Beta for one point hull: " + betaother + " beta for full hull " + beta + " alpha " + fAlpha + " beta " + fBeta + " Quality: " + getQuality());
                     System.out.println("Value for point Y: " + ((new BigDecimal(otherBoundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
                     System.out.println("Value for point latest Y: going to: " + BigDecimal.valueOf(boundList.get(0).getTimeX()) + " transformed " + ((BigDecimal.valueOf(boundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
                 } else {
@@ -436,7 +478,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             } else if (((fLmax[0] == null) && (fLmin[1] == null))
                     || ((fLmax[1] == null) && (fLmin[0] == null))) {
                 /* Either there is no upper hull point or no lower hull */
-                fQuality = SyncQuality.INCOMPLETE;
+                setQuality(SyncQuality.INCOMPLETE);
                 SyncPoint onlyPoint = null;
                 if (fLmin[1] != null) {
                     onlyPoint = fLmin[1];
@@ -516,7 +558,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
 
         public ITmfTimestampTransform getTimestampTransform(String hostId) {
-            if (hostId.equals(fOtherHost) && (fQuality == SyncQuality.ACCURATE || fQuality == SyncQuality.APPROXIMATE || fQuality == SyncQuality.FAIL)) {
+            if (hostId.equals(fOtherHost) && (getQuality() == SyncQuality.ACCURATE || getQuality() == SyncQuality.APPROXIMATE || getQuality() == SyncQuality.FAIL)) {
                 /* alpha: beta => 1 / fAlpha, -1 * fBeta / fAlpha); */
                 return new TmfTimestampTransformLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
             }
@@ -530,7 +572,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         public Map<String, Object> getStats() {
             if (fStats.size() == 0) {
                 String syncQuality;
-                switch (fQuality) {
+                switch (getQuality()) {
                 case ABSENT:
                     syncQuality = Messages.SyncAlgorithmFullyIncremental_absent;
                     break;
@@ -577,7 +619,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
         public boolean isTraceSynced(String hostId) {
             /* Returns true if the timestamp transform is not identity */
-            return (hostId.equals(fOtherHost) && (fQuality == SyncQuality.ACCURATE || fQuality == SyncQuality.APPROXIMATE || fQuality == SyncQuality.FAIL));
+            return (hostId.equals(fOtherHost) && (getQuality() == SyncQuality.ACCURATE || getQuality() == SyncQuality.APPROXIMATE || getQuality() == SyncQuality.FAIL));
         }
 
         public boolean isForHosts(String hostId1, String hostId2) {
@@ -608,6 +650,23 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             b.append(" alpha " + fAlpha + " beta " + fBeta + " ]");
             return b.toString();
         }
+
+        private void setQuality(SyncQuality fQuality) {
+            this.fQuality = fQuality;
+            for (IQualityListener listener: fQualityListeners) {
+                listener.qualityChanged(this, fQuality);
+            }
+
+        }
+
+        public void addQualityListener(IQualityListener ql) {
+            fQualityListeners.add(ql);
+        }
+
+    }
+
+    public static interface IQualityListener {
+        public void qualityChanged(ConvexHull hull, SyncQuality quality);
     }
 
     /**

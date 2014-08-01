@@ -304,6 +304,8 @@ public class SyncTest {
             }
             assertEquals(SyncQuality.ACCURATE, algo.getSynchronizationQuality(x, y));
         }
+        // generated events should make the graph fully connected
+        assertEquals(1, algo.getNumPartitions());
 
         int identity = 0;
         for (ITmfTrace trace : traces) {
@@ -341,5 +343,39 @@ public class SyncTest {
                 )
                 );
     }
+
+
+//    @Test
+//    public void checkSyncBounds() {
+//        ArrayList<ITmfTrace> traces = new ArrayList<>();
+//        for (int i = 0; i < 2; i++) {
+//            TmfTraceStub trace = new TmfTraceStub();
+//            trace.init(String.format("T%d", i));
+//            traces.add(trace);
+//        }
+//        SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+//        algo.init(traces);
+//        ITmfTrace x1 = traces.get(0);
+//        ITmfTrace x2 = traces.get(1);
+//
+//        genMatchEvent(algo, x1, x2, 0, 10);
+//        genMatchEvent(algo, x2, x1, 20, 30);
+//        genMatchEvent(algo, x1, x2, 40, 50);
+//        genMatchEvent(algo, x2, x1, 60, 70);
+//        assertEquals(SyncQuality.ACCURATE, algo.getSynchronizationQuality(x1, x2));
+//        //TmfTimestampTransformLinear xform1 = (TmfTimestampTransformLinear) algo.getTimestampTransform(x1);
+//        TmfTimestampTransformLinear xform2 = (TmfTimestampTransformLinear) algo.getTimestampTransform(x2);
+//        TmfTimestampTransformLinear xform3 = (TmfTimestampTransformLinear) xform2.inverse();
+//        //System.out.println("xform1 " + xform1.getAlpha() + " " + xform1.getBeta());
+//        System.out.println("xform2 " + xform2.getAlpha() + " " + xform2.getBeta());
+//        System.out.println("xform3 " + xform3.getAlpha() + " " + xform3.getBeta());
+//        // I want to know the fAlphamax, fAlphamin, fBetamax, fBetamin
+//
+//        // fAlphamax =  3
+//        // fBetamax  = -70
+//
+//        // fAlphamin = 0.7
+//        // fBetamin  = 10
+//    }
 
 }
