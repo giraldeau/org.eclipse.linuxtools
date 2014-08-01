@@ -112,6 +112,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
         fUnionFind = new WeightedQuickUnion(traceArr.length);
         fInternHostId = new InternalizeMap();
+
         for (ITmfTrace trace: traces) {
             fInternHostId.put(trace.getHostId());
         }

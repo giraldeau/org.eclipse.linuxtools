@@ -12,6 +12,8 @@
 
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
+import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
+
 
 /**
  * Interface for matching trace events
@@ -27,5 +29,12 @@ public interface ITmfEventMatching {
      * @return Whether the match was completed correctly or not
      */
     boolean matchEvents();
+
+    /**
+     * Request about to start
+     * @param request
+     */
+    void startingRequest(TmfEventRequest request);
+
 
 }

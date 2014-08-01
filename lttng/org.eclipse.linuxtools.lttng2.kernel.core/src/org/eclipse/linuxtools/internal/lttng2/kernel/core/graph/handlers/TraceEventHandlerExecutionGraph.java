@@ -8,9 +8,9 @@ import java.util.Set;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.TcpEventStrings;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.Context;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.process_status_enum;
+import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.ALog;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.EventField;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.Softirq;
@@ -105,6 +105,7 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
                     output.linkVertical(input).setType(EdgeType.NETWORK);
                 }
             }
+
         };
 
         ITmfTrace[] traces = TmfTraceManager.getTraceSet(provider.getTrace());

@@ -119,7 +119,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
      * applies to the trace
      */
     protected void initMatching() {
-        fMatches.init(fTraces);
+        fMatches.init(getTraces());
         List<ITmfMatchEventDefinition> deflist = fMatchDefinitions.get(getMatchingType());
         if (deflist == null) {
             return;
@@ -211,6 +211,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
              * Send the request to the trace here, since there is probably no
              * experiment.
              */
+            startingRequest(request);
             trace.sendRequest(request);
             try {
                 request.waitForCompletion();
