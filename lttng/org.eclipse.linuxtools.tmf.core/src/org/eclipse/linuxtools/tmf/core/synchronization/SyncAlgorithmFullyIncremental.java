@@ -193,7 +193,6 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 result = result.composeWith(edge.getLabel());
             }
         }
-        System.out.println("xform " + result);
         return result;
     }
 
