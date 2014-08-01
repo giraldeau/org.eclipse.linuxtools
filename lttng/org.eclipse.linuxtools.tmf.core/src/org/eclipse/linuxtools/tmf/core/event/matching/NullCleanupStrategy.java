@@ -13,15 +13,11 @@
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
-import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 
 /**
  * @since 3.1
  */
-public class NullCleanupStrategy implements IMatchMonitor {
-
-    public NullCleanupStrategy() {
-    }
+public class NullCleanupStrategy extends AbstractMatchMonitor {
 
     @Override
     public void init() {
@@ -32,14 +28,7 @@ public class NullCleanupStrategy implements IMatchMonitor {
     }
 
     @Override
-    public void setParent(TmfNetworkEventMatching parent) {
-    }
-
-    @Override
     public void cacheHit(TmfEventDependency dep) {
     }
 
-    @Override
-    public void setRequest(TmfEventRequest request) {
-    }
 }

@@ -26,12 +26,14 @@ import java.util.Set;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
-import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupStrategy;
-import org.eclipse.linuxtools.tmf.core.event.matching.ICleanupStrategy;
+import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
+import org.eclipse.linuxtools.tmf.core.event.matching.IMatchMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.NullCleanupStrategy;
+import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfContext;
@@ -175,9 +177,13 @@ public class EventMatchingBenchmark {
         funcMap.put("nothing", new ShiftNothingFunction());
     }
 
+    /**
+     * Test the effect of trace alignment and cleanup on the maximum number
+     * unmatched packets.
+     */
     @Test
-    public void testShiftOrigin() {
-        ICleanupStrategy[] cleanup = new ICleanupStrategy[] { new ExpireCleanupStrategy(), new NullCleanupStrategy() };
+    public void testShiftTrace() {
+        IMatchMonitor[] cleanup = new IMatchMonitor[] { new ExpireCleanupMonitor(), new NullCleanupStrategy() };
 
         assumeTrue(CtfTmfTestTrace.DJANGO_CLIENT.exists());
         assumeTrue(CtfTmfTestTrace.DJANGO_DB.exists());
@@ -190,11 +196,10 @@ public class EventMatchingBenchmark {
                 TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
                 func.getValue().apply(experiment);
 
-                for (ICleanupStrategy clean: cleanup) {
+                for (IMatchMonitor clean : cleanup) {
                     TmfNetworkEventMatching traceMatch = new TmfNetworkEventMatching(Collections.singleton(experiment));
-                    traceMatch.setCleanupStrategy(clean);
+                    traceMatch.addMatchMonitor(clean);
                     traceMatch.matchEvents();
-                    // HeapDump.dumpHeap("django-" + func.getKey() + "-" +clean.getClass().getSimpleName() + ".hprof", true);
                     String str = String.format("%8s %25s matched:%6d unmatched:%6d",
                             func.getKey(),
                             clean.getClass().getSimpleName(),
@@ -206,6 +211,69 @@ public class EventMatchingBenchmark {
             }
         }
     }
+
+
+    private static void printStat(String msg, TmfNetworkEventMatching matching) {
+        System.out.println(String.format("%8s %6d %6d", msg,
+                matching.getMatchedCount(), matching.getMaxUnmatchedCount()));
+    }
+
+    @Test
+    public void testPreSync() {
+        assumeTrue(CtfTmfTestTrace.DJANGO_CLIENT.exists());
+        assumeTrue(CtfTmfTestTrace.DJANGO_DB.exists());
+        assumeTrue(CtfTmfTestTrace.DJANGO_HTTPD.exists());
+        try (CtfTmfTrace trace1 = CtfTmfTestTrace.DJANGO_CLIENT.getTrace();
+                CtfTmfTrace trace2 = CtfTmfTestTrace.DJANGO_DB.getTrace();
+                CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
+
+            // print header
+            System.out.println(String.format("%-8s %6s %6s", "step", "hit", "miss"));
+
+            ITmfTrace[] traces = { trace1, trace2, trace3 };
+            TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
+            // worst-case sync
+            Function<TmfExperiment> func = new ShiftDisjointFunction();
+            func.apply(experiment);
+            SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+            TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
+            matching.matchEvents();
+            printStat("worst", matching);
+        }
+
+        try (CtfTmfTrace trace1 = CtfTmfTestTrace.DJANGO_CLIENT.getTrace();
+                CtfTmfTrace trace2 = CtfTmfTestTrace.DJANGO_DB.getTrace();
+                CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
+            ITmfTrace[] traces = { trace1, trace2, trace3 };
+            TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
+            // coarse pre-sync step
+            Function<TmfExperiment> func = new ShiftOriginFunction();
+            func.apply(experiment);
+            SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+            TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
+            //matching.addMatchMonitor(new ExpireCleanupMonitor());
+            matching.addMatchMonitor(new StopEarlyMonitor());
+            matching.matchEvents();
+            printStat("presync", matching);
+
+            // compose the new timestamp transform with the current transform
+            for (ITmfTrace trace : traces) {
+                ITmfTimestampTransform xform = algo.getTimestampTransform(trace).composeWith(trace.getTimestampTransform());
+                trace.setTimestampTransform(xform);
+            }
+
+            // do the fine grained sync
+            algo = new SyncAlgorithmFullyIncremental();
+            matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
+            matching.addMatchMonitor(new ExpireCleanupMonitor());
+            matching.matchEvents();
+            printStat("realsync", matching);
+        }
+
+        // FIXME: assert that both method yield almost the same result
+        // very strange: alpha close to 2!!!
+    }
+
 
     /**
      * Run the benchmark with 3 bigger traces
@@ -223,8 +291,9 @@ public class EventMatchingBenchmark {
                 CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
             ITmfTrace[] traces = { trace1, trace2, trace3 };
             TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
-            runCpuTest(Collections.singleton(experiment), "Django traces", 1);
-            runMemoryTest(traces, "Django traces", 10);
+            runCpuTest(Collections.singleton(experiment), "Django traces", 10);
+            runMemoryTest(Collections.singleton(experiment), "Django traces", 10);
+            experiment.dispose();
         }
     }
 
@@ -235,12 +304,9 @@ public class EventMatchingBenchmark {
 
         for (int i = 0; i < loop_count; i++) {
             TmfNetworkEventMatching traceMatch = new TmfNetworkEventMatching(testTraces);
-
             pm.start();
             traceMatch.matchEvents();
             pm.stop();
-            HeapDump.dumpHeap("event-matching-" + i + ".hprof", true);
-
         }
         pm.commit();
 
@@ -254,15 +320,9 @@ public class EventMatchingBenchmark {
 
         for (int i = 0; i < loop_count; i++) {
             TmfNetworkEventMatching traceMatch = new TmfNetworkEventMatching(testTraces);
-            ICleanupStrategy st = new ExpireCleanupStrategy();
-            traceMatch.setCleanupStrategy(st);
-
             System.gc();
             pm.start();
-            System.out.println("Max count for " + testName + ": " + traceMatch.getMaxUnmatchedCount());
             traceMatch.matchEvents();
-
-            System.out.println("Max count for " + testName + ": " + traceMatch.getMaxUnmatchedCount());
             System.gc();
             pm.stop();
         }

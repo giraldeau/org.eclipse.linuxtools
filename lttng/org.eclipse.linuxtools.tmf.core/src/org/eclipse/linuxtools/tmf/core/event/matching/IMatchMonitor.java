@@ -22,6 +22,7 @@ import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
  * @since 3.1
  */
 public interface IMatchMonitor {
+
     public void init();
 
     /**
@@ -35,7 +36,11 @@ public interface IMatchMonitor {
      */
     public void cacheHit(TmfEventDependency dep);
 
-    public void setParent(TmfNetworkEventMatching tmfNetworkEventMatching);
+    public TmfNetworkEventMatching getParent();
+
+    public void setParent(TmfNetworkEventMatching evmatching);
+
+    public TmfEventRequest getRequest();
 
     public void setRequest(TmfEventRequest request);
 }

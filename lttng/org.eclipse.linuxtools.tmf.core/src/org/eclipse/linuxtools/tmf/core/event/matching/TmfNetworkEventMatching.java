@@ -12,12 +12,15 @@
 
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.TmfEvent;
+import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
 import com.google.common.collect.HashBasedTable;
@@ -71,7 +74,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         OUT,
     }
 
-    IMatchMonitor fMonitorClass = new NullCleanupStrategy();
+    List<IMatchMonitor> fMonitors = new ArrayList<>();
 
     /**
      * Constructor with multiple traces and match processing object
@@ -104,7 +107,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         fUnmatchedIn.clear();
         fUnmatchedOut.clear();
         super.initMatching();
-        fMonitorClass.init();
+        for (IMatchMonitor monitor : fMonitors) {
+            monitor.init();
+        }
     }
 
     /**
@@ -121,6 +126,13 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     @Override
     protected MatchingType getMatchingType() {
         return MatchingType.NETWORK;
+    }
+
+    @Override
+    public void startingRequest(TmfEventRequest request) {
+        for (IMatchMonitor monitor : fMonitors) {
+            monitor.setRequest(request);
+        }
     }
 
     @Override
@@ -188,7 +200,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
          */
         if (found) {
             getProcessingUnit().addMatch(dep);
-            fMonitorClass.cacheHit(dep);
+            for (IMatchMonitor monitor : fMonitors) {
+                monitor.cacheHit(dep);
+            }
         } else {
             /*
              * If an event is already associated with this key, do not add it
@@ -203,7 +217,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
              */
             if (!unmatchedTbl.contains(event.getTrace(), eventKey)) {
                 unmatchedTbl.put(event.getTrace(), eventKey, event);
-                fMonitorClass.cacheMiss(eventKey);
+                for (IMatchMonitor monitor : fMonitors) {
+                    monitor.cacheMiss(eventKey);
+                }
             }
         }
         if (event instanceof TmfEvent) {
@@ -275,9 +291,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     /**
      * @since 3.1
      */
-    public void setMatchMonitor(@NonNull IMatchMonitor obj) {
-        fMonitorClass = obj;
-        fMonitorClass.setParent(this);
+    public void addMatchMonitor(@NonNull IMatchMonitor obj) {
+        fMonitors.add(obj);
+        obj.setParent(this);
     }
 
 }

@@ -12,35 +12,23 @@
 
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
-import java.util.Collection;
 import java.util.LinkedList;
 
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
-import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
-import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
-import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
 /**
  * @since 3.1
  */
-public class ExpireCleanupMonitor implements IMatchMonitor {
+public class ExpireCleanupMonitor extends AbstractMatchMonitor {
 
     private static final int threshold = 100;
     private int count;
-    private long delay = 1000000000;
+    private long delay = 1000000000; // FIXME: should be 6 sigma from the average delay
     private final LinkedList<PacketKey> queue = new LinkedList<>();
-    private TmfNetworkEventMatching fParent; // FIXME: move removeKey() to base
-                                             // class
-    private TmfEventRequest fRequest;
-    private Object fUF;
-
-    public ExpireCleanupMonitor() {
-        count = 0;
-    }
 
     @Override
     public void init() {
+        count = 0;
         queue.clear();
     }
 
@@ -52,42 +40,12 @@ public class ExpireCleanupMonitor implements IMatchMonitor {
             PacketKey last = queue.getLast();
             while ((last.getTs() - queue.peek().getTs()) > delay) {
                 PacketKey pk = queue.poll();
-                if (fParent != null) {
-                    fParent.removeKey(pk);
+                if (getParent() != null) {
+                    getParent().removeKey(pk);
                 }
             }
 
         }
     }
 
-    @Override
-    public void cacheHit(TmfEventDependency dep) {
-        if (fParent == null || fRequest == null) {
-            return;
-        }
-        IMatchProcessingUnit unit = fParent.getProcessingUnit();
-        if (unit instanceof SyncAlgorithmFullyIncremental) {
-            SyncAlgorithmFullyIncremental sync = (SyncAlgorithmFullyIncremental) unit;
-            if (fUF == null) {
-                Collection<? extends ITmfTrace> traces = fParent.getTraces();
-                fUF = new WeightedQuickUnion(traces.size());
-            }
-
-            SyncQuality quality = sync.getSynchronizationQuality(dep.getSourceEvent().getTrace(), dep.getDestinationEvent().getTrace());
-            if (quality == SyncQuality.ACCURATE) {
-                System.out.println("accurate!");
-                fRequest.cancel();
-            }
-        }
-    }
-
-    @Override
-    public void setParent(TmfNetworkEventMatching parent) {
-        this.fParent = parent;
-    }
-
-    @Override
-    public void setRequest(TmfEventRequest request) {
-        this.fRequest = request;
-    }
 }
