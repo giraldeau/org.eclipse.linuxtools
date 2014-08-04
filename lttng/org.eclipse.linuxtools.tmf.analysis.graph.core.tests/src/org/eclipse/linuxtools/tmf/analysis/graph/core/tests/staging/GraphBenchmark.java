@@ -22,8 +22,6 @@ import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
-import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
-import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 import org.junit.Test;
 
 public class GraphBenchmark {
@@ -97,7 +95,7 @@ public class GraphBenchmark {
         Data data = Run.go(new Func() {
             @Override
             public void func() {
-                exp = CtfTraceFinder.makeTmfExperiment(path, CtfTmfTrace.class, CtfTmfEvent.class);
+                exp = CtfTraceFinder.makeTmfExperiment(path);
                 CtfTraceFinder.synchronizeExperiment(exp);
             }
         });
@@ -181,7 +179,7 @@ public class GraphBenchmark {
 
     @Test
     public void testBenchmarkTransform() {
-        exp = CtfTraceFinder.makeTmfExperiment(Paths.get("traces/django-index"), CtfTmfTrace.class, CtfTmfEvent.class);
+        exp = CtfTraceFinder.makeTmfExperiment(Paths.get("traces/django-index"));
         CtfTraceFinder.synchronizeExperiment(exp);
 
         ITmfTimestampTransform orig = null;

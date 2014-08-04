@@ -2,6 +2,8 @@ package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.management.MBeanServer;
 
@@ -33,7 +35,10 @@ public class HeapDump {
      *             only the live objects
      */
     static void dumpHeap(String fileName, boolean live) {
-        // initialize hotspot diagnostic MBean
+        Path path = Paths.get(fileName);
+        if (path.toFile().exists()) {
+            path.toFile().delete();
+        }
         initHotspotMBean();
         try {
             Class<?> clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");

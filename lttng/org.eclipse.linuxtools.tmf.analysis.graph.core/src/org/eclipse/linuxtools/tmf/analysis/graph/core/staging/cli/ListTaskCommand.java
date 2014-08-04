@@ -117,6 +117,7 @@ public class ListTaskCommand implements ICommand {
         } catch (TmfAnalysisException e) {
             throw new RuntimeException(e);
         }
+        exp.dispose();
 
         /*
          * Print the report

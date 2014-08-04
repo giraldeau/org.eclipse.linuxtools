@@ -13,6 +13,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -58,13 +59,12 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
 
     /**
      * Make an experiment of CTF traces
-     * @param base base directory of traces
+     * @param paths directory of traces
      * @param traceKlass the trace type
      * @param evKlass the event type
      * @return experiment
      */
-    public static TmfExperiment makeTmfExperiment(Path base, Class<? extends ITmfTrace> traceKlass, Class<? extends ITmfEvent> evKlass) {
-        List<Path> paths = findCtfTrace(base);
+    public static TmfExperiment makeTmfExperiment(List<Path> paths, Class<? extends ITmfTrace> traceKlass, Class<? extends ITmfEvent> evKlass) {
         final ITmfTrace[] traces = new TmfTrace[paths.size()];
         int i = 0;
         for (Path p: paths) {
@@ -79,28 +79,34 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         }
 
         TmfExperiment experiment = new TmfExperiment();
-        experiment.initExperiment(evKlass, "", traces, Integer.MAX_VALUE, null);
+        experiment.initExperiment(evKlass, "default", traces, Integer.MAX_VALUE, null); //$NON-NLS-1$
         return experiment;
     }
 
     /**
-     * Make experiment from a trace directory with default trace and event type
-     * @param base trace directory
+     * Make experiment from trace directories. The paths is searched recursively
+     * for traces.
+     *
+     * @param paths
+     *            the list of paths to search for traces
      * @return the experiment
      */
-    public static TmfExperiment makeTmfExperiment(Path base) {
-        return makeTmfExperiment(base, CtfTmfTrace.class, CtfTmfEvent.class);
+    public static TmfExperiment makeTmfExperiment(List<Path> paths) {
+        List<Path> expanded = findCtfTrace(paths);
+        return makeTmfExperiment(expanded, CtfTmfTrace.class, CtfTmfEvent.class);
     }
 
     /**
-     * Make experiment from a trace directory and perform the trace synchronization
-     * @param base trace directory
-     * @return the synchronized experiment
+     * Make experiment from a trace directory with default trace and event type.
+     * The path is searched recursively.
+     *
+     * @param base
+     *            trace directory
+     * @return the experiment
      */
-    public static TmfExperiment makeSynchronizedTmfExperiment(Path base) {
-        TmfExperiment exp = makeTmfExperiment(base);
-        synchronizeExperiment(exp);
-        return exp;
+    public static TmfExperiment makeTmfExperiment(Path base) {
+        List<Path> expanded = findCtfTrace(base);
+        return makeTmfExperiment(expanded, CtfTmfTrace.class, CtfTmfEvent.class);
     }
 
     /**
@@ -138,7 +144,15 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
             throw new RuntimeException(e.getMessage());
         }
         return finder.getResults();
+    }
 
+    public static List<Path> findCtfTrace(List<Path> paths) {
+        HashSet<Path> result = new HashSet<>();
+        for (Path path: paths) {
+            result.addAll(findCtfTrace(path));
+        }
+
+        return new ArrayList<>(result);
     }
 
     /**
