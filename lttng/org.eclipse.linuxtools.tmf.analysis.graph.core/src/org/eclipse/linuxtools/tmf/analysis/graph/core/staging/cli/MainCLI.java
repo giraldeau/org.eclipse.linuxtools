@@ -20,6 +20,7 @@ public class MainCLI implements IApplication {
     static {
         commands.put("base", new BaseCommand());
         commands.put("list", new ListTaskCommand());
+        commands.put("bench", new BenchCommand());
     }
 
     public static final String ARGS_KEY = "application.args";

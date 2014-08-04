@@ -29,7 +29,8 @@ public class TestStateSystemVisitor {
     @Before
     public void setup() throws Throwable {
         Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
+        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
+        CtfTraceFinder.synchronizeExperiment(experiment);
         TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(this, experiment, null);
         experiment.traceOpened(signal);
 

@@ -4,9 +4,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfContext;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -45,6 +47,20 @@ import org.junit.Test;
  */
 public class SyncMemoryScalability {
 
+    public static void makeTest() {
+        Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
+        TmfExperiment exp = CtfTraceFinder.makeTmfExperiment(path);
+        TmfNetworkEventMatching traceMatch = new TmfNetworkEventMatching(Arrays.asList(exp.getTraces()));
+        System.out.println(traceMatch);
+        traceMatch.matchEvents();
+    }
+
+    @Test
+    public void testPacketMatch() {
+        makeTest();
+        HeapDump.dumpHeap("test-packet-match.hprof", true);
+    }
+
     @Test
     public void testSyncOrigin() {
         Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
@@ -55,6 +71,7 @@ public class SyncMemoryScalability {
         for (ITmfTrace trace : traces) {
             ITmfContext ctx = trace.seekEvent(0L);
             ITmfEvent ev = trace.getNext(ctx);
+
             double beta = -1 * ev.getTimestamp().getValue();
             TmfTimestampTransformLinear xform = new TmfTimestampTransformLinear(1.0, beta);
             trace.setTimestampTransform(xform);

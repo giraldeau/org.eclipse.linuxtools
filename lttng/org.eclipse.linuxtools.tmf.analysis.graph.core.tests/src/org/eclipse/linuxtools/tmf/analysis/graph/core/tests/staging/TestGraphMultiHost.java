@@ -52,10 +52,14 @@ public class TestGraphMultiHost {
     public void testMakeExperiment() {
         Path path1 = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
         Path path2 = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_DJANGO_INDEX);
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path1);
+
+        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path1);
         assertEquals(2, experiment.getTraces().length);
-        experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path2);
+        experiment.dispose();
+
+        experiment = CtfTraceFinder.makeTmfExperiment(path2);
         assertEquals(3, experiment.getTraces().length);
+        experiment.dispose();
     }
 
     long errors = 0;
@@ -70,7 +74,8 @@ public class TestGraphMultiHost {
     @Test
     public void testTraceSynchronization() throws InterruptedException {
         Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_PHD_HOG);
-        TmfExperiment experiment = CtfTraceFinder.makeSynchronizedTmfExperiment(path);
+        TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
+        CtfTraceFinder.synchronizeExperiment(experiment);
         TmfEventRequest request = new TmfEventRequest(ITmfEvent.class, 0, ITmfEventRequest.ALL_DATA, ExecutionType.BACKGROUND) {
             public long prev = 0;
 
