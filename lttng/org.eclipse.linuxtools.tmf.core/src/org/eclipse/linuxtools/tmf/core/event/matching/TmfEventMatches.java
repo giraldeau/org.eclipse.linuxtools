@@ -19,7 +19,7 @@ import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 /**
  * Class that does something with a match.
  *
- * This default implementation of the class just adds it to a list of matches
+ * This default implementation of the class just counts the matches
  *
  * @author Geneviève Bastien
  * @since 3.0
@@ -68,7 +68,7 @@ public class TmfEventMatches implements IMatchProcessingUnit {
      * @param index
      *            The index of the match to get
      * @return The match at index or null or not present
-     * @deprecated Array removed
+     * @deprecated Matches are not kept anymore, they use up memory for no real reason
      */
     @Deprecated
     public TmfEventDependency getMatch(int index) {
@@ -77,7 +77,7 @@ public class TmfEventMatches implements IMatchProcessingUnit {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " [ Number of matches found: " + countMatches() + " ]"; //$NON-NLS-1$ //$NON-NLS-2$
+        return getClass().getSimpleName() + " [ Number of matches found: " + fMatchCount + " ]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

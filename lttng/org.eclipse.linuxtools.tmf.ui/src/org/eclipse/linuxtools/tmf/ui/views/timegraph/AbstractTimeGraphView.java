@@ -105,14 +105,14 @@ public abstract class AbstractTimeGraphView extends TmfView {
     private ITmfTrace fTrace;
 
     /** The timegraph entry list
-     * @since 3.1*/
+     * @since 4.0*/
     protected List<TimeGraphEntry> fEntryList;
 
     /** The trace to entry list hash map */
     private final Map<ITmfTrace, List<TimeGraphEntry>> fEntryListMap = new HashMap<>();
 
     /** The trace to build thread hash map
-     * @since 3.1*/
+     * @since 4.0*/
     protected final Map<ITmfTrace, BuildThread> fBuildThreadMap = new HashMap<>();
 
     /** The start time */
@@ -430,7 +430,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
     /**
      * Build thread class for time graph views
-     * @since 3.1
+     * @since 4.0
      */
     protected class BuildThread extends Thread {
 
@@ -1037,7 +1037,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
     // ------------------------------------------------------------------------
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     protected void loadTrace() {
         synchronized (fEntryListMap) {
@@ -1152,7 +1152,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
     /**
      * Sets the entry list field
-     * @since 3.1
+     * @since 4.0
      */
     protected void updateEntryList() {
         synchronized (fEntryListMap) {

@@ -272,8 +272,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @param eventKey
-     * @since 3.1
+     * @since 4.0
      */
     public synchronized void cleanUp(PacketKey eventKey) {
         if (fCleanUpClass != null) {
