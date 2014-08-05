@@ -68,7 +68,7 @@ public class TcpLttngEventMatching implements ITmfNetworkMatchDefinition {
      * @param event
      *            The event for which to compute the key
      * @return the unique key for this event
-     * @since 3.0
+     * @since 4.0
      */
     @Override
     public PacketKey getUniqueField(ITmfEvent event) {

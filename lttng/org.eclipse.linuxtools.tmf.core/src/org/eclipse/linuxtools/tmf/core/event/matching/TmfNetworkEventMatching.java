@@ -241,7 +241,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     public synchronized void cleanUp() {
         if (fCleanUpClass != null) {

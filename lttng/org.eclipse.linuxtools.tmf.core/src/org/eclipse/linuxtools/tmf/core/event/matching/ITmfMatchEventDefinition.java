@@ -32,7 +32,7 @@ public interface ITmfMatchEventDefinition {
      * @param event
      *            The event for which to compute the key
      * @return the unique key for this event
-     * @since 3.1
+     * @since 4.0
      */
     PacketKey getUniqueField(ITmfEvent event);
 

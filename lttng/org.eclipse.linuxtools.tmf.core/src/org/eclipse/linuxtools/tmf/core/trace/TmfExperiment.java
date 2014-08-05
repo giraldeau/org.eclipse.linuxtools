@@ -95,7 +95,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
 
     /**
      * Lock for synchronization methods
-     * @since 3.1
+     * @since 4.0
      */
     protected final ReentrantLock fSyncLock = new ReentrantLock();
 
@@ -494,7 +494,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
      * traces and the events present, it should be specified otherwise
      *
      * @return A new event matching instance
-     * @since 3.1
+     * @since 4.0
      */
     protected ITmfEventMatching createEventMatching() {
         return new TmfNetworkEventMatching(Collections.singleton((ITmfTrace) this));
@@ -538,7 +538,7 @@ public class TmfExperiment extends TmfTrace implements ITmfEventParser, ITmfPers
      * @return The synchronization object
      * @throws TmfTraceException
      *             propagate TmfTraceExceptions
-     * @since 3.1
+     * @since 4.0
      */
     public SynchronizationAlgorithm synchronizeTraces(boolean doSync, SynchronizationAlgorithm algorithm) throws TmfTraceException {
         fSyncLock.lock();
