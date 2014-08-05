@@ -48,7 +48,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     private long maxUnmatchedCount = 0;
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     public static class PacketKey {
         private final long ts;
@@ -229,7 +229,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     public void removeKey(PacketKey key) {
         Collection<? extends ITmfTrace> traces = getTraces();
@@ -248,7 +248,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
      * @return the maximum number of unmatched count (these unmached events are
      *         using memory, and is therefore a good measure of the peak memory
      *         usage)
-     * @since 3.1
+     * @since 4.0
      */
     public long getMaxUnmatchedCount() {
         return maxUnmatchedCount;
@@ -256,7 +256,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
 
     /**
      * @return the total number of matches found at this point
-     * @since 3.1
+     * @since 4.0
      */
     public long getMatchedCount() {
         return getProcessingUnit().countMatches();
@@ -289,7 +289,8 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     }
 
     /**
-     * @since 3.1
+     * @param obj
+     * @since 4.0
      */
     public void addMatchMonitor(@NonNull IMatchMonitor obj) {
         fMonitors.add(obj);

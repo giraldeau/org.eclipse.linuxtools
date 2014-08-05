@@ -59,6 +59,7 @@ public interface ITmfTimestampTransform extends Serializable {
      * inverse yields the identity.
      *
      * @return The inverse transform
+     * @since 4.0
      */
     ITmfTimestampTransform inverse();
 }

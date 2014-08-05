@@ -6,6 +6,7 @@ import java.util.HashMap;
  * Keep unique integer ID for an object. The ids are not reused.
  *
  * @author francis
+ * @since 4.0
  *
  */
 public class InternalizeMap {

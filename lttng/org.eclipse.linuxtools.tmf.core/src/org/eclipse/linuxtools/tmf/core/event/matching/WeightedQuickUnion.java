@@ -5,6 +5,7 @@ package org.eclipse.linuxtools.tmf.core.event.matching;
  * Source: Algorithms: part I (4th edition)
  *
  * @author Francis Giraldeau <francis.giraldeau@gmail.com>
+ * @since 4.0
  *
  */
 public class WeightedQuickUnion {

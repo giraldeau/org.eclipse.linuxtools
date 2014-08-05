@@ -244,6 +244,7 @@ public abstract class AbstractTmfStateProvider implements ITmfStateProvider {
 
     /**
      * Callback when the end event is reached. Called prior to closing the state system.
+     * @since 4.0
      */
     protected void handleDone() {  }
 }

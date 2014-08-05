@@ -24,6 +24,7 @@ import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationManager;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
+import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfTrace;
 import org.eclipse.linuxtools.tmf.ctf.core.tests.shared.CtfTmfTestTrace;
 import org.eclipse.test.performance.Dimension;
@@ -43,6 +44,7 @@ public class TraceSynchronizationBenchmark {
     private static final String TIME = " (time)";
     private static final String MEMORY = " (memory usage)";
     private static final String TEST_SUMMARY = "Trace synchronization";
+    private static int BLOCK_SIZE = 1000;
 
     /**
      * Initialize some data

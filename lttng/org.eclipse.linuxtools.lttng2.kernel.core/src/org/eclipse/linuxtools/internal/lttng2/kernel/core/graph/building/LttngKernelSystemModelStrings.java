@@ -17,7 +17,7 @@ package org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building;
  * model
  *
  * @author Geneviève Bastien
- * @since 3.1
+ * @since 4.0
  */
 @SuppressWarnings({ "nls", "javadoc" })
 public class LttngKernelSystemModelStrings {

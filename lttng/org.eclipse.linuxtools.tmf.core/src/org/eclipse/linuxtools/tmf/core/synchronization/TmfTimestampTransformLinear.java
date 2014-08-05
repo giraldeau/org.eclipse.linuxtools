@@ -119,6 +119,9 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform {
         }
     }
 
+    /**
+     * @since 4.0
+     */
     @Override
     public ITmfTimestampTransform inverse() {
         return new TmfTimestampTransformLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
@@ -127,6 +130,7 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform {
     /**
      * Return alpha (slope) parameter
      * @return alpha
+     * @since 4.0
      */
     public BigDecimal getAlpha() {
         return fAlpha;
@@ -135,6 +139,7 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform {
     /**
      * Return beta (offset) parameter
      * @return beta
+     * @since 4.0
      */
     public BigDecimal getBeta() {
         return fBeta;
@@ -143,6 +148,7 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform {
     /**
      * Return the math context for the BigDecimal operations
      * @return math context
+     * @since 4.0
      */
     public MathContext getMathContext() {
         return fMc;

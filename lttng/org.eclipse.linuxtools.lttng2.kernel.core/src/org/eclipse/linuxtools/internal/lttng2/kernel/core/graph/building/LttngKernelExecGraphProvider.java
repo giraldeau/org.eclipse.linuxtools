@@ -44,7 +44,7 @@ import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
  * Graph provider to build the lttng kernel execution graph
  *
  * @author Geneviève Bastien
- * @since 3.1
+ * @since 4.0
  */
 public class LttngKernelExecGraphProvider extends AbstractTmfGraphProvider {
 
