@@ -12,11 +12,9 @@
 
 package org.eclipse.linuxtools.ctf.core.event.types;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -169,16 +167,7 @@ public class StructDeclaration extends Declaration {
         alignRead(input);
         final Definition[] myFields = new Definition[fFieldMap.size()];
         StructDefinition structDefinition = new StructDefinition(this, definitionScope, fieldName, fFieldMap.keySet(), myFields);
-
-        Iterator<Map.Entry<String, IDeclaration>> iter = fFieldMap.entrySet().iterator();
-        for (int i = 0; i < fFieldMap.size(); i++) {
-            Map.Entry<String, IDeclaration> entry = iter.next();
-            String name = entry.getKey();
-            if (name == null) {
-                throw new IllegalStateException();
-            }
-            myFields[i] = entry.getValue().createDefinition(structDefinition, name, input);
-        }
+        fillStruct(input, myFields, structDefinition);
         return structDefinition;
     }
 
@@ -200,23 +189,12 @@ public class StructDeclaration extends Declaration {
             LexicalScope fieldScope, @NonNull BitBuffer input) throws CTFReaderException {
         alignRead(input);
         final Definition[] myFields = new Definition[fFieldMap.size()];
-        Set<String> keySet = fFieldMap.keySet();
-        if (keySet == null) {
-            keySet = Collections.EMPTY_SET;
-            if( keySet == null ) {
-                throw new IllegalStateException();
-            }
-        }
-        StructDefinition structDefinition = new StructDefinition(this, definitionScope, fieldScope, fieldScope.getName(), keySet, myFields);
-        Iterator<Map.Entry<String, IDeclaration>> iter = fFieldMap.entrySet().iterator();
-        for (int i = 0; i < fFieldMap.size(); i++) {
-            Map.Entry<String, IDeclaration> entry = iter.next();
-            String fieldName = entry.getKey();
-            if (fieldName == null) {
-                throw new IllegalStateException();
-            }
-            myFields[i] = entry.getValue().createDefinition(structDefinition, fieldName, input);
-        }
+        /*
+         * Key set is NOT null
+         */
+        @SuppressWarnings("null")
+        StructDefinition structDefinition = new StructDefinition(this, definitionScope, fieldScope, fieldScope.getName(), fFieldMap.keySet(), myFields);
+        fillStruct(input, myFields, structDefinition);
         return structDefinition;
     }
 
@@ -231,6 +209,15 @@ public class StructDeclaration extends Declaration {
     public void addField(String name, IDeclaration declaration) {
         fFieldMap.put(name, declaration);
         fMaxAlign = Math.max(fMaxAlign, declaration.getAlignment());
+    }
+
+    @SuppressWarnings("null")
+    private void fillStruct(@NonNull BitBuffer input, final Definition[] myFields, StructDefinition structDefinition) throws CTFReaderException {
+        Iterator<Map.Entry<String, IDeclaration>> iter = fFieldMap.entrySet().iterator();
+        for (int i = 0; i < fFieldMap.size(); i++) {
+            Map.Entry<String, IDeclaration> entry = iter.next();
+            myFields[i] = entry.getValue().createDefinition(structDefinition, entry.getKey(), input);
+        }
     }
 
     @Override
