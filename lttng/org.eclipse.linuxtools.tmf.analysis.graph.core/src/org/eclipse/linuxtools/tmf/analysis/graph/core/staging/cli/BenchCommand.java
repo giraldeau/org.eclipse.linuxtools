@@ -12,6 +12,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.BenchContext;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.BenchResult;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoRead;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSync;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.IBenchRunner;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
@@ -31,7 +32,7 @@ public class BenchCommand extends BaseCommand {
     static Map<String, IBenchRunner> stages = new HashMap<>();
     static {
         stages.put("read", new DoRead());
-        stages.put("sync", new DoRead());
+        stages.put("sync", new DoSync());
         stages.put("build", new DoRead());
         stages.put("extract", new DoRead());
     }
@@ -42,7 +43,7 @@ public class BenchCommand extends BaseCommand {
         BenchResult res = new BenchResult();
 
         ctx.put(BenchResult.class, res);
-        ctx.put(Integer.class, BenchContext.TAG_REPEAT, Integer.parseInt(opts.getOptionValue(OPT_REPEAT, "1")));
+        ctx.put(Integer.class, BenchContext.TAG_REPEAT, Integer.parseInt(opts.getOptionValue(OPT_REPEAT, "10")));
 
         ArrayList<Path> tracePaths = new ArrayList<>();
         for (String dir: opts.getArgs()) {

@@ -7,7 +7,7 @@ public class DoRead implements IBenchRunner {
     public void run(BenchContext ctx) {
         BenchResult res = ctx.get(BenchResult.class);
         res.begin();
-        res.done(ctx.get(String.class, BenchContext.TAG_TASK_NAME));
+        res.done(ctx.get(String.class, BenchContext.TAG_TASK_NAME), 42);
     }
 
 }

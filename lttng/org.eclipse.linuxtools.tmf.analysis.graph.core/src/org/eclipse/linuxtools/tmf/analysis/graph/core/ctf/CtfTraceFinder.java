@@ -22,6 +22,7 @@ import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationManager;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTrace;
@@ -115,12 +116,8 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      * @return the synchronization algorithm used
      */
     public static SynchronizationAlgorithm synchronizeExperiment(TmfExperiment experiment) {
-        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
-        try {
-            algo = experiment.synchronizeTraces(true, algo);
-        } catch (TmfTraceException e) {
-            e.printStackTrace();
-        }
+        SynchronizationAlgorithm algo;
+        algo = SynchronizationManager.synchronizeTraces(null, Collections.singleton(experiment), true);
         SyncAlgorithmFullyIncremental realAlgo = (SyncAlgorithmFullyIncremental) algo;
         for (ITmfTrace trace: experiment.getTraces()) {
             String host = trace.getHostId();
