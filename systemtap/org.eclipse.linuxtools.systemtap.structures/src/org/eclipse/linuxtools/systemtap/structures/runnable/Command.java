@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation.
+ * Copyright (c) 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - Jeff Briggs, Henry Hughes, Ryan Morse
+ *     Red Hat - ongoing maintenance
  *******************************************************************************/
 
 package org.eclipse.linuxtools.systemtap.structures.runnable;
@@ -113,16 +114,20 @@ public class Command implements Runnable {
     /**
      * Starts the <code>Thread</code> that the new <code>Process</code> will run in.
      * This must be called in order to get the process to start running.
+     * Note that this method only takes effect the first time it is called.
      * @throws CoreException
      */
     public void start() throws CoreException {
+        if (started || stopped) {
+            return;
+        }
         IStatus status = init();
         if (status.isOK()) {
             Thread t = new Thread(this, cmd[0]);
             t.start();
             started = true;
         } else {
-            stop();
+            cleanUpAfterStop();
             returnVal = Integer.MIN_VALUE;
             throw new CoreException(status);
         }
@@ -144,7 +149,7 @@ public class Command implements Runnable {
             errorGobbler = new StreamGobbler(process.getErrorStream());
             inputGobbler = new StreamGobbler(process.getInputStream());
 
-            this.transferListeners();
+            transferListeners();
             return Status.OK_STATUS;
         } catch (IOException e) {
             return new Status(IStatus.ERROR, StructuresPlugin.PLUGIN_ID, e.getMessage(), e);
@@ -169,7 +174,7 @@ public class Command implements Runnable {
     /**
      * This method handles checking the status of the running <code>Process</code>. It
      * is called when the new Thread is created, and thus should never be called by
-     * any implementing program. To run call the <code>start</code> method.
+     * any implementing program. To run call the {@link #start} method.
      */
     @Override
     public void run() {
@@ -177,16 +182,23 @@ public class Command implements Runnable {
         inputGobbler.start();
         try {
             process.waitFor();
-        } catch (InterruptedException e) {}
-        stop();
+            cleanUpAfterStop();
+        } catch (InterruptedException e) {
+            // This thread was interrupted while waiting for
+            // the process to exit. Destroy the process just
+            // to make sure it exits.
+            stop();
+        }
     }
 
     /**
-     * Stops the process from running and stops the <code>StreamGobblers</code> from monitering
-     * the dead process and unregisters the StreamListener. Also wakes up any threads waiting
-     * on this command.
+     * Performs cleanup operations for when the process ends:
+     * Stops the <code>StreamGobblers</code> from monitering
+     * the dead process and unregisters the StreamListener.
+     * Also wakes up any threads waiting on this command.
+     * @since 3.1
      */
-    public synchronized void stop() {
+    protected synchronized void cleanUpAfterStop() {
         if (!stopped) {
             if (errorGobbler != null) {
                 errorGobbler.stop();
@@ -194,19 +206,21 @@ public class Command implements Runnable {
             if (inputGobbler != null) {
                 inputGobbler.stop();
             }
-            try {
-                if (process != null) {
-                    process.waitFor();
-                }
-            } catch (InterruptedException e) {
-                // This thread was interrupted while waiting for
-                // the process to exit. Destroy the process just
-                // to make sure it exits.
-                process.destroy();
-            }
             removeInputStreamListener(logger);
             stopped = true;
             notifyAll(); // Wake up threads waiting for this command to stop.
+        }
+    }
+
+    /**
+     * Stops the process from running and performs post-stop cleanup if necessary.
+     */
+    public synchronized void stop() {
+        if (!stopped) {
+            if (process != null) {
+                process.destroy();
+            }
+            cleanUpAfterStop();
         }
     }
 
@@ -295,7 +309,7 @@ public class Command implements Runnable {
     }
 
     /**
-     * Saves the input stream data to a permanent file.  Any new data on the
+     * Saves the input stream data to a permanent file. Any new data on the
      * stream will automatically be saved to the file.
      * @param file The file to save the InputStream to.
      */
@@ -307,15 +321,18 @@ public class Command implements Runnable {
      * Disposes of all internal components of this class. Nothing in the class should be
      * referenced after this is called.
      */
-    public void dispose() {
+    public synchronized void dispose() {
         if (!disposed) {
             stop();
-            disposed = true;
 
-            inputListeners.clear();
-            errorListeners.clear();
-
+            if (inputListeners != null) {
+                inputListeners.clear();
+            }
             inputListeners = null;
+
+            if (errorListeners != null) {
+                errorListeners.clear();
+            }
             errorListeners = null;
 
             if (inputGobbler != null) {
@@ -327,7 +344,10 @@ public class Command implements Runnable {
                 errorGobbler.dispose();
             }
             errorGobbler = null;
+
             logger.dispose();
+            process = null;
+            disposed = true;
         }
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation.
+ * Copyright (c) 2006 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,12 +7,12 @@
  *
  * Contributors:
  *     IBM Corporation - Jeff Briggs, Henry Hughes, Ryan Morse
+ *     Red Hat - ongoing maintenance
  *******************************************************************************/
 
 package org.eclipse.linuxtools.systemtap.ui.consolelog.structures;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +25,6 @@ import org.eclipse.linuxtools.systemtap.structures.runnable.Command;
 import org.eclipse.linuxtools.systemtap.ui.consolelog.ScpExec;
 import org.eclipse.linuxtools.systemtap.ui.consolelog.internal.Localization;
 import org.eclipse.linuxtools.systemtap.ui.consolelog.views.ErrorView;
-import org.eclipse.linuxtools.tools.launch.core.factory.RuntimeProcessFactory;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PlatformUI;
@@ -43,19 +42,17 @@ import org.eclipse.ui.console.IOConsole;
  * @author Ryan Morse
  */
 public class ScriptConsole extends IOConsole {
-    private static final long RETRY_STOP_TIME = 500;
-    private static final long JOIN_WAIT_TIME = 500;
 
     /**
      * The command that will run in this console.
      */
-    private Command cmd;
+    private Command cmd = null;
 
     /**
      * A protocol for sending "stop" signals to cmd when it is forcably
      * stopped by a user action.
      */
-    private Runnable stopCommand;
+    private StopCommand stopCommand;
 
     /**
      * A thread in which to asynchronously run stopCommand.
@@ -72,8 +69,6 @@ public class ScriptConsole extends IOConsole {
      * once a previous run of cmd has successfully stopped.
      */
     private Thread onCmdStartThread;
-
-    private String moduleName;
 
     private ErrorStreamDaemon errorDaemon;
     private ConsoleStreamDaemon consoleDaemon;
@@ -100,11 +95,11 @@ public class ScriptConsole extends IOConsole {
      */
     public static boolean instanceIsRunning(String name) {
         IConsole ic[] = ConsolePlugin.getDefault().getConsoleManager().getConsoles();
-        if (null != ic) {
-            for (IConsole consoleIterator: ic) {
+        if (ic != null) {
+            for (IConsole consoleIterator : ic) {
                 if (consoleIterator instanceof ScriptConsole) {
                     ScriptConsole activeConsole = (ScriptConsole) consoleIterator;
-                    if (activeConsole.getName().endsWith(name) && activeConsole.isRunning()) {
+                    if (activeConsole.nameMatchesString(name) && activeConsole.isRunning()) {
                         return true;
                     }
                 }
@@ -129,25 +124,21 @@ public class ScriptConsole extends IOConsole {
             //Prevent running the same script twice
             if (ic != null) {
                 ScriptConsole activeConsole;
-                for (IConsole consoleIterator: ic) {
+                for (IConsole consoleIterator : ic) {
                     if (consoleIterator instanceof ScriptConsole) {
                         activeConsole = (ScriptConsole) consoleIterator;
-                        if (activeConsole.getName().endsWith(name)) {
-                            //Stop any script currently running, and terminate stream listeners.
-                            if (activeConsole.isRunning()) {
-                                activeConsole.stop();
-                                if (activeConsole.errorDaemon != null) {
-                                    activeConsole.cmd.removeErrorStreamListener(activeConsole.errorDaemon);
-                                }
-                                if (activeConsole.consoleDaemon != null) {
-                                    activeConsole.cmd.removeInputStreamListener(activeConsole.consoleDaemon);
-                                }
-                            }
+                        if (activeConsole.nameMatchesString(name)) {
+                            //Stop any script currently running.
                             if (activeConsole.onCmdStopThread != null && activeConsole.onCmdStopThread.isAlive()) {
                                 activeConsole.onCmdStopThread.interrupt();
                                 try {
-                                    activeConsole.onCmdStopThread.join(JOIN_WAIT_TIME);
+                                    activeConsole.onCmdStopThread.join();
                                 } catch (InterruptedException e) {}
+                            }
+                            if (activeConsole.isRunning()) {
+                                activeConsole.stopAndDispose();
+                            } else {
+                                activeConsole.disposeCommand();
                             }
                             //Remove output from last run
                             activeConsole.clearConsole();
@@ -167,6 +158,11 @@ public class ScriptConsole extends IOConsole {
             console = null;
         }
         return console;
+    }
+
+    private boolean nameMatchesString(String name) {
+        return getName().replace(Localization.getString(
+                "ScriptConsole.Terminated"), "").equals(name); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -207,7 +203,35 @@ public class ScriptConsole extends IOConsole {
 
     ScriptConsole(String name, ImageDescriptor imageDescriptor) {
         super(name, imageDescriptor);
-        cmd = null;
+    }
+
+    private class StopCommand implements Runnable {
+        protected final Command stopcmd;
+        private boolean disposeOnStop = false;
+
+        private StopCommand(Command stopcmd) {
+            this.stopcmd = stopcmd;
+        }
+
+        void makeDisposeOnStop() {
+            disposeOnStop = true;
+        }
+
+        @Override
+        public void run() {
+            if (consoleDaemon != null) {
+                stopcmd.removeInputStreamListener(consoleDaemon);
+            }
+            if (errorDaemon != null) {
+                stopcmd.removeErrorStreamListener(errorDaemon);
+            }
+            if (!disposeOnStop) {
+                stopcmd.stop();
+            } else {
+                stopcmd.dispose();
+            }
+        }
+
     }
 
     /**
@@ -249,28 +273,6 @@ public class ScriptConsole extends IOConsole {
             return;
         }
         cmd = new ScpExec(command, remoteOptions, envVars);
-
-        stopCommand = new Runnable() {
-            private final Command stopcmd = cmd;
-            private final String stopString = getStopString();
-
-            @Override
-            public void run() {
-                ScpExec stop = new ScpExec(new String[]{stopString}, remoteOptions, null);
-                try {
-                    synchronized (stopcmd) {
-                        while (stopcmd.isRunning()) {
-                            stop.start();
-                            stopcmd.wait(RETRY_STOP_TIME);
-                        }
-                    }
-                } catch (CoreException e) {
-                    ExceptionErrorDialog.openError(Localization.getString("ScriptConsole.ErrorKillingStap"), e.getMessage(), e); //$NON-NLS-1$
-                } catch (InterruptedException e) {
-                    // Wait was interrupted. Exit.
-                }
-            }
-        };
         this.run(cmd, errorParser);
     }
 
@@ -289,32 +291,11 @@ public class ScriptConsole extends IOConsole {
             return;
         }
         cmd = new Command(command, envVars, project);
-        final IProject proj = project;
-
-        stopCommand = new Runnable() {
-            private final Command stopcmd = cmd;
-            String stopString = getStopString();
-
-            @Override
-            public void run() {
-                try {
-                    synchronized (stopcmd) {
-                        while (stopcmd.isRunning()) {
-                            RuntimeProcessFactory.getFactory().exec(stopString, null, proj);
-                            stopcmd.wait(RETRY_STOP_TIME);
-                        }
-                    }
-                } catch (IOException e) {
-                    ExceptionErrorDialog.openError(Localization.getString("ScriptConsole.ErrorKillingStap"), e.getMessage(), e); //$NON-NLS-1$
-                } catch (InterruptedException e) {
-                    //Wait was interrupted. Exit.
-                }
-            }
-        };
         this.run(cmd, errorParser);
     }
 
     private void run(final Command cmd, IErrorParser errorParser) {
+        stopCommand = new StopCommand(cmd);
         final Runnable onCmdStop = new Runnable() {
             @Override
             public void run() {
@@ -356,6 +337,7 @@ public class ScriptConsole extends IOConsole {
                     cmd.dispose();
                     return;
                 }
+                clearConsole();
                 notifyConsoleObservers();
             }
         };
@@ -433,26 +415,44 @@ public class ScriptConsole extends IOConsole {
      */
     public boolean isDisposed() {
         // If there is no command it can be considered disposed
-        if (null == cmd) {
+        if (cmd == null) {
             return true;
         }
         return cmd.isDisposed();
     }
 
+    private void disposeCommand() {
+        if (!isDisposed()) {
+            cmd.dispose();
+        }
+    }
+
     /**
      * Method to allow the user to save the Commands output to a file for use latter.
+     * Does not return a value indicating success of the operation; for that, use
+     * {@link #saveStreamAndReturnResult(File)} instead.
      * @param file The new file to save the output to.
      */
     public void saveStream(File file) {
-        if (isRunning()) {
-            if (!cmd.saveLog(file)) {
-                MessageDialog.openWarning(
-                        PlatformUI.getWorkbench()
-                        .getActiveWorkbenchWindow().getShell(),
-                        Localization.getString("ScriptConsole.Problem"), Localization.getString("ScriptConsole.ErrorSavingLog")); //$NON-NLS-1$//$NON-NLS-2$
+        saveStreamAndReturnResult(file);
+    }
 
-            }
+    /**
+     * Method to allow the user to save the Commands output to a file for use later.
+     * @param file The new file to save the output to.
+     * @return <code>true</code> if the save result was successful, <code>false</code> otherwise.
+     * Note that a failed save attempt will not interfere with an already-running log.
+     * @since 3.1
+     */
+    public boolean saveStreamAndReturnResult(File file) {
+        if (!cmd.saveLog(file)) {
+            MessageDialog.openWarning(
+                    PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getShell(),
+                    Localization.getString("ScriptConsole.Problem"), Localization.getString("ScriptConsole.ErrorSavingLog")); //$NON-NLS-1$//$NON-NLS-2$
+            return false;
         }
+        return true;
     }
 
     /**
@@ -475,6 +475,14 @@ public class ScriptConsole extends IOConsole {
     }
 
     /**
+     * Stops and disposes the running command.
+     */
+    private synchronized void stopAndDispose() {
+        stopCommand.makeDisposeOnStop();
+        stop();
+    }
+
+    /**
      * Stops the running command and the associated listeners.
      */
     public synchronized void stop() {
@@ -485,24 +493,6 @@ public class ScriptConsole extends IOConsole {
         }
     }
 
-    private String getModuleName() {
-        if (moduleName == null) {
-            moduleName = getName();
-            int lastSlash = moduleName.lastIndexOf('/')+1;
-            if (lastSlash < 0) {
-                lastSlash = 0;
-            }
-            int lastDot = moduleName.indexOf(".stp"); //$NON-NLS-1$
-            if (lastDot > 0) {
-                moduleName = moduleName.substring(lastSlash, lastDot);
-            }
-        }
-        return moduleName;
-    }
-
-    private String getStopString() {
-        return "pkill -SIGINT -f stapio.*"+ getModuleName();  //$NON-NLS-1$
-    }
     /**
      * Disposes of all internal references in the class. No method should be called after this.
      */

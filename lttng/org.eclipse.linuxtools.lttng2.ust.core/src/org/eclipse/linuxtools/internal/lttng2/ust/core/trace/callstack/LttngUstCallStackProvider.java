@@ -8,6 +8,7 @@
  *
  * Contributors:
  *   Alexandre Montplaisir - Initial API and implementation
+ *   Patrick Tasse - Add support for thread id
  *******************************************************************************/
 
 package org.eclipse.linuxtools.internal.lttng2.ust.core.trace.callstack;
@@ -68,7 +69,7 @@ public class LttngUstCallStackProvider extends CallStackStateProvider {
      * Version number of this state provider. Please bump this if you modify
      * the contents of the generated state history in some way.
      */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     // ------------------------------------------------------------------------
     // Constructor
@@ -160,5 +161,11 @@ public class LttngUstCallStackProvider extends CallStackStateProvider {
         }
 
         return new String(procName + '-' + vtid.toString());
+    }
+
+    @Override
+    protected Long getThreadId(ITmfEvent event) {
+        ITmfEventField content = ((CtfTmfEvent) event).getContent();
+        return (Long) content.getField(CONTEXT_VTID).getValue();
     }
 }
