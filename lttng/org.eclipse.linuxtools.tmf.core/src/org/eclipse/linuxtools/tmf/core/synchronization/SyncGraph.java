@@ -23,7 +23,7 @@ import com.google.common.collect.Multimap;
  * @author Francis Giraldeau <francis.giraldeau@gmail.com>
  * @param <V> The vertices type
  * @param <E> The edge annotation type
- * @since 3.1
+ * @since 4.0
  */
 public class SyncGraph<V, E> {
 

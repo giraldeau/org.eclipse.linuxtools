@@ -19,7 +19,7 @@ import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
  * The match monitor is responsible for cleanup of packet matching and to stop
  * the request if some condition occurs.
  *
- * @since 3.1
+ * @since 4.0
  */
 public interface IMatchMonitor {
 

@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.linuxtools.tmf.ctf.core,
  org.eclipse.linuxtools.lttng2.control.core
 Export-Package: org.eclipse.linuxtools.internal.lttng2.kernel.core;x-friends:="org.eclipse.linuxtools.lttng2.kernel.ui,org.eclipse.linuxtools.lttng2.kernel.core.tests",
- org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building,
+ org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building;x-internal:=true,
  org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.handlers;x-friends:="org.eclipse.linuxtools.lttng2.kernel.ui,org.eclipse.linuxtools.lttng2.kernel.core.tests",
  org.eclipse.linuxtools.internal.lttng2.kernel.core.model;x-friends:="org.eclipse.linuxtools.lttng2.kernel.ui",
  org.eclipse.linuxtools.internal.lttng2.kernel.core.stateprovider;x-friends:="org.eclipse.linuxtools.lttng2.kernel.ui,org.eclipse.linuxtools.lttng2.kernel.core.tests",

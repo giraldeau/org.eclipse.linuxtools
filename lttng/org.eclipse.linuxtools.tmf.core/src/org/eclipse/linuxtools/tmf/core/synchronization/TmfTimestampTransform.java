@@ -56,6 +56,9 @@ public class TmfTimestampTransform implements ITmfTimestampTransform {
         return composeWith;
     }
 
+    /**
+     * @since 4.0
+     */
     @Override
     public ITmfTimestampTransform inverse() {
         return IDENTITY;
