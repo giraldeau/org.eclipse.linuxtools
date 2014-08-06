@@ -80,7 +80,7 @@ public class LttngKernelTrace extends CtfTmfTrace {
      * stream comes from a cpu
      *
      * @return The number of cpus
-     * @since 3.1
+     * @since 4.0
      */
     public int getNbCpus() {
         int streams = 0;

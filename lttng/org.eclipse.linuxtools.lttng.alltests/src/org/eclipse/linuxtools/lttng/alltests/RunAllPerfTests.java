@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     org.eclipse.linuxtools.ctf.core.tests.perf.AllPerfTests.class,
     org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.AllPerfTests.class,
+    org.eclipse.linuxtools.pcap.core.tests.perf.AllPerfTests.class,
     org.eclipse.linuxtools.tmf.ctf.core.tests.perf.AllPerfTests.class
 })
 public class RunAllPerfTests {

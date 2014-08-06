@@ -65,6 +65,12 @@
       </modules>
   </profile>
   <profile>
+    <id>performance</id>
+    <modules>
+      <module>org.eclipse.linuxtools.lttng.alltests</module>
+    </modules>
+  </profile>
+  <profile>
     <id>macosx</id>
     <activation>
       <os>
@@ -99,6 +105,9 @@
     <module>org.eclipse.linuxtools.ctf.core.tests</module>
     <module>org.eclipse.linuxtools.ctf.parser</module>
     <module>org.eclipse.linuxtools.ctf.parser.tests</module>
+
+    <module>org.eclipse.linuxtools.pcap.core</module>
+    <module>org.eclipse.linuxtools.pcap.core.tests</module>
 
     <module>org.eclipse.linuxtools.statesystem.core</module>
     <module>org.eclipse.linuxtools.statesystem.core.tests</module>

@@ -36,7 +36,7 @@ import org.eclipse.linuxtools.tmf.ui.widgets.timegraph.model.TimeGraphEntry;
  * This view contains either a time graph viewer, or a time graph combo which is
  * divided between a tree viewer on the left and a time graph viewer on the right.
  *
- * @since 3.1
+ * @since 4.0
  */
 public abstract class AbstractTimeGraphPerObjectView extends AbstractTimeGraphView {
 
