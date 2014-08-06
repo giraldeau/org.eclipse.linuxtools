@@ -3,6 +3,9 @@ package org.eclipse.linuxtools.tmf.core.event.matching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 
+/**
+ * @since 4.0
+ */
 public abstract class AbstractMatchMonitor implements IMatchMonitor {
 
     private TmfNetworkEventMatching fParent; // FIXME: move removeKey() to base class
