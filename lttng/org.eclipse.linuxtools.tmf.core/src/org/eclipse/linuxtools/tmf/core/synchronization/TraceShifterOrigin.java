@@ -20,6 +20,7 @@ public class TraceShifterOrigin implements IFunction<TmfExperiment> {
             double beta = -1.0 * (v2 - v1);
             ITmfTimestampTransform xform = new TmfTimestampTransformLinear(1.0, beta);
             t2.setTimestampTransform(xform);
+            // FIXME: move to unit tests
 //            long v3 = t2.getNext(t2.seekEvent(0L)).getTimestamp().getValue();
 //            assertTrue(Math.abs(v1 - v3) < 1000);
         }
