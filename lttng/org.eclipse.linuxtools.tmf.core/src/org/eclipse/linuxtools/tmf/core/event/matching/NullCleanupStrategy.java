@@ -15,7 +15,7 @@ package org.eclipse.linuxtools.tmf.core.event.matching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching.PacketKey;
 
 /**
- * @since 3.1
+ * @since 4.0
  */
 public class NullCleanupStrategy extends AbstractMatchMonitor {
 

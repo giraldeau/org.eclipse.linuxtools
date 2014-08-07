@@ -79,6 +79,15 @@ public class TraceSessionGroup extends TraceControlComponent {
         return getTargetNode().isSnapshotSupported();
     }
 
+    /**
+     * Returns if node supports live or not
+     *
+     * @return <code>true</code> if it supports live else <code>false</code>
+     */
+    public boolean isLiveSupported() {
+        return getTargetNode().isLiveSupported();
+    }
+
     // ------------------------------------------------------------------------
     // Operations
     // ------------------------------------------------------------------------
@@ -126,7 +135,7 @@ public class TraceSessionGroup extends TraceControlComponent {
         ISessionInfo sessionInfo = getControlService().createSession(sessionInf, monitor);
 
         if (sessionInfo != null) {
-            TraceSessionComponent session = new TraceSessionComponent(sessionInfo.getName(), TraceSessionGroup.this);
+            TraceSessionComponent session = new TraceSessionComponent(sessionInfo, TraceSessionGroup.this);
             addChild(session);
             session.getConfigurationFromNode(monitor);
         }

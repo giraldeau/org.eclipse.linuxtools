@@ -254,6 +254,7 @@ public class Messages extends NLS {
     public static String FilterViewer_RegexHint;
     public static String FilterViewer_RegexLabel;
     public static String FilterViewer_ResultLabel;
+    public static String FilterViewer_Subfilter_ToolTip;
     public static String FilterViewer_TimestampButtonText;
     public static String FilterViewer_TypeLabel;
     public static String FilterViewer_ValueHint;
@@ -262,17 +263,24 @@ public class Messages extends NLS {
     public static String TmfView_PinActionNameText;
     public static String TmfView_PinActionToolTipText;
 
+    public static String CallStackPresentationProvider_Thread;
     public static String CallStackView_FunctionColumn;
     public static String CallStackView_DepthColumn;
     public static String CallStackView_EntryTimeColumn;
     public static String CallStackView_ExitTimeColumn;
     public static String CallStackView_DurationColumn;
     public static String CallStackView_StackInfoNotAvailable;
-
+    public static String CallStackView_SortByThreadName;
+    public static String CallStackView_SortByThreadId;
+    public static String CallStackView_SortByThreadTime;
     public static String CallStackView_ImportMappingButtonText;
     public static String CallStackView_ImportMappingButtonTooltip;
     public static String CallStackView_ImportMappingDialogTitle;
     public static String CallStackView_ImportMappingJobName;
+
+    public static String CallStackView_ImportBinaryFileButtonText;
+    public static String CallStackView_ImportBinaryFileButtonTooltip;
+    public static String CallStackView_ImportBinaryFileDialogTitle;
 
     public static String ExportToTextJob_Export_to;
     public static String ExportToTextJob_Export_trace_to;

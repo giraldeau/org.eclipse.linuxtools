@@ -159,7 +159,7 @@ public class TmfEvent extends PlatformObject implements ITmfEvent {
     }
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     public void compress() {
 

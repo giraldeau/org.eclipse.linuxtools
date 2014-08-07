@@ -12,6 +12,8 @@
 
 package org.eclipse.linuxtools.tmf.core.synchronization;
 
+import java.io.Serializable;
+
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 
 /**
@@ -21,7 +23,7 @@ import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
  * @author Geneviève Bastien
  * @since 3.0
  */
-public interface ITmfTimestampTransform {
+public interface ITmfTimestampTransform extends Serializable {
 
     /**
      * Transforms a timestamp
@@ -57,6 +59,7 @@ public interface ITmfTimestampTransform {
      * inverse yields the identity.
      *
      * @return The inverse transform
+     * @since 4.0
      */
     ITmfTimestampTransform inverse();
 }
