@@ -33,6 +33,7 @@ import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterDisjoint;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterNone;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
@@ -174,17 +175,31 @@ public class EventMatchingBenchmark {
                 CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
 
             // print header
-            HashMap<ITmfTrace, Long> results = new HashMap<>();
+            HashMap<ITmfTrace, Long> begin = new HashMap<>();
+            HashMap<ITmfTrace, Long> end = new HashMap<>();
             System.out.println(String.format("%-8s %6s %6s", "step", "hit", "miss"));
 
             ITmfTrace[] traces = { trace1, trace2, trace3 };
             TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
 
-            // worst-case sync
-            IFunction<TmfExperiment> func = new TraceShifterDisjoint();
-            func.apply(experiment);
-            SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+//            IFunction<TmfExperiment> reset = new TraceShifterReset();
+            IFunction<TmfExperiment> origin = new TraceShifterOrigin();
+            IFunction<TmfExperiment> distjoint = new TraceShifterDisjoint();
+
+            origin.apply(experiment);
+            SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
             TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
+            matching.matchEvents();
+            printStat("legacy", matching);
+//            for (ITmfTrace trace : traces) {
+//                ITmfTimestampTransform xform = algo.getTimestampTransform(trace).composeWith(trace.getTimestampTransform());
+//                System.out.println(xform);
+//            }
+
+            // worst-case sync
+            distjoint.apply(experiment);
+            algo = new SyncAlgorithmFullyIncremental();
+            matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.matchEvents();
             printStat("worst", matching);
             for (ITmfTrace trace : traces) {
@@ -193,12 +208,13 @@ public class EventMatchingBenchmark {
             }
 
             for (ITmfTrace trace: traces) {
-                results.put(trace, trace.getNext(trace.seekEvent(0L)).getTimestamp().getValue());
+                begin.put(trace, trace.getNext(trace.seekEvent(0L)).getTimestamp().getValue());
+                end.put(trace, trace.getNext(trace.seekEvent(trace.getNbEvents() - 1)).getTimestamp().getValue());
+//                System.out.println(trace.getTimestampTransform());
             }
 
             // coarse pre-sync step
-            func = new TraceShifterOrigin();
-            func.apply(experiment);
+            origin.apply(experiment);
             algo = new SyncAlgorithmFullyIncremental();
             matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.addMatchMonitor(new StopEarlyMonitor());
@@ -209,6 +225,7 @@ public class EventMatchingBenchmark {
             for (ITmfTrace trace : traces) {
                 ITmfTimestampTransform xform = algo.getTimestampTransform(trace).composeWith(trace.getTimestampTransform());
                 trace.setTimestampTransform(xform);
+//                System.out.println(xform);
             }
 
             // do the fine grained sync
@@ -220,17 +237,19 @@ public class EventMatchingBenchmark {
             for (ITmfTrace trace : traces) {
                 ITmfTimestampTransform xform = algo.getTimestampTransform(trace).composeWith(trace.getTimestampTransform());
                 trace.setTimestampTransform(xform);
+//                System.out.println(trace.getTimestampTransform());
             }
 
             // check that the two synchronization methods produces almost the same result
             for (ITmfTrace trace: traces) {
-                long diff = trace.getNext(trace.seekEvent(0L)).getTimestamp().getValue() - results.get(trace);
-                assertTrue(Math.abs(diff) < 10000); // 10us
+                long diffBegin = trace.getNext(trace.seekEvent(0L)).getTimestamp().getValue() - begin.get(trace);
+                long diffEnd = trace.getNext(trace.seekEvent(trace.getNbEvents() - 1)).getTimestamp().getValue() - end.get(trace);
+                System.out.println("diffbegin: "+ diffBegin + " diffend: " + diffEnd);
+                assertTrue(Math.abs(diffBegin) < 10);
+                assertTrue(Math.abs(diffEnd) < 10);
             }
-        }
 
-        // FIXME: assert that both method yield almost the same result
-        // very strange: alpha close to 2!!!
+        }
     }
 
 
