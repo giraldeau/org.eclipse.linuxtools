@@ -1,8 +1,5 @@
 package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -21,26 +18,23 @@ public class BenchResult {
     private long memStart;
     private long timeStart;
 
-    public void begin() {
+    /**
+     * @param ctx
+     */
+    public void begin(BenchContext ctx) {
         Runtime runtime = Runtime.getRuntime();
-        for (int i = 0; i < 10; i++) {
-            System.gc();
-            runtime.totalMemory();
-            runtime.freeMemory();
-        }
+        System.gc();
         memStart = runtime.totalMemory() - runtime.freeMemory();
         timeStart = System.currentTimeMillis();
     }
 
-    public void done(String tag, Integer size) {
+    public void done(BenchContext ctx) {
         Runtime runtime = Runtime.getRuntime();
         long time = System.currentTimeMillis() - timeStart;
-        for (int i = 0; i < 10; i++) {
-            System.gc();
-            runtime.totalMemory();
-            runtime.freeMemory();
-        }
+        System.gc();
         long mem = (runtime.totalMemory() - runtime.freeMemory()) - memStart;
+        String tag = ctx.get(String.class, BenchContext.TAG_TASK_NAME);
+        Integer size = ctx.get(Integer.class, BenchContext.TAG_SIZE);
         addDataRaw(tag, BenchResult.METRIC_TIME, size, time);
         addDataRaw(tag, BenchResult.METRIC_MEM, size, mem);
     }
@@ -85,15 +79,6 @@ public class BenchResult {
             }
         }
         return str.toString();
-    }
-
-    public static void save(Path path, String str) {
-        System.out.println("saving " + path.toAbsolutePath());
-        try (FileWriter w = new FileWriter(path.toFile())) {
-            w.append(str);
-        } catch (IOException e) {
-            System.err.println("error saving data");
-        }
     }
 
 }
