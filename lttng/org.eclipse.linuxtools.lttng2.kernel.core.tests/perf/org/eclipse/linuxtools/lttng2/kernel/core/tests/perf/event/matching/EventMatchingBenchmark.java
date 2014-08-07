@@ -13,7 +13,6 @@
 package org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.event.matching;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -25,19 +24,19 @@ import java.util.Set;
 
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMatching;
-import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.IMatchMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.NullCleanupStrategy;
 import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
+import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterDisjoint;
+import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterNone;
+import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
-import org.eclipse.linuxtools.tmf.core.trace.ITmfContext;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
@@ -86,102 +85,11 @@ public class EventMatchingBenchmark {
         }
     }
 
-    public static interface Function<T> {
-        public void apply(T obj);
-    }
-
-    public static class ShiftResetFunction implements Function<TmfExperiment> {
-        @Override
-        public void apply(TmfExperiment exp) {
-            ITmfTrace[] traces = exp.getTraces();
-            for (ITmfTrace iTmfTrace : traces) {
-                iTmfTrace.setTimestampTransform(TmfTimestampTransform.IDENTITY);
-            }
-        }
-    }
-
-    public static class ShiftOriginFunction implements Function<TmfExperiment> {
-        @Override
-        public void apply(TmfExperiment exp) {
-            new ShiftResetFunction().apply(exp);
-            ITmfTrace[] traces = exp.getTraces();
-            for (int i = 0; i < traces.length - 1; i++) {
-                ITmfTrace t1 = traces[i];
-                ITmfTrace t2 = traces[i + 1];
-
-                long v1 = t1.getNext(t1.seekEvent(0L)).getTimestamp().getValue();
-                long v2 = t2.getNext(t2.seekEvent(0L)).getTimestamp().getValue();
-                double beta = -1.0 * (v2 - v1);
-                ITmfTimestampTransform xform = new TmfTimestampTransformLinear(1.0, beta);
-                t2.setTimestampTransform(xform);
-                long v3 = t2.getNext(t2.seekEvent(0L)).getTimestamp().getValue();
-                assertTrue(Math.abs(v1 - v3) < 1000);
-            }
-            // getStartTime() does not return the transformed timestamp
-            // assertEquals(startBegin.getValue(), firstEv.getValue());
-        }
-    }
-
-    public static class ShiftNothingFunction implements Function<TmfExperiment> {
-        @Override
-        public void apply(TmfExperiment exp) {
-        }
-    }
-
-    public static class ShiftDisjointFunction implements Function<TmfExperiment> {
-        @Override
-        public void apply(TmfExperiment exp) {
-            new ShiftResetFunction().apply(exp);
-            ITmfTrace[] traces = exp.getTraces();
-
-            for (int i = 0; i < traces.length - 1; i++) {
-                ITmfTrace t1 = traces[i];
-                ITmfTrace t2 = traces[i + 1];
-
-                ITmfContext ctx = t1.seekEvent(0L);
-                t1.getNext(ctx);
-                ctx = t1.seekEvent(Long.MAX_VALUE);
-                ctx = t1.seekEvent(t1.getNbEvents() - 1);
-                ITmfEvent lastEv = t1.getNext(ctx);
-                assertNotNull(lastEv);
-
-                ctx = t2.seekEvent(0L);
-                ITmfEvent first = t2.getNext(ctx);
-
-                double beta = lastEv.getTimestamp().getValue() - first.getTimestamp().getValue();
-                ITmfTimestampTransform xform = new TmfTimestampTransformLinear(1.0, beta);
-                t2.setTimestampTransform(xform);
-                ctx = t2.seekEvent(0L);
-                t2.getNext(ctx);
-            }
-
-            for (int i = 0; i < traces.length - 1; i++) {
-                ITmfTrace t1 = traces[i];
-                ITmfTrace t2 = traces[i + 1];
-
-                // force seek to the end
-                ITmfContext ctx = t1.seekEvent(0L);
-                ctx = t1.seekEvent(Long.MAX_VALUE);
-                ctx = t1.seekEvent(t1.getNbEvents() - 1);
-                ITmfEvent last = t1.getNext(ctx);
-
-                ctx = t2.seekEvent(0L);
-                ITmfEvent first = t2.getNext(ctx);
-
-                long delta = last.getTimestamp().getValue() - first.getTimestamp().getValue();
-                // FIXME: getStartTime() and
-                // getEndTime() are not updated on setTimestampTransform()
-                assertTrue(Math.abs(delta) < 1000);
-            }
-
-        }
-    }
-
-    private static final Map<String, Function<TmfExperiment>> funcMap = new HashMap<>();
+    private static final Map<String, IFunction<TmfExperiment>> funcMap = new HashMap<>();
     static {
-        funcMap.put("origin", new ShiftOriginFunction());
-        funcMap.put("disjoint", new ShiftDisjointFunction());
-        funcMap.put("nothing", new ShiftNothingFunction());
+        funcMap.put("origin", new TraceShifterOrigin());
+        funcMap.put("disjoint", new TraceShifterDisjoint());
+        funcMap.put("nothing", new TraceShifterNone());
     }
 
     /**
@@ -195,7 +103,7 @@ public class EventMatchingBenchmark {
         assumeTrue(CtfTmfTestTrace.DJANGO_CLIENT.exists());
         assumeTrue(CtfTmfTestTrace.DJANGO_DB.exists());
         assumeTrue(CtfTmfTestTrace.DJANGO_HTTPD.exists());
-        for (Entry<String, Function<TmfExperiment>> func : funcMap.entrySet()) {
+        for (Entry<String, IFunction<TmfExperiment>> func : funcMap.entrySet()) {
             try (CtfTmfTrace trace1 = CtfTmfTestTrace.DJANGO_CLIENT.getTrace();
                     CtfTmfTrace trace2 = CtfTmfTestTrace.DJANGO_DB.getTrace();
                     CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
@@ -238,10 +146,10 @@ public class EventMatchingBenchmark {
                 CtfTmfTrace trace3 = CtfTmfTestTrace.DJANGO_HTTPD.getTrace();) {
             ITmfTrace[] traces = { trace1, trace2, trace3 };
             TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
-            for (Entry<String, Function<TmfExperiment>> entry: funcMap.entrySet()) {
+            for (Entry<String, IFunction<TmfExperiment>> entry: funcMap.entrySet()) {
                 System.out.println("func " + entry.getKey());
                 HashMap<ITmfTrace, ITmfTimestamp> result = new HashMap<>();
-                Function<TmfExperiment> func = entry.getValue();
+                IFunction<TmfExperiment> func = entry.getValue();
                 func.apply(experiment);
                 for (ITmfTrace trace: traces) {
                     ITmfTimestamp value = trace.getNext(trace.seekEvent(0L)).getTimestamp();
@@ -273,7 +181,7 @@ public class EventMatchingBenchmark {
             TmfExperiment experiment = new TmfExperiment(CtfTmfEvent.class, "Test experiment", traces, 1000);
 
             // worst-case sync
-            Function<TmfExperiment> func = new ShiftDisjointFunction();
+            IFunction<TmfExperiment> func = new TraceShifterDisjoint();
             func.apply(experiment);
             SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
             TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
@@ -289,7 +197,7 @@ public class EventMatchingBenchmark {
             }
 
             // coarse pre-sync step
-            func = new ShiftOriginFunction();
+            func = new TraceShifterOrigin();
             func.apply(experiment);
             algo = new SyncAlgorithmFullyIncremental();
             matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);

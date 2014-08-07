@@ -14,11 +14,13 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfWorker;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest.ExecutionType;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
@@ -139,7 +141,9 @@ public class TestGraphMultiHost {
     public void testSyncTransform() {
         Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_BUG_SYNC);
         TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
-        SyncAlgorithmFullyIncremental algo = (SyncAlgorithmFullyIncremental) CtfTraceFinder.synchronizeExperiment(experiment);
+        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+        TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
+        matching.matchEvents();
 
         for (ITmfTrace i: experiment.getTraces()) {
             for (ITmfTrace j: experiment.getTraces()) {
