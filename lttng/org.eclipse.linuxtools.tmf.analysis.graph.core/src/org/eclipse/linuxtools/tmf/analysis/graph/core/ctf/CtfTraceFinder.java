@@ -126,8 +126,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         applyComposeTransform(algo, experiment);
     }
 
-    public static void synchronizeExperimentWithPreSync(TmfExperiment experiment) {
-        synchronizeExperimentCoarse(experiment);
+    public static void synchronizeExperimentWithCleanupMonitor(TmfExperiment experiment) {
         SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.addMatchMonitor(new ExpireCleanupMonitor());
@@ -144,6 +143,13 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
         matching.matchEvents();
         applyComposeTransform(algo, experiment);
     }
+
+
+    public static void synchronizeExperimentWithPreSync(TmfExperiment experiment) {
+        synchronizeExperimentCoarse(experiment);
+        synchronizeExperimentWithCleanupMonitor(experiment);
+    }
+
 
     public static void applyComposeTransform(SynchronizationAlgorithm algo, TmfExperiment experiment) {
         for (ITmfTrace trace : experiment.getTraces()) {

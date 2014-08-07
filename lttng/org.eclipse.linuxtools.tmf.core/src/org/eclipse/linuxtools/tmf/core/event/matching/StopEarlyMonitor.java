@@ -20,6 +20,7 @@ public class StopEarlyMonitor extends AbstractMatchMonitor {
         if (unit instanceof SyncAlgorithmFullyIncremental) {
             SyncAlgorithmFullyIncremental sync = (SyncAlgorithmFullyIncremental) unit;
             if (sync.getNumPartitions() == 1) {
+                System.out.println("stop early!");
                 getRequest().cancel();
             }
         }
