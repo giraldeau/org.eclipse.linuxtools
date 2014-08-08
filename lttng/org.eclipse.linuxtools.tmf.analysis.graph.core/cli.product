@@ -94,6 +94,7 @@
       <plugin id="org.eclipse.jface.databinding"/>
       <plugin id="org.eclipse.linuxtools.ctf.core"/>
       <plugin id="org.eclipse.linuxtools.ctf.parser"/>
+      <plugin id="org.eclipse.linuxtools.lttng2.control.core"/>
       <plugin id="org.eclipse.linuxtools.lttng2.kernel.core"/>
       <plugin id="org.eclipse.linuxtools.statesystem.core"/>
       <plugin id="org.eclipse.linuxtools.tmf.analysis.graph.core"/>
