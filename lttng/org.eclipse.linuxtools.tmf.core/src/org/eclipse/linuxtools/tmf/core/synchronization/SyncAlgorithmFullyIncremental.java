@@ -14,8 +14,10 @@
 package org.eclipse.linuxtools.tmf.core.synchronization;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     private static final MathContext fMc = MathContext.DECIMAL128;
 
+    /** @Serial */
     private final List<ConvexHull> fSyncs;
 
     private SyncGraph<String, ITmfTimestampTransform> fSyncGraph;
@@ -116,7 +119,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         fUnionFind = new WeightedQuickUnion(traceArr.length);
         fInternHostId = new InternalizeMap();
 
-        for (ITmfTrace trace: traces) {
+        for (ITmfTrace trace : traces) {
             fInternHostId.put(trace.getHostId());
         }
         // TODO: move monitoring code outside of the class
@@ -257,11 +260,13 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     @Override
     public boolean isTraceSynced(String hostId) {
-        boolean traceSynced = false;
-        for (ConvexHull traceSync : fSyncs) {
-            traceSynced = traceSynced || traceSync.isTraceSynced(hostId);
-        }
-        return traceSynced;
+        ITmfTimestampTransform t = getTimestampTransform(hostId);
+        return !t.equals(TmfTimestampTransform.IDENTITY);
+//        boolean traceSynced = false;
+//        for (ConvexHull traceSync : fSyncs) {
+//            traceSynced = traceSynced || traceSync.isTraceSynced(hostId);
+//        }
+//        return traceSynced;
     }
 
     @Override
@@ -278,6 +283,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
      * begins, the number of partitions is equal to the number of hosts and
      * decrease. When the number of partitions reaches 1, then there exists a
      * relation between each traces in the set.
+     *
      * @return the number of partitions
      * @since 4.0
      */
@@ -456,7 +462,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     /* Lines intersect, not good */
                     setQuality(SyncQuality.FAIL);
                 }
-            } else if ( (fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1) ) {
+            } else if ((fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1)) {
                 /* There is no slope but at least one of the bounds is present */
                 LinkedList<SyncPoint> boundList, otherBoundList;
                 int inversionFactor;
@@ -473,8 +479,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
                 for (int i = 1; i < boundList.size() - 1; i++) {
                     alpha = (alpha.multiply(new BigDecimal(boundList.get(i).getTimeX() - boundList.get(0).getTimeX())).
-                            add( (boundList.get(i+1).getAlpha(boundList.get(i))).multiply(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(i).getTimeX())))).
-                            divide(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(0).getTimeX()), fMc);
+                            add((boundList.get(i + 1).getAlpha(boundList.get(i))).multiply(new BigDecimal(boundList.get(i + 1).getTimeX() - boundList.get(i).getTimeX())))).
+                            divide(new BigDecimal(boundList.get(i + 1).getTimeX() - boundList.get(0).getTimeX()), fMc);
                 }
                 BigDecimal beta = boundList.get(0).getBeta(alpha);
                 BigDecimal betatemp = beta;
@@ -484,7 +490,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                         beta = betatemp;
                     }
                 }
-                /* Is there a point in the other hull?  If so, move the line so it is between the 2 */
+                /*
+                 * Is there a point in the other hull? If so, move the line so
+                 * it is between the 2
+                 */
                 if (otherBoundList.size() > 0) {
                     BigDecimal betaother = otherBoundList.get(0).getBeta(alpha);
                     if (betaother.compareTo(beta) * inversionFactor < 0) {
@@ -516,7 +525,9 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 }
                 if (onlyPoint != null) {
                     fBeta = BigDecimal.valueOf(onlyPoint.getTimeY() - onlyPoint.getTimeX());
-//                    System.out.println("Value for point Y: " + (BigDecimal.valueOf(onlyPoint.getTimeY()).subtract(fBeta)).divide(fAlpha, fMc));
+                    // System.out.println("Value for point Y: " +
+                    // (BigDecimal.valueOf(onlyPoint.getTimeY()).subtract(fBeta)).divide(fAlpha,
+                    // fMc));
                 }
             }
         }
@@ -667,8 +678,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             fLmin[1] = null;
             fLmax[0] = null;
             fLmax[1] = null;
+            fQualityListeners.clear();
             s.defaultWriteObject();
-
         }
 
         @SuppressWarnings("nls")
@@ -768,6 +779,43 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         @Override
         public String toString() {
             return String.format("%s (%s,  %s)", this.getClass().getCanonicalName(), x, y); //$NON-NLS-1$
+        }
+    }
+
+    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
+        List<ConvexHull> hulls = new LinkedList<>();
+        int nbHulls = (int) aInputStream.readObject();
+        for (int i = 0; i < nbHulls; i++) {
+            Object obj = aInputStream.readObject();
+            if (obj instanceof ConvexHull) {
+                hulls.add((ConvexHull) obj);
+            } else {
+                System.out.println("null convex hull");
+            }
+        }
+        try {
+            Class<? extends SyncAlgorithmFullyIncremental> cl = this.getClass();
+            Field f;
+
+            f = cl.getDeclaredField("fSyncs");
+
+            f.setAccessible(true);
+            f.set(this, hulls);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void writeObject(ObjectOutputStream s)
+            throws IOException {
+        /*
+         * Remove calculation data because most of it is not serializable. We
+         * have the statistics anyway
+         */
+        s.writeObject(fSyncs.size());
+        for (ConvexHull hull : this.fSyncs) {
+            s.writeObject(hull);
         }
     }
 

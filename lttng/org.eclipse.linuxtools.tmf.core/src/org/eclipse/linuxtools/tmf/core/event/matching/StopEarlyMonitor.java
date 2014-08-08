@@ -7,6 +7,7 @@ import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncreme
  * partition exists) and cancel the pending request.
  *
  * @author francis
+ * @since 4.0
  *
  */
 public class StopEarlyMonitor extends AbstractMatchMonitor {
