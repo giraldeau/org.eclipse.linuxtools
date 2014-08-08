@@ -128,6 +128,9 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         return MatchingType.NETWORK;
     }
 
+    /**
+     * @since 4.0
+     */
     @Override
     public void startingRequest(TmfEventRequest request) {
         for (IMatchMonitor monitor : fMonitors) {

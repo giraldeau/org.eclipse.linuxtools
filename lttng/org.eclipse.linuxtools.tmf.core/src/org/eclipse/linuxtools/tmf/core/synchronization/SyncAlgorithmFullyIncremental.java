@@ -260,6 +260,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
      * relation between each traces in the set.
      *
      * @return the number of partitions
+     * @since 4.0
      */
     public int getNumPartitions() {
         return fUnionFind.count();
@@ -676,6 +677,9 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     }
 
+    /**
+     * @since 4.0
+     */
     public static interface IQualityListener {
         public void qualityChanged(ConvexHull hull, SyncQuality quality);
     }

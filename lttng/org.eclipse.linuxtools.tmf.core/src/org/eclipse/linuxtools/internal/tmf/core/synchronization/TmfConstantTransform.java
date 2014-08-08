@@ -103,4 +103,9 @@ public class TmfConstantTransform implements ITmfTimestampTransform {
         return builder.toString();
     }
 
+    @Override
+    public ITmfTimestampTransform inverse() {
+        return new TmfConstantTransform(-1 * fOffset.getValue());
+    }
+
 }
