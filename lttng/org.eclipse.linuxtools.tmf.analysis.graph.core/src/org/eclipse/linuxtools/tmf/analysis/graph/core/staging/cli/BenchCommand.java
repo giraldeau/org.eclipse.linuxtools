@@ -22,7 +22,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSleep;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoRead;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimized;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimizedRawReader;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncRaw;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSync;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.IBenchRunner;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
@@ -48,7 +48,7 @@ public class BenchCommand extends BaseCommand {
     static {
         stages.put("sleep", new DoSleep());
         stages.put("read", new DoRead());
-        stages.put("sync-raw", new DoSyncRaw());
+        stages.put("sync", new DoSync());
         stages.put("sync-optimized", new DoSyncOptimized());
         stages.put("sync-optimized-rawreader", new DoSyncOptimizedRawReader());
         stages.put("build", new DoRead());
@@ -151,7 +151,10 @@ public class BenchCommand extends BaseCommand {
             System.err.print("setup...\r");
             runner.setup(ctx);
             System.err.print("warm up...\r");
+            ctx.get(BenchResult.class).setRecording(false);
             runner.run(ctx);
+            runner.run(ctx);
+            ctx.get(BenchResult.class).setRecording(true);
             for (int i = 0; i < repeat; i++) {
                 System.err.print(String.format("run %d/%d...\r", i, repeat));
                 runner.run(ctx);

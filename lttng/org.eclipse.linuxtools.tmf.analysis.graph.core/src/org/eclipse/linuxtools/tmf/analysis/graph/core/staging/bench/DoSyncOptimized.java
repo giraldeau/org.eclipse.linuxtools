@@ -7,7 +7,6 @@ public class DoSyncOptimized implements IBenchRunner {
 
     @Override
     public void setup(BenchContext ctx) {
-
     }
 
     @Override

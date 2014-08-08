@@ -17,7 +17,7 @@ public class BenchResult {
 
     private long memStart;
     private long timeStart;
-
+    private boolean recording;
     /**
      * @param ctx
      */
@@ -40,6 +40,9 @@ public class BenchResult {
     }
 
     public void addDataRaw(String name, String metric, Integer size, double value) {
+        if (!recording) {
+            return;
+        }
         BenchResultKey key = new BenchResultKey(name, metric, size);
         if (!results.containsKey(key)) {
             results.put(key, key);
@@ -79,6 +82,10 @@ public class BenchResult {
             }
         }
         return str.toString();
+    }
+
+    public void setRecording(boolean recording) {
+        this.recording = recording;
     }
 
 }

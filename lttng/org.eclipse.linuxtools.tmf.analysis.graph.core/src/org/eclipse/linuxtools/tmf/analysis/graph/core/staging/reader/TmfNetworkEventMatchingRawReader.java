@@ -18,9 +18,10 @@ public class TmfNetworkEventMatchingRawReader extends TmfNetworkEventMatching {
         if (fTraces.size() == 0) {
             return false;
         }
-
+        initMatching();
         for (ITmfTrace trace : fTraces) {
             EventMatchingBuildRequest request = new EventMatchingBuildRequest(this, trace);
+            startingRequest(request);
             TmfTraceReader reader = new TmfTraceReader();
             reader.readTraceRaw(trace, request);
         }

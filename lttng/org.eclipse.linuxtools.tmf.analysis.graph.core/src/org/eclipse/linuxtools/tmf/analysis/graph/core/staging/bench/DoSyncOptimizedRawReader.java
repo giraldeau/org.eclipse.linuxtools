@@ -16,7 +16,6 @@ public class DoSyncOptimizedRawReader implements IBenchRunner {
 
     @Override
     public void setup(BenchContext ctx) {
-
     }
 
     @Override
