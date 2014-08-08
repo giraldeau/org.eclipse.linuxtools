@@ -21,6 +21,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.BenchResult;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSleep;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoRead;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimized;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimizedRawReader;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncRaw;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.IBenchRunner;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -49,6 +50,7 @@ public class BenchCommand extends BaseCommand {
         stages.put("read", new DoRead());
         stages.put("sync-raw", new DoSyncRaw());
         stages.put("sync-optimized", new DoSyncOptimized());
+        stages.put("sync-optimized-rawreader", new DoSyncOptimizedRawReader());
         stages.put("build", new DoRead());
         stages.put("extract", new DoRead());
     }
