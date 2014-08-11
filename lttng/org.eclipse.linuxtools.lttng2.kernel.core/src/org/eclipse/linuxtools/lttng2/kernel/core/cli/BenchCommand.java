@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
+import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
 /**
@@ -43,8 +44,8 @@ public class BenchCommand extends BaseCommand {
         stages.put("sync", new DoSync());
         stages.put("sync-optimized", new DoSyncOptimized());
         stages.put("sync-optimized-rawreader", new DoSyncOptimizedRawReader());
-        stages.put("build", new DoRead());
-        stages.put("extract", new DoRead());
+        stages.put("build", new DoBuild());
+        stages.put("extract", new DoExtract());
     }
 
     @Override
@@ -135,6 +136,8 @@ public class BenchCommand extends BaseCommand {
 
     private static void doOneStage(String stage, IBenchRunner runner, BenchContext ctx, Path path, boolean dryRun) {
         TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
+        TmfTraceOpenedSignal signal = new TmfTraceOpenedSignal(new Object(), experiment, null);
+        experiment.traceOpened(signal);
         System.err.println("begin stage: " + stage + " experiment: " +  path.toFile().getName());
         ctx.put(TmfExperiment.class, experiment);
         ctx.put(String.class, BenchContext.TAG_TASK_NAME, stage);
@@ -148,7 +151,7 @@ public class BenchCommand extends BaseCommand {
             runner.run(ctx);
             ctx.get(BenchResult.class).setRecording(true);
             for (int i = 0; i < repeat; i++) {
-                System.err.print(String.format("run %d/%d...\r", i, repeat));
+                System.err.print(String.format("run %d/%d...\r", i + 1, repeat));
                 runner.run(ctx);
             }
             System.err.print("teardown...\r");
