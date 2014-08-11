@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli;
+package org.eclipse.linuxtools.lttng2.kernel.core.cli;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,14 +16,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.BenchContext;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.BenchResult;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSleep;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoRead;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimized;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSyncOptimizedRawReader;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.DoSync;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench.IBenchRunner;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
 /**

@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench;
+package org.eclipse.linuxtools.lttng2.kernel.core.cli;
 
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
@@ -20,11 +20,9 @@ public class DoRead implements IBenchRunner {
 
         @Override
         public void handleData(final ITmfEvent event) {
-            if (event != null) {
-                if (event.getContent() == null) {
-                    event.getContent().getFields().size();
-                    throw new RuntimeException("null ctx");
-                }
+            if (event.getContent() == null) {
+                event.getContent().getFields().size();
+                throw new RuntimeException("null ctx");
             }
         }
 

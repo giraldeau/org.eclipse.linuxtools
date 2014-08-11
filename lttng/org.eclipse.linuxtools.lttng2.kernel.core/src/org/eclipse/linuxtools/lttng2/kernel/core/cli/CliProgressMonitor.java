@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli;
+package org.eclipse.linuxtools.lttng2.kernel.core.cli;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 

@@ -1,9 +1,8 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench;
+package org.eclipse.linuxtools.lttng2.kernel.core.cli;
 
 import java.util.Collections;
 
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.reader.TmfNetworkEventMatchingRawReader;
 import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
