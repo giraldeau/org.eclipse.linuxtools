@@ -42,4 +42,16 @@
          </tracetype>
       </module>
    </extension>
+   <extension
+         id="org.eclipse.linuxtools.lttng2.kernel.core.cli.main"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.eclipse.linuxtools.lttng2.kernel.core.cli.MainCLI">
+         </run>
+      </application>
+   </extension>
 </plugin>
