@@ -1,9 +1,8 @@
 package org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.handlers;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.Context;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.ALog;
+import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTmfGraphProvider;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTraceEventHandler;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfModelResource;
@@ -12,11 +11,9 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfSystemModelWithCp
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
 
-@SuppressWarnings("nls")
 public class EventContextHandler extends AbstractTraceEventHandler {
 
 	private TmfSystemModelWithCpu system;
-	private ALog log;
 
 	public static String[] getHandledEvents() {
         return new String[] { LttngStrings.SOFTIRQ_ENTRY, LttngStrings.SOFTIRQ_EXIT,
@@ -28,7 +25,6 @@ public class EventContextHandler extends AbstractTraceEventHandler {
 		super();
         system = provider.getModelRegistry().getOrCreateModel(TmfSystemModelWithCpu.class);
         system.init(provider);
-        log = ALog.getInstance();
 	}
 
 
@@ -62,13 +58,10 @@ public class EventContextHandler extends AbstractTraceEventHandler {
 	private void popInterruptContext(CtfTmfEvent event, Context ctx) {
 	    TmfModelResource interruptCtx = system.peekContextStack(event.getTrace().getHostId(), event.getCPU());
 		if (interruptCtx == null) {
-			log.entry("popInterruptContext stack is empty " + event.toString());
 			return;
 		}
 		if ((Context)interruptCtx.getField(LttngKernelSystemModelStrings.INTCONTEXT_CONTEXT) == ctx) {
 			system.popContextStack(event.getTrace().getHostId(), event.getCPU());
-		} else {
-			log.entry("popInterruptContext unexpected top stack context " + event);
 		}
 	}
 
