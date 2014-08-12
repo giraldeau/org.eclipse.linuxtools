@@ -45,6 +45,15 @@ public class DoExtract implements IBenchRunner {
             throw new RuntimeException("worker not found");
         }
 
+        CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(fGraph);
+        TmfVertex head = fGraph.getHead(fWorker);
+        TmfVertex tail = fGraph.getTail(fWorker);
+        TmfGraph result = algo.compute(head, tail);
+        BenchResult res = ctx.get(BenchResult.class);
+        String tag = ctx.get(String.class, BenchContext.TAG_TASK_NAME);
+        Integer size = ctx.get(Integer.class, BenchContext.TAG_SIZE);
+        res.addDataRaw(tag, BenchResult.METRIC_GRAPH, size, fGraph.size());
+        res.addDataRaw(tag, BenchResult.METRIC_PATH, size, result.size());
         module.dispose();
     }
 
@@ -55,8 +64,7 @@ public class DoExtract implements IBenchRunner {
         CriticalPathAlgorithmBounded algo = new CriticalPathAlgorithmBounded(fGraph);
         TmfVertex head = fGraph.getHead(fWorker);
         TmfVertex tail = fGraph.getTail(fWorker);
-        TmfGraph result = algo.compute(head, tail);
-        System.out.println(result.size());
+        algo.compute(head, tail);
         res.done(ctx);
     }
 

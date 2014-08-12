@@ -12,6 +12,8 @@ public class BenchResult {
 
     public static final String METRIC_TIME = "time";
     public static final String METRIC_MEM = "mem";
+    public static final String METRIC_GRAPH = "graph";
+    public static final String METRIC_PATH = "path";
 
     HashMap<BenchResultKey, BenchResultKey> results = new HashMap<>();
 
