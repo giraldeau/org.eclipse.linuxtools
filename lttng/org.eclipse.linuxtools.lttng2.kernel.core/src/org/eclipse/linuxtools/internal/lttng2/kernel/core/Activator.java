@@ -15,7 +15,6 @@ package org.eclipse.linuxtools.internal.lttng2.kernel.core;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.ALog;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
@@ -36,11 +35,6 @@ public class Activator extends Plugin {
      * The plug-in ID
      */
     public static final String PLUGIN_ID = "org.eclipse.linuxtools.lttng2.core"; //$NON-NLS-1$
-
-    /**
-     * The log path
-     */
-    private static final String LOG_PATH = "TmfKernel.log"; //$NON-NLS-1$
 
     /**
      * The shared instance
@@ -80,17 +74,12 @@ public class Activator extends Plugin {
         plugin = this;
         TmfEventMatching.registerMatchObject(new TcpEventMatching());
         TmfEventMatching.registerMatchObject(new TcpLttngEventMatching());
-        // can't access ALog from unit tests, so disable it for now
-        //ALog.getInstance().init(LOG_PATH);
-        ALog.getInstance().entry("Hello ALog " + LOG_PATH); //$NON-NLS-1$
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         plugin = null;
         super.stop(context);
-        ALog.getInstance().entry("Bye ALog"); //$NON-NLS-1$
-        ALog.getInstance().close();
     }
 
     /**

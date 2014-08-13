@@ -94,6 +94,8 @@
       <plugin id="org.eclipse.jface.databinding"/>
       <plugin id="org.eclipse.linuxtools.ctf.core"/>
       <plugin id="org.eclipse.linuxtools.ctf.parser"/>
+      <plugin id="org.eclipse.linuxtools.lttng2.control.core"/>
+      <plugin id="org.eclipse.linuxtools.lttng2.kernel.core"/>
       <plugin id="org.eclipse.linuxtools.statesystem.core"/>
       <plugin id="org.eclipse.linuxtools.tmf.analysis.graph.core"/>
       <plugin id="org.eclipse.linuxtools.tmf.core"/>
@@ -113,6 +115,7 @@
       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="1" />
+      <plugin id="org.eclipse.linuxtools.lttng2.kernel.core" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="-1" />
    </configurations>
 

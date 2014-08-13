@@ -23,9 +23,6 @@ import java.util.Set;
 
 import org.eclipse.linuxtools.internal.tmf.core.Activator;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
-import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
-import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
-import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
 
@@ -53,7 +50,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
     /**
      * The array of traces to match
      */
-    private final Collection<? extends ITmfTrace> fTraces;
+    protected final Collection<? extends ITmfTrace> fTraces;
 
     /**
      * The class to call once a match is found
@@ -240,41 +237,4 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
         }
     }
 
-}
-
-class EventMatchingBuildRequest extends TmfEventRequest {
-
-    private final TmfEventMatching matching;
-    private final ITmfTrace trace;
-
-    EventMatchingBuildRequest(TmfEventMatching matching, ITmfTrace trace) {
-        super(ITmfEvent.class,
-                TmfTimeRange.ETERNITY,
-                0,
-                ITmfEventRequest.ALL_DATA,
-                ITmfEventRequest.ExecutionType.FOREGROUND);
-        this.matching = matching;
-        this.trace = trace;
-    }
-
-    @Override
-    public void handleData(final ITmfEvent event) {
-        super.handleData(event);
-        matching.matchEvent(event, trace);
-    }
-
-    @Override
-    public void handleSuccess() {
-        super.handleSuccess();
-    }
-
-    @Override
-    public void handleCancel() {
-        super.handleCancel();
-    }
-
-    @Override
-    public void handleFailure() {
-        super.handleFailure();
-    }
 }

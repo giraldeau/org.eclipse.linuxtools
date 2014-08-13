@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.staging.bench;
+package org.eclipse.linuxtools.lttng2.kernel.core.cli;
 
 import com.google.common.collect.HashBasedTable;
 
@@ -13,6 +13,7 @@ public class BenchContext {
     public static final String GLOBAL = "__global__";
     public static final String TAG_TASK_NAME = "task";
     public static final String TAG_REPEAT = "repeat";
+    public static final String TAG_SIZE = "size";
 
     HashBasedTable<Class<?>, String, Object> fProperties = HashBasedTable.create();
 

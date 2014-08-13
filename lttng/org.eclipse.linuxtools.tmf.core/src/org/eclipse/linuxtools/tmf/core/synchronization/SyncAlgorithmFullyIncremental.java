@@ -68,16 +68,19 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     private WeightedQuickUnion fUnionFind;
 
+    // TODO: remove once the monitoring code is removed
+//  private static int id = 0;
+//    private FileWriter fSyncData;
+
     private IQualityListener fUpdatePartitions = new IQualityListener() {
 
         @Override
         public void qualityChanged(ConvexHull hull, SyncQuality quality) {
-            if (quality == SyncQuality.ABSENT || quality == SyncQuality.INCOMPLETE) {
-                return;
+            if (quality == SyncQuality.ACCURATE) {
+                int p = fInternHostId.get(hull.getReferenceHost());
+                int q = fInternHostId.get(hull.getOtherHost());
+                fUnionFind.union(p, q);
             }
-            int p = fInternHostId.get(hull.getReferenceHost());
-            int q = fInternHostId.get(hull.getOtherHost());
-            fUnionFind.union(p, q);
         }
 
     };
@@ -119,6 +122,11 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         for (ITmfTrace trace : traces) {
             fInternHostId.put(trace.getHostId());
         }
+        // TODO: move monitoring code outside of the class
+//        try {
+//            fSyncData = new FileWriter(new File("syncdata-" + id++));
+//        } catch (IOException e) {
+//        }
     }
 
     @Override
@@ -145,6 +153,23 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
         algo.processMatch(match);
         invalidateSyncGraph();
+//        try {
+//            String str = String.format("%d-%d;%10.6f;%10.6f;%10.6f;%10.6f;%d;%d;%d;%d\n",
+//                    fInternHostId.get(algo.getReferenceHost()),
+//                    fInternHostId.get(algo.getOtherHost()),
+//                    algo.fAlpha.doubleValue(),
+//                    algo.fAlphamin.doubleValue(),
+//                    algo.fAlphamax.doubleValue(),
+//                    algo.fAlphamax.doubleValue() - algo.fAlphamin.doubleValue(),
+//                    algo.fBeta.longValue(),
+//                    algo.fBetamin.longValue(),
+//                    algo.fBetamax.longValue(),
+//                    algo.fBetamax.longValue() - algo.fBetamin.longValue()
+//                    );
+//            fSyncData.write(str);
+//        } catch (IOException e) {
+//            throw new RuntimeException();
+//        }
     }
 
     private void invalidateSyncGraph() {
@@ -304,9 +329,9 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
          * Slopes and ordinate at origin of respectively fLmin, fLmax and the
          * bisector
          */
-        private BigDecimal fAlphamin, fBetamax, fAlphamax, fBetamin, fAlpha, fBeta;
+        public BigDecimal fAlphamin, fBetamax, fAlphamax, fBetamin, fAlpha, fBeta;
 
-        private int fNbMatches, fNbAccurateMatches;
+        public int fNbMatches, fNbAccurateMatches;
         private String fReferenceHost = "", fOtherHost = ""; //$NON-NLS-1$//$NON-NLS-2$
         private SyncQuality fQuality;
 
@@ -429,7 +454,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     setQuality(SyncQuality.APPROXIMATE);
                 }
                 else if (fAlphamax.compareTo(fAlphamin) > 0) {
-                    setQuality(SyncQuality.ACCURATE);
+                    double alphaErr = fAlphamax.subtract(fAlphamin).doubleValue();
+                    if (alphaErr < 0.01) {
+                        setQuality(SyncQuality.ACCURATE);
+                    }
                 } else {
                     /* Lines intersect, not good */
                     setQuality(SyncQuality.FAIL);
@@ -664,11 +692,12 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
 
         private void setQuality(SyncQuality fQuality) {
-            this.fQuality = fQuality;
-            for (IQualityListener listener : fQualityListeners) {
-                listener.qualityChanged(this, fQuality);
+            if (this.fQuality != fQuality) {
+                this.fQuality = fQuality;
+                for (IQualityListener listener: fQualityListeners) {
+                    listener.qualityChanged(this, fQuality);
+                }
             }
-
         }
 
         public void addQualityListener(IQualityListener ql) {

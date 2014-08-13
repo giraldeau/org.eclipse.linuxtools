@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
@@ -174,12 +175,14 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
         boolean found = false;
         TmfEventDependency dep = null;
         /* Search for the event in the companion table */
-        for (ITmfTrace mTrace: companionTbl.rowKeySet()) {
-            if (companionTbl.containsColumn(eventKey)) {
+        Set<ITmfTrace> rows = companionTbl.rowKeySet();
+        for (ITmfTrace mTrace: rows) {
+            if (companionTbl.contains(mTrace, eventKey)) {
                 found = true;
                 ITmfEvent companionEvent = companionTbl.get(mTrace, eventKey);
 
                 /* Remove the element from the companion table */
+                // FIXME: should not modify the collection from within the loop, unless we break the loop
                 companionTbl.remove(mTrace, eventKey);
 
                 /* Create the dependency object */
@@ -192,8 +195,8 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
                     break;
                 default:
                     break;
-
                 }
+                break;
             }
         }
 

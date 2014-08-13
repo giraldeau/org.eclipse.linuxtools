@@ -11,7 +11,6 @@ import org.eclipse.linuxtools.internal.lttng2.kernel.core.TcpEventStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.Context;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.process_status_enum;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.ALog;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.EventField;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.Softirq;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge;
@@ -41,14 +40,12 @@ import com.google.common.collect.Table;
  * @author Geneviève Bastien
  *
  */
-@SuppressWarnings("nls")
 public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
 
     AbstractTmfGraphProvider fProvider;
     TmfSystemModelWithCpu system;
     Table<String, Integer, TmfWorker> kernel;
     TmfGraph graph;
-    private ALog log;
     IMatchProcessingUnit matchProcessing;
     HashMap<ITmfEvent, TmfVertex> tcpNodes;
     TmfNetworkEventMatching tcpMatching;
@@ -67,8 +64,6 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
         system = provider.getModelRegistry().getOrCreateModel(TmfSystemModelWithCpu.class);
         system.init(provider);
         graph = provider.getAssignedGraph();
-        log = ALog.getInstance();
-        log.entry("init TraceEventHandlerExecutionGraph");
         kernel = HashBasedTable.create();
 
         // init graph
@@ -94,14 +89,9 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
 
             @Override
             public void addMatch(TmfEventDependency match) {
-                log.entry("tcp match " + match.getSourceEvent().getContent() + " " + match.getDestinationEvent().getContent());
-                log.entry("xmit " + match.getSourceEvent().getTimestamp() + " recv" + match.getDestinationEvent().getTimestamp());
-
                 TmfVertex output = tcpNodes.remove(match.getSourceEvent());
                 TmfVertex input = tcpNodes.remove(match.getDestinationEvent());
-                if (output == null || input == null) {
-                    log.entry("null tcp endpoint output=" + " input=" + input);
-                } else {
+                if (output != null && input != null) {
                     output.linkVertical(input).setType(EdgeType.NETWORK);
                 }
             }
@@ -172,18 +162,8 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
         TmfWorker prevTask = system.getWorker(host, cpu, prev);
 
         if (prevTask == null || nextTask == null) {
-            log.entry("prevTask=" + prevTask + " nextTask=" + nextTask);
             return;
         }
-        log.entry(event.getTimestamp().toString());
-        log.entry(String.format("%5d %12s %12s",
-                prevTask.getId(),
-                prevTask.getOldValue(LttngStrings.STATUS),
-                prevTask.getField(LttngStrings.STATUS)));
-        log.entry(String.format("%5d %12s %12s",
-                nextTask.getId(),
-                nextTask.getOldValue(LttngStrings.STATUS),
-                nextTask.getField(LttngStrings.STATUS)));
         stateChange(prevTask, ts);
         stateChange(nextTask, ts);
     }
@@ -242,13 +222,11 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
         TmfWorker target = system.getWorker(host, cpu, tid);
         TmfWorker current = system.getWorkerCpu(host, cpu);
         if (target == null) {
-            log.entry("wakeup current=" + current + " target=" + target);
             return;
         }
 
         process_status_enum status = (process_status_enum) target.getOldValue(LttngStrings.STATUS);
         if (status == null) {
-            log.entry("No status");
             return;
         }
 
@@ -316,7 +294,6 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
         case UNNAMED:
         case WAIT_CPU:
         case ZOMBIE:
-            log.entry("wakeup target " + target + " bad state: " + status);
             break;
         default:
             break;

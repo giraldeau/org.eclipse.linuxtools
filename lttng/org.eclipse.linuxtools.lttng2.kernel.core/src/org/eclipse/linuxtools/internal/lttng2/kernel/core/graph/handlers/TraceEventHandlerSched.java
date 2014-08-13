@@ -6,10 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.execution_mode_enum;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelExecGraphProvider.process_status_enum;
-import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.ALog;
+import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.LttngKernelSystemModelStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.AnalysisFilter;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.CloneFlags;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.model.EventField;
@@ -52,8 +51,6 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
     ITmfTrace fTrace;
 
     private AnalysisFilter filter;
-
-    private ALog log;
 
     private Map<ITmfTrace, Boolean> fHasEventSchedTTWU;
 
@@ -118,7 +115,6 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
                 return swapper;
             }
         });
-		log = ALog.getInstance();
         evHistory = new HashMap<>();
         fTrace = provider.getTrace();
         fHasEventSchedTTWU = new HashMap<>();
@@ -159,7 +155,6 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
         if (nextTask == null) {
             String name = EventField.getOrDefault(event, LttngStrings.NEXT_COMM, LttngStrings.UNKNOWN);
             nextTask = createTask(event.getTrace(), next, event.getTimestamp().getValue(), name);
-            log.entry("sched_switch next task was null " + nextTask);
         }
         nextTask.setField(LttngStrings.STATUS, process_status_enum.RUN);
 
@@ -167,12 +162,8 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
         if (prevTask == null) {
             String name = EventField.getOrDefault(event, LttngStrings.PREV_COMM, LttngStrings.UNKNOWN);
             prevTask = createTask(event.getTrace(), next, event.getTimestamp().getValue(), name);
-            log.entry("sched_switch prev task was null " + prevTask);
         }
-        process_status_enum status = (process_status_enum) prevTask.getField(LttngStrings.STATUS);
-        if (status != process_status_enum.RUN && status != process_status_enum.EXIT) {
-            log.entry("prev task was not running " + prevTask + " " + event.getTimestamp());
-        }
+//        process_status_enum status = (process_status_enum) prevTask.getField(LttngStrings.STATUS);
         // prev_state == 0 means runnable, thus waits for cpu
         if (prev_state == 0) {
             prevTask.setField(LttngStrings.STATUS, process_status_enum.WAIT_CPU);
@@ -237,13 +228,11 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
             String name = EventField.getOrDefault(event, LttngStrings.COMM, LttngStrings.UNKNOWN);
             target = createTask(event.getTrace(), tid, event.getTimestamp().getValue(), name);
             target.setField(LttngStrings.STATUS, process_status_enum.WAIT_BLOCKED);
-            log.entry("sched_wakeup target was null " + event.getTimestamp().toString());
         }
         // spurious wakeup
         process_status_enum status = (process_status_enum) target.getField(LttngStrings.STATUS);
         if ((current != null && target.getId() == current.getId()) ||
                 status == process_status_enum.WAIT_CPU) {
-            log.entry("sched_wakeup SELF_WAKEUP " + target);
             return;
         }
         if (status == process_status_enum.WAIT_BLOCKED ||

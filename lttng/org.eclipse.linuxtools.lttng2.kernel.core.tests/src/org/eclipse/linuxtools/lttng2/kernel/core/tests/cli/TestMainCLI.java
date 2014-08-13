@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging.cli;
+package org.eclipse.linuxtools.lttng2.kernel.core.tests.cli;
 
 import static org.junit.Assert.*;
 
@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.staging.cli.MainCLI;
+import org.eclipse.linuxtools.lttng2.kernel.core.cli.MainCLI;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
