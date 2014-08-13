@@ -111,7 +111,7 @@ public class TraceEventHandlerSched extends AbstractTraceEventHandler {
             @Override
             public TmfWorker createModelElement(String host, int cpu, long wid) {
                 TmfWorkerDeclaration decl = system.getWorkerDeclaration(LttngKernelSystemModelStrings.WORKER);
-                TmfWorker swapper = decl.create(0, null); // this is ugly, should not provide a null trace, but reference is unreachable in this scope
+                TmfWorker swapper = decl.create(0, host);
                 swapper.setName(String.format("swapper/%d", cpu)); //$NON-NLS-1$
                 swapper.setField(LttngStrings.PID, 0);
                 swapper.setField(LttngStrings.PPID, 0);

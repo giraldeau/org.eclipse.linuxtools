@@ -19,7 +19,7 @@ import org.eclipse.osgi.util.NLS;
  * @since 4.0
  */
 public class Messages extends NLS {
-    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.lttng2.kernel.core.graph.building.messages"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building.messages"; //$NON-NLS-1$
     /** Phase 1 title */
     public static String LttngKernelExecGraphProvider_AnalysePhase1;
     /** Phase 2 title */

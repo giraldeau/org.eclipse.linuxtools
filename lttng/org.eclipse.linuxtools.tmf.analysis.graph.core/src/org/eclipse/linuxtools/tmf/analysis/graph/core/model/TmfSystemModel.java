@@ -80,7 +80,7 @@ public class TmfSystemModel implements ITmfTraceModel {
 
     @Override
     public void putWorker(TmfWorker worker) {
-        fWorkers.put(worker.getTrace().getHostId(), worker.getId(), worker);
+        fWorkers.put(worker.getHostId(), worker.getId(), worker);
         Multimap<TmfModelElementDeclaration, TmfModelResource> put = HashMultimap.create();
         fWorkerResources.put(worker, put);
     }

@@ -70,6 +70,9 @@ public class TmfSystemModelWithCpu extends TmfSystemModel {
                  * parameter instead? Then, would allow to change the factory
                  * depending on the expected worker creation.
                  */
+                if (host == null) {
+                    throw new IllegalArgumentException("TmfSystemModelWithCpu: Getting worker: the host should not be null"); //$NON-NLS-1$
+                }
                 TmfWorker swapper = swapperFactory.createModelElement(host, cpu, wid);
                 fSwappers.put(host, cpu, swapper);
             }

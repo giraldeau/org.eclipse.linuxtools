@@ -224,7 +224,7 @@ public class CriticalPathView extends AbstractTimeGraphPerObjectView {
                 CriticalPathEntry parent = defaultParent;
                 if (owner instanceof TmfWorker) { // this is ugly, should use label providers
                     TmfWorker worker = ((TmfWorker) owner);
-                    String host = worker.getTrace().getHostId(); // FIXME: reference LttngStrings here, but avoid reverse dependence on lttng2.kernel.core
+                    String host = worker.getHostId();
                     if (!hostEntries.containsKey(host)) {
                         parent = new CriticalPathEntry(host, trace, getStartTime(), getEndTime(), null);
                         hostEntries.put(host, parent);
