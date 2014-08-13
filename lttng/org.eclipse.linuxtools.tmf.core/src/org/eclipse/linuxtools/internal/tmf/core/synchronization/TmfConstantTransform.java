@@ -111,7 +111,7 @@ public class TmfConstantTransform implements ITmfTimestampTransform {
 
     @Override
     public ITmfTimestampTransform inverse() {
-        return new TmfConstantTransform(-1 * fOffset.getValue());
+        return new TmfConstantTransform(-1 * fOffset);
     }
 
 }

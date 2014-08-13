@@ -16,13 +16,13 @@ import org.eclipse.osgi.util.NLS;
 
 /**
  * Class for message externalization of this package
- * 
+ *
  * @author Geneviève Bastien
  */
 @SuppressWarnings("javadoc")
 public class Messages extends NLS {
-    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.tmf.analysis.graph.building.messages"; //$NON-NLS-1$
-    
+    private static final String BUNDLE_NAME = "org.eclipse.linuxtools.tmf.analysis.graph.core.building.messages"; //$NON-NLS-1$
+
     public static String TmfGraphBuildingListener_PhaseProgress;
     public static String TmfGraphBuildingListener_Waiting;
     static {
