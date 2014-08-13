@@ -61,6 +61,7 @@ public class SyncTest {
         traces.add(t1);
         traces.add(t2);
         fTraces = traces;
+        SyncAlgorithmFullyIncremental.setSyncThreshold(100);
     }
 
     /**

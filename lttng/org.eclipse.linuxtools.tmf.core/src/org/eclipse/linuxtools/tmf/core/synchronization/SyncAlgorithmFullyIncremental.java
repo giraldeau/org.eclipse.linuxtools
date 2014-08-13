@@ -55,6 +55,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
      */
     private static final long serialVersionUID = -1782788842774838830L;
 
+    private static double SYNC_THRESHOLD = 0.01;
+
     private static final MathContext fMc = MathContext.DECIMAL128;
 
     /** @Serial */
@@ -69,8 +71,8 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
     private WeightedQuickUnion fUnionFind;
 
     // TODO: remove once the monitoring code is removed
-//  private static int id = 0;
-//    private FileWriter fSyncData;
+    // private static int id = 0;
+    // private FileWriter fSyncData;
 
     private IQualityListener fUpdatePartitions = new IQualityListener() {
 
@@ -90,6 +92,19 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
      */
     public SyncAlgorithmFullyIncremental() {
         fSyncs = new LinkedList<>();
+    }
+
+    /**
+     * Sets the threshold corresponding to slope difference between minimum and
+     * maximum slope for the synchronization formula to be considered accurate.
+     *
+     * @param threshold
+     *            The minimum difference between slopes for synchronization to
+     *            be accurate
+     * @since 4.0
+     */
+    public static void setSyncThreshold(double threshold) {
+        SYNC_THRESHOLD = threshold;
     }
 
     /**
@@ -123,10 +138,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             fInternHostId.put(trace.getHostId());
         }
         // TODO: move monitoring code outside of the class
-//        try {
-//            fSyncData = new FileWriter(new File("syncdata-" + id++));
-//        } catch (IOException e) {
-//        }
+        // try {
+        // fSyncData = new FileWriter(new File("syncdata-" + id++));
+        // } catch (IOException e) {
+        // }
     }
 
     @Override
@@ -153,23 +168,24 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
         algo.processMatch(match);
         invalidateSyncGraph();
-//        try {
-//            String str = String.format("%d-%d;%10.6f;%10.6f;%10.6f;%10.6f;%d;%d;%d;%d\n",
-//                    fInternHostId.get(algo.getReferenceHost()),
-//                    fInternHostId.get(algo.getOtherHost()),
-//                    algo.fAlpha.doubleValue(),
-//                    algo.fAlphamin.doubleValue(),
-//                    algo.fAlphamax.doubleValue(),
-//                    algo.fAlphamax.doubleValue() - algo.fAlphamin.doubleValue(),
-//                    algo.fBeta.longValue(),
-//                    algo.fBetamin.longValue(),
-//                    algo.fBetamax.longValue(),
-//                    algo.fBetamax.longValue() - algo.fBetamin.longValue()
-//                    );
-//            fSyncData.write(str);
-//        } catch (IOException e) {
-//            throw new RuntimeException();
-//        }
+        // try {
+        // String str =
+        // String.format("%d-%d;%10.6f;%10.6f;%10.6f;%10.6f;%d;%d;%d;%d\n",
+        // fInternHostId.get(algo.getReferenceHost()),
+        // fInternHostId.get(algo.getOtherHost()),
+        // algo.fAlpha.doubleValue(),
+        // algo.fAlphamin.doubleValue(),
+        // algo.fAlphamax.doubleValue(),
+        // algo.fAlphamax.doubleValue() - algo.fAlphamin.doubleValue(),
+        // algo.fBeta.longValue(),
+        // algo.fBetamin.longValue(),
+        // algo.fBetamax.longValue(),
+        // algo.fBetamax.longValue() - algo.fBetamin.longValue()
+        // );
+        // fSyncData.write(str);
+        // } catch (IOException e) {
+        // throw new RuntimeException();
+        // }
     }
 
     private void invalidateSyncGraph() {
@@ -262,11 +278,11 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
     public boolean isTraceSynced(String hostId) {
         ITmfTimestampTransform t = getTimestampTransform(hostId);
         return !t.equals(TmfTimestampTransform.IDENTITY);
-//        boolean traceSynced = false;
-//        for (ConvexHull traceSync : fSyncs) {
-//            traceSynced = traceSynced || traceSync.isTraceSynced(hostId);
-//        }
-//        return traceSynced;
+        // boolean traceSynced = false;
+        // for (ConvexHull traceSync : fSyncs) {
+        // traceSynced = traceSynced || traceSync.isTraceSynced(hostId);
+        // }
+        // return traceSynced;
     }
 
     @Override
@@ -455,7 +471,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 }
                 else if (fAlphamax.compareTo(fAlphamin) > 0) {
                     double alphaErr = fAlphamax.subtract(fAlphamin).doubleValue();
-                    if (alphaErr < 0.01) {
+                    if (alphaErr < SYNC_THRESHOLD) {
                         setQuality(SyncQuality.ACCURATE);
                     }
                 } else {
@@ -694,7 +710,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         private void setQuality(SyncQuality fQuality) {
             if (this.fQuality != fQuality) {
                 this.fQuality = fQuality;
-                for (IQualityListener listener: fQualityListeners) {
+                for (IQualityListener listener : fQualityListeners) {
                     listener.qualityChanged(this, fQuality);
                 }
             }
