@@ -328,9 +328,6 @@ public class EventMatchingBenchmark {
 
     /**
      * Run the benchmark with 3 bigger traces
-     *
-     * TODO: For now, this test takes a lot of RAM. To run, remove the @Ignore
-     * and set at least 1024Mb RAM, or else there is OutOfMemoryError exception
      */
     @Test
     public void testDjangoTraces() {
