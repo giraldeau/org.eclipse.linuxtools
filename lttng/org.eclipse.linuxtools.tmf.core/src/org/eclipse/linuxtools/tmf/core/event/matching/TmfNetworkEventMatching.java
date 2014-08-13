@@ -45,7 +45,7 @@ public class TmfNetworkEventMatching extends TmfEventMatching {
     private final LinkedList<PacketKey> queue = new LinkedList<>();
 
     /**
-     * @since 3.1
+     * @since 4.0
      */
     public static class PacketKey {
         private final long ts;
