@@ -1,4 +1,4 @@
-package org.eclipse.linuxtools.lttng2.kernel.core.cli;
+package org.eclipse.linuxtools.internal.lttng2.kernel.core.cli;
 
 import java.nio.file.Paths;
 import java.util.List;

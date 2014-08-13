@@ -6,6 +6,9 @@ import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
+/**
+ * @since 4.0
+ */
 public class EventMatchingBuildRequest extends TmfEventRequest {
 
     private final TmfEventMatching matching;
