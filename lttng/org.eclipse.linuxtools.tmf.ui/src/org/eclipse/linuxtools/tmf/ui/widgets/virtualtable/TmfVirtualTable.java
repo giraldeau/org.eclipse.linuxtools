@@ -615,6 +615,35 @@ public class TmfVirtualTable extends Composite {
     // ------------------------------------------------------------------------
 
     /**
+     * Constructs a new TableColumn instance given a style value describing its
+     * alignment behavior. The column is added to the end of the columns
+     * maintained by the table.
+     *
+     * @param style
+     *            the alignment style
+     * @return the new TableColumn
+     *
+     * @see SWT#LEFT
+     * @see SWT#RIGHT
+     * @see SWT#CENTER
+     *
+     * @since 3.1
+     */
+    public TableColumn newTableColumn(int style) {
+        TableColumn column = new TableColumn(fTable, style);
+
+        /*
+         * In Linux the table does not receive a control resized event when
+         * a table column resize causes the horizontal scroll bar to become
+         * visible or invisible, so a resize listener must be added to every
+         * table column to properly update the number of fully visible rows.
+         */
+        column.addControlListener(fResizeListener);
+
+        return column;
+    }
+
+    /**
      * Method setHeaderVisible.
      * @param b boolean
      */
@@ -893,25 +922,13 @@ public class TmfVirtualTable extends Composite {
 
     /**
      * Method setColumnHeaders.
-     * @param columnData ColumnData[] the columndata array.
+     *
+     * @param columnData
+     *            ColumnData[] the columndata array.
      */
+    @Deprecated
     public void setColumnHeaders(ColumnData columnData[]) {
-        for (int i = 0; i < columnData.length; i++) {
-            TableColumn column = new TableColumn(fTable, columnData[i].alignment, i);
-            column.setText(columnData[i].header);
-            /*
-             * In Linux the table does not receive a control resized event when
-             * a table column resize causes the horizontal scroll bar to become
-             * visible or invisible, so a resize listener must be added to every
-             * table column to properly update the number of fully visible rows.
-             */
-            column.addControlListener(fResizeListener);
-            if (columnData[i].width > 0) {
-                column.setWidth(columnData[i].width);
-            } else {
-                column.pack();
-            }
-        }
+        /* No-op */
     }
 
     /**
