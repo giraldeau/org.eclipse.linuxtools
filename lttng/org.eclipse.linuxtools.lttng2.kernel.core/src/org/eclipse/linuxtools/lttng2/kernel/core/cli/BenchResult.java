@@ -14,6 +14,8 @@ public class BenchResult {
     public static final String METRIC_MEM = "mem";
     public static final String METRIC_GRAPH = "graph";
     public static final String METRIC_PATH = "path";
+    public static final String METRIC_EVENTS = "events";
+    public static final String METRIC_DURATION = "duration";
 
     HashMap<BenchResultKey, BenchResultKey> results = new HashMap<>();
 
@@ -60,7 +62,7 @@ public class BenchResult {
         for (BenchResultKey item: sorted) {
             DescriptiveStatistics stats = item.getStats();
             for (double value: stats.getValues()) {
-                str.append(String.format("%s;%s;%d,%f\n",
+                str.append(String.format("%s,%s,%d,%f\n",
                         item.getName(), item.getMetric(), item.getSize(), value));
             }
         }

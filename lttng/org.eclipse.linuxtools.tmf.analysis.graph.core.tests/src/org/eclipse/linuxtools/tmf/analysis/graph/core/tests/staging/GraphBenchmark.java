@@ -2,7 +2,6 @@ package org.eclipse.linuxtools.tmf.analysis.graph.core.tests.staging;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
@@ -17,9 +16,8 @@ import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
-import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
-import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.junit.Test;
@@ -149,32 +147,6 @@ public class GraphBenchmark {
         Matcher m = pattern.matcher(name);
         m.find();
         return Integer.parseInt(m.group(1));
-    }
-
-    private static class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear {
-        private static final long serialVersionUID = 2398540405078949738L;
-        private static int PWR = 10;
-        private long m = 0;
-        private long b = 0;
-        public TmfTimestampTransformLinearFast(TmfTimestampTransformLinear xform) {
-            super();
-            m = BigDecimal.valueOf(1 << PWR).multiply(xform.getAlpha(), xform.getMathContext()).longValue();
-            b = xform.getBeta().longValue();
-        }
-
-        private long apply(long ts) {
-            return ((m * ts) >> PWR) + b;
-        }
-
-        @Override
-        public ITmfTimestamp transform(ITmfTimestamp timestamp) {
-            return new TmfTimestamp(timestamp, apply(timestamp.getValue()));
-        }
-
-        @Override
-        public long transform(long timestamp) {
-            return apply(timestamp);
-        }
     }
 
     @Test

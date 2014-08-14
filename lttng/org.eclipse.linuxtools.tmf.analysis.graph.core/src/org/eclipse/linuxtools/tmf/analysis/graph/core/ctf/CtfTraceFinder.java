@@ -26,6 +26,8 @@ import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -154,6 +156,14 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
     public static void applyComposeTransform(SynchronizationAlgorithm algo, TmfExperiment experiment) {
         for (ITmfTrace trace : experiment.getTraces()) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace).composeWith(trace.getTimestampTransform());
+            trace.setTimestampTransform(xform);
+        }
+    }
+
+    public static void makeFastTransform(TmfExperiment experiment) {
+        for (ITmfTrace trace : experiment.getTraces()) {
+            TmfTimestampTransformLinear xformSlow = (TmfTimestampTransformLinear) trace.getTimestampTransform();
+            TmfTimestampTransformLinearFast xform = new TmfTimestampTransformLinearFast(xformSlow);
             trace.setTimestampTransform(xform);
         }
     }

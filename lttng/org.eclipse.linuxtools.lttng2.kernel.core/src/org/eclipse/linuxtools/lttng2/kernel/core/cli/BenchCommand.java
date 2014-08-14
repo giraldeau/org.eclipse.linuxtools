@@ -28,19 +28,21 @@ import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 @SuppressWarnings("nls")
 public class BenchCommand extends BaseCommand {
 
-    private static final String OPT_OUTPUT = "output";
-    private static final String OPT_OUTPUT_DEFAULT = "results";
-    private static final String OPT_STAGE = "stage";
-    private static final String OPT_DRY_RUN = "dry-run";
-    private static final String OPT_REPEAT = "repeat";
-    private static final String OPT_TRACESET = "traceset";
-    private static final String OPT_REGEX = "regex";
-    private static final String OPT_REGEX_DEFAULT = "[a-z-A-Z_-]*(\\d+)";
+    public static final String OPT_OUTPUT = "output";
+    public static final String OPT_OUTPUT_DEFAULT = "results";
+    public static final String OPT_STAGE = "stage";
+    public static final String OPT_DRY_RUN = "dry-run";
+    public static final String OPT_REPEAT = "repeat";
+    public static final String OPT_TRACESET = "traceset";
+    public static final String OPT_REGEX = "regex";
+    public static final String OPT_REGEX_DEFAULT = "[a-z-A-Z_-]*(\\d+)";
 
     static Map<String, IBenchRunner> stages = new HashMap<>();
     static {
         stages.put("sleep", new DoSleep());
+        stages.put("info", new DoInfo());
         stages.put("read", new DoRead());
+        stages.put("readfast", new DoReadFast());
         stages.put("sync", new DoSync());
         stages.put("sync-optimized", new DoSyncOptimized());
         stages.put("sync-optimized-rawreader", new DoSyncOptimizedRawReader());
@@ -142,6 +144,7 @@ public class BenchCommand extends BaseCommand {
         ctx.put(TmfExperiment.class, experiment);
         ctx.put(String.class, BenchContext.TAG_TASK_NAME, stage);
         Integer repeat = ctx.get(Integer.class, BenchContext.TAG_REPEAT);
+        ctx.get(BenchResult.class).setRecording(true);
         if (!dryRun) {
             System.err.print("setup...\r");
             runner.setup(ctx);
