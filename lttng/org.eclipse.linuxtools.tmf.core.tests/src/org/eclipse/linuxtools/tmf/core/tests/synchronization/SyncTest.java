@@ -297,7 +297,7 @@ public class SyncTest {
             int id1 = link[1];
             ITmfTrace x = traces.get(id0);
             ITmfTrace y = traces.get(id1);
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 10; i++) {
                 int off = i * 1000;
                 genMatchEvent(algo, x, y, (id0 * clk) + off + ((i + 0) * 10), (id1 * clk) + off + ((i + 1) * 10));
                 genMatchEvent(algo, y, x, (id1 * clk) + off + ((i + 2) * 10), (id0 * clk) + off + ((i + 3) * 10));
