@@ -819,7 +819,8 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
      */
     @Override
     public void setTimestampTransform(final ITmfTimestampTransform tt) {
-        if (fTsTransform != null && fTsTransform.equals(tt)) {
+        if (fTsTransform != null && fTsTransform.equals(tt) &&
+                tt != null && tt.equals(fTsTransform)) {
             return;
         }
 
