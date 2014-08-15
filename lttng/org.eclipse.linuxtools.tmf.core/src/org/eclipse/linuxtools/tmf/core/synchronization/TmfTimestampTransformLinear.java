@@ -43,7 +43,7 @@ public class TmfTimestampTransformLinear implements ITmfTimestampTransform {
     private final BigDecimal fAlpha;
     private final BigDecimal fBeta;
 
-    private static final MathContext fMc = MathContext.DECIMAL128;
+    protected static final MathContext fMc = MathContext.DECIMAL128;
 
     /**
      * Default constructor

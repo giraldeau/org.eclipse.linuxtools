@@ -56,6 +56,11 @@ public class TransformCommand extends BaseCommand {
             buildSamples(str, Math.PI - 2.141592, t0, t1 + i, defScale, defShift);
         }
 
+        printHeader("varying ts with low shift");
+        for (int i = 0; i < 100; i++) {
+            printResult(Math.PI, t0, t1 + i, defScale, 25);
+        }
+
         String outDir = "/tmp/xform/";
         File outDirFile = new File(outDir);
         if (!outDirFile.exists()) {

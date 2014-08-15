@@ -12,7 +12,9 @@
 
 package org.eclipse.linuxtools.tmf.core.tests.synchronization;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import java.util.Map;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.junit.Test;
@@ -154,4 +157,42 @@ public class TsTransformTest {
         assertEquals(1.0, identity.getAlpha().doubleValue(), 0.001);
         assertEquals(0.0, identity.getBeta().doubleValue(), 0.001);
     }
+
+    long maxError = 0;
+    long minError = 0;
+
+    @Test
+    public void testFastTransformPrecision() {
+        TmfTimestampTransformLinear precise = new TmfTimestampTransformLinear(Math.PI, 0);
+        TmfTimestampTransformLinearFast fast = new TmfTimestampTransformLinearFast(precise);
+        long start = (long) Math.pow(10, 18);
+
+        int samples = 100;
+        simulateTime(precise, fast, samples, start, Long.MAX_VALUE / samples);
+        assertEquals(samples, fast.getScaleMiss());
+
+        // check that rescale is done only when required
+        // assumes tsBitWidth == 30
+        samples = 1000;
+        for (int i = 0; i <= 30; i++) {
+            fast.setScaleMiss(0);
+            long step = (1 << i);
+            simulateTime(precise, fast, samples, start, step);
+            assertTrue(samples > fast.getScaleMiss());
+        }
+
+    }
+
+    private void simulateTime(ITmfTimestampTransform precise, ITmfTimestampTransform fast, int samples, long start, long step) {
+        for (int i = 0; i < samples; i++) {
+            long time = start + i * step;
+            long exp = precise.transform(time);
+            long act = fast.transform(time);
+            long err = act - exp;
+            maxError = Math.max(err, maxError);
+            minError = Math.min(err, minError);
+            assertTrue("[" + minError + "," + maxError + "]", Math.abs(err) < 3); // allow only two ns of error
+        }
+    }
+
 }
