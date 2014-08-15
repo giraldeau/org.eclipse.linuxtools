@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 public class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear {
 
     private static final long serialVersionUID = 2398540405078949739L;
@@ -13,7 +16,13 @@ public class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear
     private long fAlphaLong;
     private long fBetaLong;
     private long scaleMiss;
+    private int hc;
     private static final int tsBitWidth = 30;
+    private static final HashFunction hf = Hashing.goodFastHash(32);
+    /*
+            HashFunction hf =
+    HashCode hc =
+           */
 
     public TmfTimestampTransformLinearFast(TmfTimestampTransformLinear xform) {
         super(xform.getAlpha(), xform.getBeta());
@@ -22,6 +31,11 @@ public class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear
         start = 0L;
         scaleOffset = 0L;
         scaleMiss = 0;
+        hc = hf.newHasher()
+                .putLong(getAlpha().longValue())
+                .putLong(getBeta().longValue())
+                .hash()
+                .asInt();
     }
 
     private long apply(long ts) {
@@ -51,5 +65,21 @@ public class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear
     public void setScaleMiss(long scaleMiss) {
         this.scaleMiss = scaleMiss;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof TmfTimestampTransformLinearFast) {
+            TmfTimestampTransformLinearFast that = (TmfTimestampTransformLinearFast) other;
+            return this.getAlpha().equals(that.getAlpha()) &&
+                    this.getBeta().equals(that.getBeta());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return hc;
+    }
+
 
 }
