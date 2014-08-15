@@ -20,8 +20,11 @@ import java.util.Arrays;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpEventMatching;
 import org.eclipse.linuxtools.lttng2.kernel.core.event.matching.TcpLttngEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationManager;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
@@ -119,6 +122,32 @@ public class TraceSynchronizationBenchmark {
             assertNotNull(algo);
 
             System.gc();
+            pm.stop();
+        }
+        pm.commit();
+    }
+
+    @Test
+    public void testTimestampTransformPerformance() {
+        long iter = 1 << 25;
+        TmfTimestampTransformLinear slow = new TmfTimestampTransformLinear(Math.PI, 1234);
+        TmfTimestampTransformLinearFast fast = new TmfTimestampTransformLinearFast(slow);
+
+        doTimestampTransformRun("xform-slow", slow, iter);
+        doTimestampTransformRun("xform-fast", fast, iter);
+    }
+
+    private static void doTimestampTransformRun(String testName, ITmfTimestampTransform xform, long iter) {
+        Performance perf = Performance.getDefault();
+        PerformanceMeter pm = perf.createPerformanceMeter(TEST_ID + testName + TIME);
+        perf.tagAsSummary(pm, TEST_SUMMARY + ':' + testName + TIME, Dimension.CPU_TIME);
+
+        long start = (long) Math.pow(10, 18);
+        for (int x = 0; x < 10; x++) {
+            pm.start();
+            for (long i = 0; i < iter; i++) {
+                xform.transform(start + i * 200);
+            }
             pm.stop();
         }
         pm.commit();
