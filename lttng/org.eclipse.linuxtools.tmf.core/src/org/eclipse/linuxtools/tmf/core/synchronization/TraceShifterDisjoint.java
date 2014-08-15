@@ -5,6 +5,9 @@ import org.eclipse.linuxtools.tmf.core.trace.ITmfContext;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
+/**
+ * @since 4.0
+ */
 public class TraceShifterDisjoint implements IFunction<TmfExperiment> {
 
     private static final IFunction<TmfExperiment> reset = new TraceShifterReset();

@@ -130,6 +130,10 @@
     <module>org.eclipse.linuxtools.tmf.analysis.graph.ui</module>
     <module>org.eclipse.linuxtools.tmf.analysis.graph.ui.tests</module>
 
+    <module>org.eclipse.linuxtools.tmf.pcap.core</module>
+    <module>org.eclipse.linuxtools.tmf.pcap.core.tests</module>
+    <module>org.eclipse.linuxtools.tmf.pcap.ui</module>
+
     <module>org.eclipse.linuxtools.tmf.analysis.xml.core</module>
     <module>org.eclipse.linuxtools.tmf.analysis.xml.core.tests</module>
     <module>org.eclipse.linuxtools.tmf.analysis.xml.ui</module>

@@ -12,7 +12,7 @@
 
 package org.eclipse.linuxtools.tmf.analysis.graph.core.model;
 
-import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
+import org.eclipse.jdt.annotation.NonNull;
 
 /**
  * Defines a model entity doing something in the trace. For example, a worker
@@ -30,24 +30,21 @@ public class TmfWorker extends TmfAbstractModelElement {
     private long fStart;
     private long fEnd;
 
-    // TODO: See if possible to change trace to host, workers can be part of
-    // multiple traces of the same host
-    private final ITmfTrace fTrace;
+    private final @NonNull String fHost;
 
     /**
      * Constructor
      *
      * @param id
      *            The id of this worker
-     * @param trace
-     *            The trace it belongs to
+     * @param hostId The host id of the trace
      * @param declaration
      *            The model declaration for this worker
      */
-    public TmfWorker(long id, ITmfTrace trace, TmfModelElementDeclaration declaration) {
+    public TmfWorker(long id, @NonNull String hostId, TmfModelElementDeclaration declaration) {
         super(declaration);
         fId = id;
-        fTrace = trace;
+        fHost = hostId;
     }
 
     /**
@@ -60,12 +57,12 @@ public class TmfWorker extends TmfAbstractModelElement {
     }
 
     /**
-     * Get the trace
+     * Get the host Id
      *
-     * @return The trace
+     * @return The host id
      */
-    public ITmfTrace getTrace() {
-        return fTrace;
+    public String getHostId() {
+        return fHost;
     }
 
     /**

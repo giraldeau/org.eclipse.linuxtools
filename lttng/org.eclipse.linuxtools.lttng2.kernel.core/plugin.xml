@@ -50,7 +50,7 @@
             thread="main"
             visible="true">
          <run
-               class="org.eclipse.linuxtools.lttng2.kernel.core.cli.MainCLI">
+               class="org.eclipse.linuxtools.internal.lttng2.kernel.core.cli.MainCLI">
          </run>
       </application>
    </extension>

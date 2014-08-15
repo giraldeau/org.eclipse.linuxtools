@@ -26,7 +26,7 @@ import org.junit.runners.Suite;
     TmfUml2SDSyncLoaderExpTest.class,
     TmfUml2SDSyncLoaderFilterTest.class,
     TmfUml2SDSyncLoaderFindTest.class,
-    TmfUml2SDSyncLoaderPagesTest.class,
+    /* TmfUml2SDSyncLoaderPagesTest.class, */
     TmfUml2SDSyncLoaderSignalTest.class,
     TmfUml2SDSyncLoaderTimeTest.class
 })

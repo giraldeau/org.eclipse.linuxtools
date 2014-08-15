@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.ITmfWorkerFactory;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfModelResourceDeclaration;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.TmfSystemModel;
@@ -241,8 +242,8 @@ public class TmfSystemModelTest {
         model.addWorkerDeclaration(workerDecl);
         model.setSwapperFactory(new ITmfWorkerFactory() {
             @Override
-            public TmfWorker createModelElement(String host, int cpu, long wid) {
-                TmfWorker swapper = workerDecl.create(0, null);
+            public TmfWorker createModelElement(@NonNull String host, int cpu, long wid) {
+                TmfWorker swapper = workerDecl.create(0, host);
                 swapper.setName(name);
                 swapper.setField(idField, id);
                 return swapper;

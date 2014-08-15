@@ -12,6 +12,7 @@
 
 package org.eclipse.linuxtools.tmf.analysis.graph.core.model;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
 /**
@@ -33,7 +34,7 @@ public class TmfWorkerDeclaration extends TmfModelElementDeclaration {
 
     @Override
     public TmfWorker create() {
-        return new TmfWorker(0, null, this);
+        return new TmfWorker(0, "", this); //$NON-NLS-1$
     }
 
     /**
@@ -44,7 +45,22 @@ public class TmfWorkerDeclaration extends TmfModelElementDeclaration {
      * @return The new worker
      */
     public TmfWorker create(long id, ITmfTrace trace) {
-        return new TmfWorker(id, trace, this);
+        String hostId = trace.getHostId();
+        if (hostId == null) {
+            throw new IllegalArgumentException("Host is null for trace " + trace.getName()); //$NON-NLS-1$
+        }
+        return new TmfWorker(id, hostId, this);
+    }
+
+    /**
+     * Create a new worker with id and trace
+     *
+     * @param id The id of the worker
+     * @param hostId The host ID of the trace
+     * @return The new worker
+     */
+    public TmfWorker create(long id, @NonNull String hostId) {
+        return new TmfWorker(id, hostId, this);
     }
 
 }
