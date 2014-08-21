@@ -1,6 +1,14 @@
 package org.eclipse.linuxtools.internal.lttng2.kernel.core.cli;
 
+import java.util.Collections;
+
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
+import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
+import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
+import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
+import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
+import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
 public class DoSyncOptimized implements IBenchRunner {
@@ -13,9 +21,31 @@ public class DoSyncOptimized implements IBenchRunner {
     public void run(BenchContext ctx) {
         BenchResult res = ctx.get(BenchResult.class);
         TmfExperiment experiment = ctx.get(TmfExperiment.class);
+
+        SyncAlgorithmFullyIncremental algo;
+        TmfNetworkEventMatching matching;
+
         res.begin(ctx);
-        CtfTraceFinder.synchronizeExperimentWithPreSync(experiment);
+
+        IFunction<TmfExperiment> func = new TraceShifterOrigin();
+        func.apply(experiment);
+        algo = new SyncAlgorithmFullyIncremental();
+        matching = new TmfNetworkEventMatchingRawReader(Collections.singleton(experiment), algo);
+        matching.addMatchMonitor(new StopEarlyMonitor());
+        matching.matchEvents();
+        CtfTraceFinder.applyComposeTransform(algo, experiment);
+
+        algo = new SyncAlgorithmFullyIncremental();
+        matching = new TmfNetworkEventMatchingRawReader(Collections.singleton(experiment), algo);
+        matching.addMatchMonitor(new ExpireCleanupMonitor());
+        matching.matchEvents();
+        CtfTraceFinder.applyComposeTransform(algo, experiment);
+
         res.done(ctx);
+        String tag = ctx.get(String.class, BenchContext.TAG_TASK_NAME);
+        Integer size = ctx.get(Integer.class, BenchContext.TAG_SIZE);
+        res.addDataRaw(tag, BenchResult.METRIC_UNMATCHED, size, matching.getMaxUnmatchedCount());
+        res.addDataRaw(tag, BenchResult.METRIC_MATCHED, size, matching.getMatchedCount());
     }
 
     @Override

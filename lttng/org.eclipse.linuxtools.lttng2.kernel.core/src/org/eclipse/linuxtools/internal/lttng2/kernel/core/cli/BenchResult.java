@@ -17,6 +17,8 @@ public class BenchResult {
     public static final String METRIC_EVENTS = "events";
     public static final String METRIC_DURATION = "duration";
     public static final String METRIC_SCALEMISS = "scalemiss";
+    public static final String METRIC_UNMATCHED = "unmatched";
+    public static final String METRIC_MATCHED = "matched";
 
     HashMap<BenchResultKey, BenchResultKey> results = new HashMap<>();
 

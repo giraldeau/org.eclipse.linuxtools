@@ -44,6 +44,7 @@ public class BenchCommand extends BaseCommand {
         stages.put("read", new DoRead());
         stages.put("readfast", new DoReadFast());
         stages.put("sync", new DoSync());
+        stages.put("sync-worst", new DoSyncWorst());
         stages.put("sync-optimized", new DoSyncOptimized());
         stages.put("sync-optimized-rawreader", new DoSyncOptimizedRawReader());
         stages.put("build", new DoBuild());
