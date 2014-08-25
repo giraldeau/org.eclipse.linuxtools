@@ -26,16 +26,13 @@ import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
  */
 public class TmfEventMatches implements IMatchProcessingUnit {
 
-    /**
-     * The list of matches found
-     */
-    private int fMatchCount = 0;
+    private int fMatchCount;
 
     /**
      * Constructor
      */
     public TmfEventMatches() {
-
+        fMatchCount = 0;
     }
 
     /**

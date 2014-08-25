@@ -12,9 +12,8 @@
 
 package org.eclipse.linuxtools.internal.tmf.pcap.core.util;
 
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.linuxtools.pcap.core.protocol.Protocol;
-import org.eclipse.linuxtools.tmf.pcap.core.protocol.TmfProtocol;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.PcapProtocol;
+import org.eclipse.linuxtools.internal.tmf.pcap.core.protocol.TmfPcapProtocol;
 
 /**
  * Helper class that allows the conversion between Protocol and TmfProtocol.
@@ -22,34 +21,60 @@ import org.eclipse.linuxtools.tmf.pcap.core.protocol.TmfProtocol;
  *
  * @author Vincent Perot
  */
-public class ProtocolConversion {
+public final class ProtocolConversion {
+
+    private ProtocolConversion() {}
 
     /**
-     * Wrap a Protocol into a TmfProtocol.
+     * Wrap a {@link PcapProtocol} into a {@link TmfPcapProtocol}.
      *
      * @param protocol
-     *            The Protocol.
-     * @return The TmfProtocol.
+     *            The {@link PcapProtocol} to match
+     * @return The TmfProtocol
      */
-    public static TmfProtocol wrap(Protocol protocol) {
-        @SuppressWarnings("null")
-        @NonNull String name = protocol.name();
-
-        @NonNull TmfProtocol wrappedProtocol = TmfProtocol.valueOf(name);
-        return wrappedProtocol;
+    public static TmfPcapProtocol wrap(PcapProtocol protocol) {
+        switch (protocol) {
+        case ETHERNET_II:
+            return TmfPcapProtocol.ETHERNET_II;
+        case IPV4:
+            return TmfPcapProtocol.IPV4;
+        case PCAP:
+            return TmfPcapProtocol.PCAP;
+        case TCP:
+            return TmfPcapProtocol.TCP;
+        case UDP:
+            return TmfPcapProtocol.UDP;
+        case UNKNOWN:
+            return TmfPcapProtocol.UNKNOWN;
+        default:
+            throw new IllegalArgumentException();
+        }
     }
 
     /**
-     * Unwrap a TmfProtocol into a Protocol.
+     * Unwrap a {@link TmfPcapProtocol} from a {@link PcapProtocol}.
      *
      * @param protocol
-     *            The TmfProtocol.
-     * @return The Protocol.
+     *            The TmfProtocol
+     * @return The Protocol
      */
-    public static Protocol unwrap(TmfProtocol protocol) {
-        @SuppressWarnings("null")
-        @NonNull String name = protocol.name();
-        return Protocol.valueOf(name);
+    public static PcapProtocol unwrap(TmfPcapProtocol protocol) {
+        switch (protocol) {
+        case ETHERNET_II:
+            return PcapProtocol.ETHERNET_II;
+        case IPV4:
+            return PcapProtocol.IPV4;
+        case PCAP:
+            return PcapProtocol.PCAP;
+        case TCP:
+            return PcapProtocol.TCP;
+        case UDP:
+            return PcapProtocol.UDP;
+        case UNKNOWN:
+            return PcapProtocol.UNKNOWN;
+        default:
+            throw new IllegalArgumentException();
+        }
     }
 
 }

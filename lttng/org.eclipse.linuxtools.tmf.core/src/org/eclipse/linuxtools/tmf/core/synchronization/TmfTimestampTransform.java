@@ -20,7 +20,12 @@ import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
  *
  * @author Geneviève Bastien
  * @since 3.0
+ * @deprecated This class has been moved to internal. Use one of
+ *             {@link TimestampTransformFactory} methods to create the timestamp
+ *             transform. For the identity, use
+ *             {@link TimestampTransformFactory#getDefaultTransform()}
  */
+@Deprecated
 public class TmfTimestampTransform implements ITmfTimestampTransform {
 
     /**
