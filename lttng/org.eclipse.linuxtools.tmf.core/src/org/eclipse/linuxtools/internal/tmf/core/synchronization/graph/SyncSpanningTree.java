@@ -14,7 +14,7 @@ package org.eclipse.linuxtools.internal.tmf.core.synchronization.graph;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.eclipse.linuxtools.internal.tmf.core.synchronization.ITmfTimestampTransformInvertible;
@@ -38,9 +38,9 @@ public class SyncSpanningTree {
 
     /*
      * Using a TreeSet here to make sure the order of the hosts, and thus the
-     * reference node, is predictable
+     * reference node, is predictable, mostly for unit tests.
      */
-    private Set<String> fHosts = new TreeSet<>();
+    private SortedSet<String> fHosts = new TreeSet<>();
 
     /**
      * Default constructor
@@ -75,6 +75,11 @@ public class SyncSpanningTree {
     /**
      * Get the timestamp transform to a host
      *
+     * FIXME: This might not work in situations where we have disjoint graphs
+     * since we only calculate 1 root node and each tree has its own root. When
+     * implementing the algorithm with minimal spanning tree, we will solve this
+     * problem.
+     *
      * @param host
      *            The host to reach
      * @return The timestamp transform to host
@@ -99,10 +104,14 @@ public class SyncSpanningTree {
     }
 
     private String getRootNode() {
+        /**
+         * Get the root node from which all other paths will be calculated. For
+         * now, we take the first node alphabetically.
+         */
         if (fHosts.size() == 0) {
             return null;
         }
-        return fHosts.iterator().next();
+        return fHosts.first();
     }
 
     /**

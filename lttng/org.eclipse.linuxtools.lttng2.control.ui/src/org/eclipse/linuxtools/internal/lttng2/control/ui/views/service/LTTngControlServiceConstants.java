@@ -40,7 +40,20 @@ public interface LTTngControlServiceConstants {
      * Unused value
      */
     static final int UNUSED_VALUE = -1;
+    /**
+     * String representation of numerical true element
+     */
+    static final String TRUE_NUMERICAL = "1"; //$NON-NLS-1$
 
+    // ------------------------------------------------------------------------
+    // LTTng Machine Interface constants
+    // ------------------------------------------------------------------------
+
+    /**
+     * Name of the XSD to validate against the xml machine interface
+     * output from LTTng
+     */
+    static final String MI_XSD_FILENAME = "mi_lttng.xsd"; //$NON-NLS-1$
     // ------------------------------------------------------------------------
     // Command constants
     // ------------------------------------------------------------------------
@@ -48,6 +61,14 @@ public interface LTTngControlServiceConstants {
      * The lttng tools command.
      */
     static final String CONTROL_COMMAND = "lttng"; //$NON-NLS-1$
+    /**
+     * The lttng tools machine interface command.
+     */
+    static final String CONTROL_COMMAND_MI = CONTROL_COMMAND + " --mi"; //$NON-NLS-1$
+    /**
+     * The lttng tools XML machine interface command.
+     */
+    static final String CONTROL_COMMAND_MI_XML = CONTROL_COMMAND_MI + " xml"; //$NON-NLS-1$
     /**
      * Command: lttng version.
      */
@@ -290,6 +311,11 @@ public interface LTTngControlServiceConstants {
      */
     static final Pattern TRACE_NETWORK_PATH_PATTERN = Pattern.compile("\\s*Trace\\s+path\\:\\s+(net|net4|net6|tcp|tcp6)\\:\\/\\/(.*)(\\:(\\d*)\\/(.*)\\[data\\:\\s+(\\d*)\\]){0,1}"); //$NON-NLS-1$
     /**
+     * Pattern to match session path for network tracing
+     * Note: file for protocol is not considered as network trace since local consumer will be used.
+     */
+    static final Pattern TRACE_NETWORK_PATTERN = Pattern.compile("\\s*(net|net4|net6|tcp|tcp4|tcp6)\\:\\/\\/(.*)(\\:(\\d*)\\/(.*)\\[data\\:\\s+(\\d*)\\]){0,1}"); //$NON-NLS-1$
+    /**
      * Sub-pattern to pattern TRACE_NETWORK_PATH_PATTERN to match file protocol
      */
     static final Pattern TRACE_FILE_PROTOCOL_PATTERN = Pattern.compile("(file)\\:\\/\\/(.*)"); //$NON-NLS-1$
@@ -354,6 +380,10 @@ public interface LTTngControlServiceConstants {
      */
     static final String OVERWRITE_MODE_ATTRIBUTE_FALSE = "0"; //$NON-NLS-1$
     /**
+     * Pattern to match indicating false for overwrite mode in machine interface mode
+     */
+    static final String OVERWRITE_MODE_ATTRIBUTE_FALSE_MI = "DISCARD"; //$NON-NLS-1$
+    /**
      * Pattern to match for channel (sub-buffer size) information (lttng list <session>)
      */
     static final Pattern SUBBUFFER_SIZE_ATTRIBUTE = Pattern.compile("\\s+subbufers\\s+size\\:.*"); //$NON-NLS-1$
@@ -396,7 +426,7 @@ public interface LTTngControlServiceConstants {
     /**
      * Pattern to match for session command output for "session name not found".
      */
-    static final Pattern SESSION_NOT_FOUND_ERROR_PATTERN = Pattern.compile("\\s*Error:\\s+Session\\s+name\\s+not\\s+found"); //$NON-NLS-1$
+    static final Pattern SESSION_NOT_FOUND_ERROR_PATTERN = Pattern.compile("\\s*Error:\\s+Session\\s+name\\s.*not\\s+found"); //$NON-NLS-1$
     /**
      * Pattern to match introduction line of context list.
      */

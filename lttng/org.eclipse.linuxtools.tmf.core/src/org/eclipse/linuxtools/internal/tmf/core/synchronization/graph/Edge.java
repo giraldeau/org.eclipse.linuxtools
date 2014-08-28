@@ -23,9 +23,9 @@ package org.eclipse.linuxtools.internal.tmf.core.synchronization.graph;
  */
 public class Edge<V, E> {
 
-    private final V from;
-    private final V to;
-    private final E label;
+    private final V fFrom;
+    private final V fTo;
+    private final E fLabel;
 
     /**
      * An edge constructor
@@ -38,9 +38,9 @@ public class Edge<V, E> {
      *            The edge annotation label
      */
     public Edge(V from, V to, E label) {
-        this.from = from;
-        this.to = to;
-        this.label = label;
+        fFrom = from;
+        fTo = to;
+        fLabel = label;
     }
 
     /**
@@ -49,7 +49,7 @@ public class Edge<V, E> {
      * @return The origin vertex
      */
     public V getFrom() {
-        return from;
+        return fFrom;
     }
 
     /**
@@ -58,7 +58,7 @@ public class Edge<V, E> {
      * @return The destination vertex
      */
     public V getTo() {
-        return to;
+        return fTo;
     }
 
     /**
@@ -67,11 +67,11 @@ public class Edge<V, E> {
      * @return The edge label
      */
     public E getLabel() {
-        return label;
+        return fLabel;
     }
 
     @Override
     public String toString() {
-        return String.format("(%s, %s, %s)", from, to, label); //$NON-NLS-1$
+        return String.format("(%s, %s, %s)", fFrom, fTo, fLabel); //$NON-NLS-1$
     }
 }

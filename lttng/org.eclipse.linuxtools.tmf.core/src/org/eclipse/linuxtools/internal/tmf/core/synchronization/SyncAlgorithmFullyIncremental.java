@@ -11,7 +11,7 @@
  *   Francis Giraldeau - Transform computation using synchronization graph
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.core.synchronization;
+package org.eclipse.linuxtools.internal.tmf.core.synchronization;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -46,12 +46,7 @@ import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
  * all traces.
  *
  * @author Geneviève Bastien
- * @since 3.0
- * @deprecated This class has been moved to internal. Use one of
- *             {@link SynchronizationAlgorithmFactory#getFullyIncrementalAlgorithm()}
- *             method to get this algorithm.
  */
-@Deprecated
 public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     /**
@@ -380,70 +375,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     }
                     setQuality(quality);
                 }
-            } else if ( (fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1) ) {
-                /* There is no slope but at least one of the bounds is present */
-                LinkedList<SyncPoint> boundList, otherBoundList;
-                int inversionFactor;
-                if (fUpperBoundList.size() > 1) {
-                    boundList = fUpperBoundList;
-                    otherBoundList = fLowerBoundList;
-                    inversionFactor = 1;
-                } else {
-                    boundList = fLowerBoundList;
-                    otherBoundList = fUpperBoundList;
-                    inversionFactor = -1;
-                }
-                BigDecimal alpha = boundList.get(1).getAlpha(boundList.get(0));
-
-                for (int i = 1; i < boundList.size() - 1; i++) {
-                    alpha = (alpha.multiply(new BigDecimal(boundList.get(i).getTimeX() - boundList.get(0).getTimeX())).
-                            add( (boundList.get(i+1).getAlpha(boundList.get(i))).multiply(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(i).getTimeX())))).
-                            divide(new BigDecimal(boundList.get(i+1).getTimeX() - boundList.get(0).getTimeX()), fMc);
-                }
-                BigDecimal beta = boundList.get(0).getBeta(alpha);
-                BigDecimal betatemp = beta;
-                for (int i = 1; i < boundList.size(); i++) {
-                    betatemp = boundList.get(i).getBeta(alpha);
-                    if (betatemp.compareTo(beta) * inversionFactor > 0) {
-                        beta = betatemp;
-                    }
-                }
-                /* Is there a point in the other hull?  If so, move the line so it is between the 2 */
-                if (otherBoundList.size() > 0) {
-                    BigDecimal betaother = otherBoundList.get(0).getBeta(alpha);
-                    if (betaother.compareTo(beta) * inversionFactor < 0) {
-                        fQuality = SyncQuality.FAIL;
-                    } else {
-                        fAlpha = alpha;
-                        fBeta = beta.add(betaother).divide(BigDecimal.valueOf(2), fMc);
-                    }
-                    System.out.println("Beta for one point hull: " + betaother + " beta for full hull " + beta + " alpha " + fAlpha + " beta " + fBeta + " Quality: " + fQuality);
-                    System.out.println("Value for point Y: " + ((new BigDecimal(otherBoundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
-                    System.out.println("Value for point latest Y: going to: " + BigDecimal.valueOf(boundList.get(0).getTimeX()) + " transformed " + ((BigDecimal.valueOf(boundList.get(0).getTimeY())).subtract(fBeta)).divide(fAlpha, fMc));
-                } else {
-                    SyncPoint last = boundList.get(boundList.size() - 1);
-                    SyncPoint previous = boundList.get(boundList.size() - 2);
-                    System.out.println("Difference with previous (" + (last.getTimeX() - previous.getTimeX()) + ", " + (last.getTimeY() - previous.getTimeY()) + ") last timeX " + last.getTimeX() + " last timey " + last.getTimeY());
-                    System.out.println("Beta for one single hull: " + beta + " alpha " + alpha);
-                    fAlpha = alpha;
-                    fBeta = beta;
-
-                }
             } else if (((fLmax[0] == null) && (fLmin[1] == null))
                     || ((fLmax[1] == null) && (fLmin[0] == null))) {
                 /* Either there is no upper hull point or no lower hull */
                 setQuality(SyncQuality.INCOMPLETE);
-                SyncPoint onlyPoint = null;
-                if (fLmin[1] != null) {
-                    onlyPoint = fLmin[1];
-                } else if (fLmax[1] != null) {
-                    onlyPoint = fLmax[1];
-                }
-                if (onlyPoint != null) {
-                    fBeta = BigDecimal.valueOf(onlyPoint.getTimeY() - onlyPoint.getTimeX());
-//                    System.out.println("Value for point Y: " + (BigDecimal.valueOf(onlyPoint.getTimeY()).subtract(fBeta)).divide(fAlpha, fMc));
-                }
-
             }
         }
 
@@ -624,10 +559,6 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
         public long getTimeX() {
             return x.getValue();
-        }
-
-        public long getTimeY() {
-            return y.getValue();
         }
 
         /**

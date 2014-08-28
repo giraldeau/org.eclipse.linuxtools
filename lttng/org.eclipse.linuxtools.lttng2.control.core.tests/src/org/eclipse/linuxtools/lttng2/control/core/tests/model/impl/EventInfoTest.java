@@ -168,6 +168,13 @@ public class EventInfoTest {
         assertEquals("DISABLED", state.toString());
         assertEquals(0, state.ordinal());
 
+        fixture.setState("false");
+        state = fixture.getState();
+        assertEquals("false", state.getInMiName());
+        assertEquals("DISABLED", state.name());
+        assertEquals("DISABLED", state.toString());
+        assertEquals(0, state.ordinal());
+
         fixture.setState("bla");
         state = fixture.getState();
         assertEquals("disabled", state.getInName());
@@ -178,6 +185,13 @@ public class EventInfoTest {
         fixture.setState("enabled");
         state = fixture.getState();
         assertEquals("enabled", state.getInName());
+        assertEquals("ENABLED", state.name());
+        assertEquals("ENABLED", state.toString());
+        assertEquals(1, state.ordinal());
+
+        fixture.setState("true");
+        state = fixture.getState();
+        assertEquals("true", state.getInMiName());
         assertEquals("ENABLED", state.name());
         assertEquals("ENABLED", state.toString());
         assertEquals(1, state.ordinal());
@@ -197,6 +211,7 @@ public class EventInfoTest {
         assertEquals("ENABLED", state.toString());
         assertEquals(1, state.ordinal());
 
+        // setLogLevelType(String name)
         fixture.setLogLevelType("==");
         assertEquals("LOGLEVEL_ONLY", fixture.getLogLevelType().name());
         assertEquals("==", fixture.getLogLevelType().getShortName());
@@ -206,12 +221,43 @@ public class EventInfoTest {
         assertEquals("<=", fixture.getLogLevelType().getShortName());
 
         fixture.setLogLevelType("");
-        assertEquals("LOGLEVEL_NONE", fixture.getLogLevelType().name());
+        assertEquals("LOGLEVEL_ALL", fixture.getLogLevelType().name());
         assertEquals("", fixture.getLogLevelType().getShortName());
 
         fixture.setLogLevelType(LogLevelType.LOGLEVEL_ONLY);
         assertEquals("LOGLEVEL_ONLY", fixture.getLogLevelType().name());
         assertEquals("==", fixture.getLogLevelType().getShortName());
+
+        fixture.setLogLevelType(LogLevelType.LOGLEVEL);
+        assertEquals("LOGLEVEL", fixture.getLogLevelType().name());
+        assertEquals("<=", fixture.getLogLevelType().getShortName());
+
+        fixture.setLogLevelType(LogLevelType.LOGLEVEL_ALL);
+        assertEquals("LOGLEVEL_ALL", fixture.getLogLevelType().name());
+        assertEquals("", fixture.getLogLevelType().getShortName());
+
+        fixture.setLogLevelType(LogLevelType.LOGLEVEL_NONE);
+        assertEquals("LOGLEVEL_NONE", fixture.getLogLevelType().name());
+        assertEquals("", fixture.getLogLevelType().getShortName());
+
+        // setLogLevelType(String name)
+        // machine interface
+        fixture.setLogLevelType("SINGLE");
+        assertEquals("LOGLEVEL_ONLY", fixture.getLogLevelType().name());
+        assertEquals("SINGLE", fixture.getLogLevelType().getMiName());
+
+        fixture.setLogLevelType("RANGE");
+        assertEquals("LOGLEVEL", fixture.getLogLevelType().name());
+        assertEquals("RANGE", fixture.getLogLevelType().getMiName());
+
+        fixture.setLogLevelType("ALL");
+        assertEquals("LOGLEVEL_ALL", fixture.getLogLevelType().name());
+        assertEquals("ALL", fixture.getLogLevelType().getMiName());
+
+        fixture.setLogLevelType("UNKNOWN");
+        assertEquals("LOGLEVEL_NONE", fixture.getLogLevelType().name());
+        assertEquals("UNKNOWN", fixture.getLogLevelType().getMiName());
+
     }
 
     /**

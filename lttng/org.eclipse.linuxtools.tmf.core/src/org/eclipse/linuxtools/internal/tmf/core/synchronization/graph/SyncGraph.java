@@ -40,49 +40,49 @@ import com.google.common.collect.Multimap;
  */
 public class SyncGraph<V, E> {
 
-    private Multimap<V, Edge<V, E>> adj;
-    private Set<V> vertices;
+    private Multimap<V, Edge<V, E>> fAdjacentEdges;
+    private Set<V> fVertices;
 
     /**
      * Construct empty graph
      */
     public SyncGraph() {
-        adj = ArrayListMultimap.create();
-        vertices = new HashSet<>();
+        fAdjacentEdges = ArrayListMultimap.create();
+        fVertices = new HashSet<>();
     }
 
     /**
      * Add edge from v to w and annotation label
      *
-     * @param v
+     * @param from
      *            from vertex
-     * @param w
+     * @param to
      *            to vertex
      * @param label
      *            the edge label
      */
-    public void addEdge(V v, V w, E label) {
-        adj.put(v, new Edge<>(v, w, label));
-        vertices.add(v);
-        vertices.add(w);
+    public void addEdge(V from, V to, E label) {
+        fAdjacentEdges.put(from, new Edge<>(from, to, label));
+        fVertices.add(from);
+        fVertices.add(to);
     }
 
     /**
-     * Number of edges
+     * Get the number of edges
      *
      * @return number of edges
      */
-    public int E() {
-        return adj.entries().size();
+    public int getNbEdges() {
+        return fAdjacentEdges.entries().size();
     }
 
     /**
-     * Number of vertices
+     * Get the number of vertices
      *
      * @return number of vertices
      */
-    public int V() {
-        return vertices.size();
+    public int getNbVertices() {
+        return fVertices.size();
     }
 
     /**
@@ -92,8 +92,8 @@ public class SyncGraph<V, E> {
      *            the vertex
      * @return the adjacent vertices
      */
-    public Collection<Edge<V, E>> adj(V v) {
-        return adj.get(v);
+    public Collection<Edge<V, E>> getAdjacentEdges(V v) {
+        return fAdjacentEdges.get(v);
     }
 
     /**
@@ -111,10 +111,15 @@ public class SyncGraph<V, E> {
         HashSet<V> visited = new HashSet<>();
         Queue<V> queue = new LinkedList<>();
         queue.offer(start);
+        /**
+         * Build the map of nodes reachable from the start node, by recursively
+         * visiting all accessible nodes. It is a breadth-first search, so the
+         * edges kept for each node will be the shortest path to that node.
+         */
         while (!queue.isEmpty()) {
             V node = queue.poll();
             visited.add(node);
-            for (Edge<V, E> e : adj(node)) {
+            for (Edge<V, E> e : getAdjacentEdges(node)) {
                 V to = e.getTo();
                 if (!visited.contains(to)) {
                     queue.offer(e.getTo());
@@ -124,48 +129,49 @@ public class SyncGraph<V, E> {
                 }
             }
         }
+        /*
+         * Find path from start to end by traversing the edges backward, from
+         * the end node
+         */
         V node = end;
-        while (true) {
-            Edge<V, E> edge = hist.get(node);
-            if (edge == null) {
-                break;
-            }
+        Edge<V, E> edge = hist.get(node);
+        while (edge != null && node != start) {
             path.add(edge);
             node = edge.getFrom();
-            if (node == start) {
-                break;
-            }
+            edge = hist.get(node);
         }
         Collections.reverse(path);
         return path;
     }
 
     /**
-     * Check if this graph is connected (no partitions)
+     * Check if this graph is connected, ie there are no partitions, all
+     * vertices are reachable from every other one. It is a depth-first visit of
+     * all vertices reachable from the first vertex of the graph.
      *
      * @return true if the graph is connected, false otherwise
      */
     public boolean isConnected() {
         HashSet<V> visited = new HashSet<>();
         Stack<V> stack = new Stack<>();
-        stack.push(vertices.iterator().next());
+        stack.push(fVertices.iterator().next());
         while (!stack.isEmpty()) {
             V node = stack.pop();
             visited.add(node);
-            for (Edge<V, E> edge : adj(node)) {
+            for (Edge<V, E> edge : getAdjacentEdges(node)) {
                 if (!visited.contains(edge.getTo())) {
                     stack.push(edge.getTo());
                 }
             }
         }
-        return visited.size() == vertices.size();
+        return visited.size() == fVertices.size();
     }
 
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        for (V key : adj.keySet()) {
-            str.append(key + ": " + adj.get(key) + "\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        for (V key : fAdjacentEdges.keySet()) {
+            str.append(key + ": " + fAdjacentEdges.get(key) + "\n"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return str.toString();
     }
