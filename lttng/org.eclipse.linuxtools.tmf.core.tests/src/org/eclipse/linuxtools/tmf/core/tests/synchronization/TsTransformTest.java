@@ -174,12 +174,17 @@ public class TsTransformTest {
 
         // check that rescale is done only when required
         // assumes tsBitWidth == 30
+        // test forward and backward timestamps
         samples = 1000;
-        for (int i = 0; i <= 30; i++) {
-            fast.setScaleMiss(0);
-            long step = (1 << i);
-            simulateTime(precise, fast, samples, start, step);
-            assertTrue(samples > fast.getScaleMiss());
+        int[] directions = new int[] { 1, -1 };
+        for (Integer direction: directions) {
+            for (int i = 0; i <= 30; i++) {
+                fast.setScaleMiss(0);
+                long step = (1 << i) * direction;
+                simulateTime(precise, fast, samples, start, step);
+                assertTrue(String.format("samples: %d scale misses: %d",
+                        samples, fast.getScaleMiss()), samples > fast.getScaleMiss());
+            }
         }
 
     }

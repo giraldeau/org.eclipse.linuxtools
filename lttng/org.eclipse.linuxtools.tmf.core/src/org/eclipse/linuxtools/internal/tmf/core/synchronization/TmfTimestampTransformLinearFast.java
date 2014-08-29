@@ -49,7 +49,11 @@ public class TmfTimestampTransformLinearFast extends TmfTimestampTransformLinear
             start = ts;
             scaleMiss++;
         }
-        return ((fAlphaLong * (ts - start)) >>> tsBitWidth) + scaleOffset + fBetaLong;
+        long x = (fAlphaLong * Math.abs((ts - start))) >>> tsBitWidth;
+        if (ts < start) {
+             x = -1 * x;
+        }
+        return x + scaleOffset + fBetaLong;
     }
 
     @Override
