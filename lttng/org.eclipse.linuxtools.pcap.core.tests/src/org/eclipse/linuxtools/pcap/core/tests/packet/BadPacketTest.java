@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.eclipse.linuxtools.pcap.core.packet.BadPacketException;
-import org.eclipse.linuxtools.pcap.core.protocol.ethernet2.EthernetIIPacket;
+import org.eclipse.linuxtools.internal.pcap.core.packet.BadPacketException;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.ethernet2.EthernetIIPacket;
+import org.eclipse.linuxtools.internal.pcap.core.trace.BadPcapFileException;
+import org.eclipse.linuxtools.internal.pcap.core.trace.PcapFile;
 import org.eclipse.linuxtools.pcap.core.tests.shared.PcapTestTrace;
-import org.eclipse.linuxtools.pcap.core.trace.BadPcapFileException;
-import org.eclipse.linuxtools.pcap.core.trace.PcapFile;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -78,8 +78,7 @@ public class BadPacketTest {
     public void PacketExceptionTest() throws BadPacketException, IOException, BadPcapFileException {
         PcapTestTrace trace = PcapTestTrace.MOSTLY_TCP;
         assumeTrue(trace.exists());
-        String file = trace.getPath();
-        try (PcapFile dummy = new PcapFile(file)) {
+        try (PcapFile dummy = new PcapFile(trace.getPath())) {
             ByteBuffer packet = fEthernetPacket;
             if (packet != null) {
                 new EthernetIIPacket(dummy, null, packet);

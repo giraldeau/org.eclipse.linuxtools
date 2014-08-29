@@ -27,10 +27,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.graph.SyncSpanningTree;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.matching.InternalizeMap;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventDependency;
 import org.eclipse.linuxtools.tmf.core.event.matching.WeightedQuickUnion;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.Messages;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 
@@ -47,7 +52,11 @@ import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
  *
  * @author Geneviève Bastien
  * @since 3.0
+ * @deprecated This class has been moved to internal. Use one of
+ *             {@link SynchronizationAlgorithmFactory#getFullyIncrementalAlgorithm()}
+ *             method to get this algorithm.
  */
+@Deprecated
 public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     /**
@@ -61,10 +70,6 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     /** @Serial */
     private final List<ConvexHull> fSyncs;
-
-    private SyncGraph<String, ITmfTimestampTransform> fSyncGraph;
-
-    private String fRootNode;
 
     private InternalizeMap fInternHostId;
 
@@ -86,6 +91,9 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
 
     };
+
+    private SyncSpanningTree fTree = null;
+
 
     /**
      * Initialization of the attributes
@@ -168,29 +176,10 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         }
         algo.processMatch(match);
         invalidateSyncGraph();
-        // try {
-        // String str =
-        // String.format("%d-%d;%10.6f;%10.6f;%10.6f;%10.6f;%d;%d;%d;%d\n",
-        // fInternHostId.get(algo.getReferenceHost()),
-        // fInternHostId.get(algo.getOtherHost()),
-        // algo.fAlpha.doubleValue(),
-        // algo.fAlphamin.doubleValue(),
-        // algo.fAlphamax.doubleValue(),
-        // algo.fAlphamax.doubleValue() - algo.fAlphamin.doubleValue(),
-        // algo.fBeta.longValue(),
-        // algo.fBetamin.longValue(),
-        // algo.fBetamax.longValue(),
-        // algo.fBetamax.longValue() - algo.fBetamin.longValue()
-        // );
-        // fSyncData.write(str);
-        // } catch (IOException e) {
-        // throw new RuntimeException();
-        // }
     }
 
     private void invalidateSyncGraph() {
-        fSyncGraph = null;
-        fRootNode = null;
+        fTree = null;
     }
 
     @Override
@@ -200,68 +189,38 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
     @Override
     public ITmfTimestampTransform getTimestampTransform(String hostId) {
-        ITmfTimestampTransform result = TmfTimestampTransform.IDENTITY;
-        /*
-         * Build the sync graph if needed. Add two edges for each ConvexHull. A
-         * forward edge with the given transform, and a reverse edge with the
-         * inverse transform.
-         */
-        if (fRootNode == null || fSyncGraph == null) {
-            fRootNode = null;
-            fSyncGraph = new SyncGraph<>();
+        SyncSpanningTree tree = getSyncTree();
+        return tree.getTimestampTransform(hostId);
+    }
+
+    /**
+     * Each convex hull computes the synchronization between 2 given hosts. A
+     * synchronization can be done on multiple hosts that may not all
+     * communicate with each other. We must use another algorithm to determine
+     * which host will be the reference node and what synchronization formula
+     * will be used between each host and this reference node.
+     *
+     * For example, take traces a, b and c where a and c talk to b but do not
+     * know each other ({@literal a <-> b <-> c}). The convex hulls will contain
+     * the formulae between their 2 traces, but if a is the reference node, then
+     * the resulting formula of c would be the composition of {@literal a <-> b}
+     * and {@literal b <-> c}
+     *
+     * @return The synchronization spanning tree for this synchronization
+     */
+    private SyncSpanningTree getSyncTree() {
+        if (fTree == null) {
+            fTree = new SyncSpanningTree();
             for (ConvexHull traceSync : fSyncs) {
                 SyncQuality q = traceSync.getQuality();
                 if (q == SyncQuality.ACCURATE || q == SyncQuality.APPROXIMATE) {
                     String from = traceSync.getReferenceHost();
                     String to = traceSync.getOtherHost();
-                    ITmfTimestampTransform xform = traceSync.getTimestampTransform(to);
-                    if (fRootNode == null || from.compareTo(fRootNode) < 0) {
-                        fRootNode = from;
-                    }
-                    fSyncGraph.addEdge(from, to, xform);
-                    fSyncGraph.addEdge(to, from, xform.inverse());
+                    fTree.addSynchronization(from, to, traceSync.getTimestampTransform(to), traceSync.getAccuracy());
                 }
             }
         }
-
-        /*
-         * Compute the path from reference node to the given host id
-         */
-        if (fRootNode != null) {
-            List<Edge<String, ITmfTimestampTransform>> path = fSyncGraph.path(fRootNode, hostId);
-            /*
-             * Compute the resulting transform by chaining each transforms on
-             * the path.
-             */
-            for (Edge<String, ITmfTimestampTransform> edge : path) {
-                result = result.composeWith(edge.getLabel());
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Previous method to compute the timestamps transform
-     *
-     * FIXME: remove once the newer method based on graph path is validated
-     *
-     * @param hostId
-     *            the host string
-     * @return the timestamps transform
-     * @since 4.0
-     */
-    public ITmfTimestampTransform getOldTimestampTransform(String hostId) {
-        for (ConvexHull traceSync : fSyncs) {
-            if (traceSync.isTraceSynced(hostId)) {
-                /*
-                 * Since there are many traces, maybe the reference trace is
-                 * also synchronized, so we need to chain sync formulas
-                 */
-                ITmfTimestampTransform refTt = getTimestampTransform(traceSync.getReferenceHost());
-                return refTt.composeWith(traceSync.getTimestampTransform(hostId));
-            }
-        }
-        return TmfTimestampTransform.IDENTITY;
+        return fTree;
     }
 
     @Override
@@ -277,16 +236,16 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
     @Override
     public boolean isTraceSynced(String hostId) {
         ITmfTimestampTransform t = getTimestampTransform(hostId);
-        return !t.equals(TmfTimestampTransform.IDENTITY);
-        // boolean traceSynced = false;
-        // for (ConvexHull traceSync : fSyncs) {
-        // traceSynced = traceSynced || traceSync.isTraceSynced(hostId);
-        // }
-        // return traceSynced;
+        return !t.equals(TimestampTransformFactory.getDefaultTransform());
     }
 
     @Override
     public Map<String, Map<String, Object>> getStats() {
+        /*
+         * TODO: Stats, while still accurate, may be misleading now that the
+         * sync tree changes synchronization formula. The stats should use the
+         * tree instead
+         */
         Map<String, Map<String, Object>> statmap = new LinkedHashMap<>();
         for (ConvexHull traceSync : fSyncs) {
             statmap.put(traceSync.getReferenceHost() + " <==> " + traceSync.getOtherHost(), traceSync.getStats()); //$NON-NLS-1$
@@ -383,6 +342,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
             fNbAccurateMatches = 0;
             fQuality = SyncQuality.ABSENT; // default quality
             fQualityListeners = new ArrayList<>();
+
         }
 
         protected void processMatch(TmfEventDependency match) {
@@ -460,23 +420,43 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
              * Lmin = alpha_min T + beta_max
              */
             if ((fLmax[0] != null) || (fLmin[0] != null)) {
-                fAlphamax = fLmax[1].getAlpha(fLmax[0]);
-                fBetamin = fLmax[1].getBeta(fAlphamax);
-                fAlphamin = fLmin[1].getAlpha(fLmin[0]);
-                fBetamax = fLmin[1].getBeta(fAlphamin);
-                fAlpha = fAlphamax.add(fAlphamin).divide(BigDecimal.valueOf(2), fMc);
-                fBeta = fBetamin.add(fBetamax).divide(BigDecimal.valueOf(2), fMc);
-                if ((fLmax[0] == null) || (fLmin[0] == null)) {
-                    setQuality(SyncQuality.APPROXIMATE);
-                }
-                else if (fAlphamax.compareTo(fAlphamin) > 0) {
-                    double alphaErr = fAlphamax.subtract(fAlphamin).doubleValue();
-                    if (alphaErr < SYNC_THRESHOLD) {
-                        setQuality(SyncQuality.ACCURATE);
+                /**
+                 * Do not recalculate synchronization after it is failed. We
+                 * keep the last not failed result.
+                 */
+                if (getQuality() != SyncQuality.FAIL) {
+                    BigDecimal alphamax = fLmax[1].getAlpha(fLmax[0]);
+                    BigDecimal alphamin = fLmin[1].getAlpha(fLmin[0]);
+                    SyncQuality quality = null;
+
+                    if ((fLmax[0] == null) || (fLmin[0] == null)) {
+                        quality = SyncQuality.APPROXIMATE;
                     }
-                } else {
-                    /* Lines intersect, not good */
-                    setQuality(SyncQuality.FAIL);
+                    else if (alphamax.compareTo(alphamin) > 0) {
+                        double alphaErr = fAlphamax.subtract(fAlphamin).doubleValue();
+
+                        if (alphaErr < SYNC_THRESHOLD) {
+                            quality = SyncQuality.ACCURATE;
+                        } else {
+                            quality = SyncQuality.APPROXIMATE;
+                        }
+                    } else {
+                        /* Lines intersect, not good */
+                        quality = SyncQuality.FAIL;
+                    }
+                    /*
+                     * Only calculate sync if this match does not cause failure
+                     * of synchronization
+                     */
+                    if (quality != SyncQuality.FAIL) {
+                        fAlphamax = alphamax;
+                        fBetamin = fLmax[1].getBeta(fAlphamax);
+                        fAlphamin = alphamin;
+                        fBetamax = fLmin[1].getBeta(fAlphamin);
+                        fAlpha = fAlphamax.add(fAlphamin).divide(BigDecimal.valueOf(2), fMc);
+                        fBeta = fBetamin.add(fBetamax).divide(BigDecimal.valueOf(2), fMc);
+                    }
+                    setQuality(quality);
                 }
             } else if ((fUpperBoundList.size() > 1) || (fLowerBoundList.size() > 1)) {
                 /* There is no slope but at least one of the bounds is present */
@@ -528,6 +508,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     System.out.println("Beta for one single hull: " + beta + " alpha " + alpha);
                     fAlpha = alpha;
                     fBeta = beta;
+
                 }
             } else if (((fLmax[0] == null) && (fLmin[1] == null))
                     || ((fLmax[1] == null) && (fLmin[0] == null))) {
@@ -545,6 +526,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                     // (BigDecimal.valueOf(onlyPoint.getTimeY()).subtract(fBeta)).divide(fAlpha,
                     // fMc));
                 }
+
             }
         }
 
@@ -616,13 +598,17 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
         public ITmfTimestampTransform getTimestampTransform(String hostId) {
             if (hostId.equals(fOtherHost) && (getQuality() == SyncQuality.ACCURATE || getQuality() == SyncQuality.APPROXIMATE || getQuality() == SyncQuality.FAIL)) {
                 /* alpha: beta => 1 / fAlpha, -1 * fBeta / fAlpha); */
-                return new TmfTimestampTransformLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
+                return TimestampTransformFactory.createLinear(BigDecimal.ONE.divide(fAlpha, fMc), BigDecimal.valueOf(-1).multiply(fBeta).divide(fAlpha, fMc));
             }
-            return TmfTimestampTransform.IDENTITY;
+            return TimestampTransformFactory.getDefaultTransform();
         }
 
         public SyncQuality getQuality() {
             return fQuality;
+        }
+
+        public BigDecimal getAccuracy() {
+            return fAlphamax.subtract(fAlphamin);
         }
 
         public Map<String, Object> getStats() {
@@ -654,8 +640,7 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_beta, fBeta);
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_ub, (fUpperBoundList.size() == 0) ? Messages.SyncAlgorithmFullyIncremental_NA : fUpperBoundList.size());
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_lb, (fLowerBoundList.size() == 0) ? Messages.SyncAlgorithmFullyIncremental_NA : fLowerBoundList.size());
-                fStats.put(Messages.SyncAlgorithmFullyIncremental_accuracy, fAlphamax.subtract(fAlphamin).doubleValue()); // -
-                                                                                                                          // fAlphamin);
+                fStats.put(Messages.SyncAlgorithmFullyIncremental_accuracy, getAccuracy().doubleValue());
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_nbmatch, (fNbMatches == 0) ? Messages.SyncAlgorithmFullyIncremental_NA : fNbMatches);
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_nbacc, (fNbAccurateMatches == 0) ? Messages.SyncAlgorithmFullyIncremental_NA : fNbAccurateMatches);
                 fStats.put(Messages.SyncAlgorithmFullyIncremental_refformula, Messages.SyncAlgorithmFullyIncremental_T_ + fReferenceHost);
@@ -671,11 +656,6 @@ public class SyncAlgorithmFullyIncremental extends SynchronizationAlgorithm {
 
         public String getOtherHost() {
             return fOtherHost;
-        }
-
-        public boolean isTraceSynced(String hostId) {
-            /* Returns true if the timestamp transform is not identity */
-            return (hostId.equals(fOtherHost) && (getQuality() == SyncQuality.ACCURATE || getQuality() == SyncQuality.APPROXIMATE || getQuality() == SyncQuality.FAIL));
         }
 
         public boolean isForHosts(String hostId1, String hostId2) {

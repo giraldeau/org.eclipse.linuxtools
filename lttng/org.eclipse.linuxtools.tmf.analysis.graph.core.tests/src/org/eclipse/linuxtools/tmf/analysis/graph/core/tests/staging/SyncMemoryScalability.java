@@ -9,7 +9,8 @@ import java.util.Arrays;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfContext;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -72,8 +73,8 @@ public class SyncMemoryScalability {
             ITmfContext ctx = trace.seekEvent(0L);
             ITmfEvent ev = trace.getNext(ctx);
 
-            double beta = -1 * ev.getTimestamp().getValue();
-            TmfTimestampTransformLinear xform = new TmfTimestampTransformLinear(1.0, beta);
+            long beta = -1 * ev.getTimestamp().getValue();
+            ITmfTimestampTransform xform = TimestampTransformFactory.createWithOffset(beta);
             trace.setTimestampTransform(xform);
         }
 

@@ -18,9 +18,9 @@ import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 
+import org.eclipse.linuxtools.internal.pcap.core.trace.BadPcapFileException;
+import org.eclipse.linuxtools.internal.pcap.core.trace.PcapFile;
 import org.eclipse.linuxtools.pcap.core.tests.shared.PcapTestTrace;
-import org.eclipse.linuxtools.pcap.core.trace.BadPcapFileException;
-import org.eclipse.linuxtools.pcap.core.trace.PcapFile;
 import org.junit.Test;
 
 /**
@@ -41,8 +41,7 @@ public class PcapFileOpenFailTest {
         PcapTestTrace trace = PcapTestTrace.BAD_PCAPFILE;
         assumeTrue(trace.exists());
 
-        String path = trace.getPath();
-        try (PcapFile file = new PcapFile(path);) {
+        try (PcapFile file = new PcapFile(trace.getPath());) {
             fail("The pcap was accepted even though the magic number is invalid!");
         } catch (BadPcapFileException e) {
             assertEquals("c3d4a1b2 is not a known magic number.", e.getMessage());
@@ -60,11 +59,10 @@ public class PcapFileOpenFailTest {
         PcapTestTrace trace = PcapTestTrace.KERNEL_TRACE;
         assumeTrue(trace.exists());
 
-        String path = trace.getPath();
-        try (PcapFile file = new PcapFile(path);) {
+        try (PcapFile file = new PcapFile(trace.getPath());) {
             fail("The file was accepted even though it is not a pcap file!");
         } catch (BadPcapFileException e) {
-            assertEquals("Bad Pcap File.", e.getMessage());
+            assertEquals("c11ffcc1 is not a known magic number.", e.getMessage());
         }
     }
 
@@ -79,8 +77,7 @@ public class PcapFileOpenFailTest {
         PcapTestTrace trace = PcapTestTrace.KERNEL_DIRECTORY;
         assumeTrue(trace.exists());
 
-        String path = trace.getPath();
-        try (PcapFile file = new PcapFile(path);) {
+        try (PcapFile file = new PcapFile(trace.getPath());) {
             fail("The file was accepted even though it is not a pcap file!");
         } catch (BadPcapFileException e) {
             assertEquals("Bad Pcap File.", e.getMessage());

@@ -12,7 +12,7 @@ public class TraceShifterReset implements IFunction<TmfExperiment> {
     public void apply(TmfExperiment experiment) {
         ITmfTrace[] traces = experiment.getTraces();
         for (ITmfTrace iTmfTrace : traces) {
-            iTmfTrace.setTimestampTransform(TmfTimestampTransform.IDENTITY);
+            iTmfTrace.setTimestampTransform(TimestampTransformFactory.getDefaultTransform());
         }
     }
 

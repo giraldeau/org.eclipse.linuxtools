@@ -14,9 +14,7 @@ import org.eclipse.linuxtools.tmf.core.analysis.TmfAbstractAnalysisModule;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfAnalysisException;
 import org.eclipse.linuxtools.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.tests.shared.TmfTestHelper;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -158,13 +156,13 @@ public class GraphBenchmark {
         ITmfTimestampTransform fast = null;
         for (ITmfTrace trace: exp.getTraces()) {
             ITmfTimestampTransform xform = trace.getTimestampTransform();
-            if (xform != TmfTimestampTransform.IDENTITY) {
+            if (xform != TimestampTransformFactory.getDefaultTransform()) {
                 orig = xform;
                 break;
             }
         }
         assertNotNull(orig);
-        fast = new TmfTimestampTransformLinearFast((TmfTimestampTransformLinear)orig);
+        fast = TimestampTransformFactory.createFast(orig);
         int iter = (1 << 25);
         Data dataOrig = xformBenchHelper(orig, iter);
         Data dataFast = xformBenchHelper(fast, iter);

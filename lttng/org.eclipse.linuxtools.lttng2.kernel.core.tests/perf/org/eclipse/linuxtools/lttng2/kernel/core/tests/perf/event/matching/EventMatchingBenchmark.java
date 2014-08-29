@@ -32,8 +32,8 @@ import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterDisjoint;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterNone;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
@@ -187,7 +187,7 @@ public class EventMatchingBenchmark {
             IFunction<TmfExperiment> distjoint = new TraceShifterDisjoint();
 
             origin.apply(experiment);
-            SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+            SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
             TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.matchEvents();
             printStat("legacy", matching);
@@ -198,7 +198,7 @@ public class EventMatchingBenchmark {
 
             // worst-case sync
             distjoint.apply(experiment);
-            algo = new SyncAlgorithmFullyIncremental();
+            algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
             matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.matchEvents();
             printStat("worst", matching);
@@ -215,7 +215,7 @@ public class EventMatchingBenchmark {
 
             // coarse pre-sync step
             origin.apply(experiment);
-            algo = new SyncAlgorithmFullyIncremental();
+            algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
             matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.addMatchMonitor(new StopEarlyMonitor());
             matching.matchEvents();
@@ -229,7 +229,7 @@ public class EventMatchingBenchmark {
             }
 
             // do the fine grained sync
-            algo = new SyncAlgorithmFullyIncremental();
+            algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
             matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
             matching.addMatchMonitor(new ExpireCleanupMonitor());
             matching.matchEvents();

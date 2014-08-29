@@ -23,13 +23,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;
 
-import org.eclipse.linuxtools.pcap.core.packet.BadPacketException;
-import org.eclipse.linuxtools.pcap.core.protocol.Protocol;
-import org.eclipse.linuxtools.pcap.core.protocol.pcap.PcapEndpoint;
-import org.eclipse.linuxtools.pcap.core.protocol.pcap.PcapPacket;
+import org.eclipse.linuxtools.internal.pcap.core.packet.BadPacketException;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.PcapProtocol;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.pcap.PcapEndpoint;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.pcap.PcapPacket;
+import org.eclipse.linuxtools.internal.pcap.core.trace.BadPcapFileException;
+import org.eclipse.linuxtools.internal.pcap.core.trace.PcapFile;
 import org.eclipse.linuxtools.pcap.core.tests.shared.PcapTestTrace;
-import org.eclipse.linuxtools.pcap.core.trace.BadPcapFileException;
-import org.eclipse.linuxtools.pcap.core.trace.PcapFile;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -181,8 +181,7 @@ public class PcapPacketTest {
     public void CompletePcapPacketTest() throws IOException, BadPcapFileException, BadPacketException {
         PcapTestTrace trace = PcapTestTrace.MOSTLY_UDP;
         assumeTrue(trace.exists());
-        String path = trace.getPath();
-        try (PcapFile file = new PcapFile(path);) {
+        try (PcapFile file = new PcapFile(trace.getPath());) {
 
             file.seekPacket(36);
             PcapPacket packet = file.parseNextPacket();
@@ -191,10 +190,10 @@ public class PcapPacketTest {
                 return;
             }
             // Protocol Testing
-            assertEquals(Protocol.PCAP, packet.getProtocol());
-            assertTrue(packet.hasProtocol(Protocol.PCAP));
-            assertTrue(packet.hasProtocol(Protocol.UNKNOWN));
-            assertFalse(packet.hasProtocol(Protocol.TCP));
+            assertEquals(PcapProtocol.PCAP, packet.getProtocol());
+            assertTrue(packet.hasProtocol(PcapProtocol.PCAP));
+            assertTrue(packet.hasProtocol(PcapProtocol.UNKNOWN));
+            assertFalse(packet.hasProtocol(PcapProtocol.TCP));
 
             // Abstract methods Testing
             assertTrue(packet.validate());

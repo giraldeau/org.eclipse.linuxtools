@@ -24,10 +24,9 @@ import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
@@ -122,14 +121,14 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
      * @return the synchronization algorithm used
      */
     public static void synchronizeExperiment(TmfExperiment experiment) {
-        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.matchEvents();
         applyComposeTransform(algo, experiment);
     }
 
     public static void synchronizeExperimentWithCleanupMonitor(TmfExperiment experiment) {
-        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.addMatchMonitor(new ExpireCleanupMonitor());
         matching.matchEvents();
@@ -139,7 +138,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
     public static void synchronizeExperimentCoarse(TmfExperiment experiment) {
         IFunction<TmfExperiment> func = new TraceShifterOrigin();
         func.apply(experiment);
-        SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.addMatchMonitor(new StopEarlyMonitor());
         matching.matchEvents();
@@ -162,8 +161,8 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
 
     public static void makeFastTransform(TmfExperiment experiment) {
         for (ITmfTrace trace : experiment.getTraces()) {
-            TmfTimestampTransformLinear xformSlow = (TmfTimestampTransformLinear) trace.getTimestampTransform();
-            TmfTimestampTransformLinearFast xform = new TmfTimestampTransformLinearFast(xformSlow);
+            ITmfTimestampTransform xformSlow = trace.getTimestampTransform();
+            ITmfTimestampTransform xform = TimestampTransformFactory.createFast(xformSlow);
             trace.setTimestampTransform(xform);
         }
     }

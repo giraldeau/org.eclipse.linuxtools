@@ -54,12 +54,4 @@ public interface ITmfTimestampTransform extends Serializable {
      */
     ITmfTimestampTransform composeWith(ITmfTimestampTransform composeWith);
 
-    /**
-     * Returns the inverse of this transform. The transform composed with its
-     * inverse yields the identity.
-     *
-     * @return The inverse transform
-     * @since 4.0
-     */
-    ITmfTimestampTransform inverse();
 }

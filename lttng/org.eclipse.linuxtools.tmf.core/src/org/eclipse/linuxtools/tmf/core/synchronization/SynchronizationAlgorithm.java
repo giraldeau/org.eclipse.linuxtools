@@ -29,6 +29,8 @@ public abstract class SynchronizationAlgorithm extends TmfEventMatches implement
 
     private static final long serialVersionUID = -3083906749528872196L;
 
+    private static double SYNC_THRESHOLD = 0.01;
+
     /**
      * Quality of the result obtained by the synchronization algorithm
      */
@@ -118,5 +120,29 @@ public abstract class SynchronizationAlgorithm extends TmfEventMatches implement
      * @return true if trace has formula
      */
     public abstract boolean isTraceSynced(String hostId);
+
+    /**
+     * Sets the threshold corresponding to the minimal accuracy requested from
+     * the algorithm to be considered accurate.
+     *
+     * @param threshold
+     *            The minimum difference between slopes for synchronization to
+     *            be accurate
+     * @since 4.0
+     */
+    public static void setSyncThreshold(double threshold) {
+        SYNC_THRESHOLD = threshold;
+    }
+
+    /**
+     * Get the minimal accuracy from which the algorithm can be considered
+     * accurate.
+     *
+     * @return The minimal accuracy
+     * @since 4.0
+     */
+    public static double getSyncThreshold() {
+        return SYNC_THRESHOLD;
+    }
 
 }

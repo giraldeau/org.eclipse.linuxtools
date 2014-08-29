@@ -23,8 +23,7 @@ import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationManager;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.ctf.core.CtfTmfEvent;
@@ -127,8 +126,8 @@ public class TraceSynchronizationBenchmark {
     @Test
     public void testTimestampTransformPerformance() {
         long iter = 1 << 25;
-        TmfTimestampTransformLinear slow = new TmfTimestampTransformLinear(Math.PI, 1234);
-        TmfTimestampTransformLinearFast fast = new TmfTimestampTransformLinearFast(slow);
+        ITmfTimestampTransform slow = TimestampTransformFactory.createLinear(Math.PI, 1234);
+        ITmfTimestampTransform fast = TimestampTransformFactory.createFast(slow);
 
         doTimestampTransformRun("xform-slow", slow, iter);
         doTimestampTransformRun("xform-fast", fast, iter);

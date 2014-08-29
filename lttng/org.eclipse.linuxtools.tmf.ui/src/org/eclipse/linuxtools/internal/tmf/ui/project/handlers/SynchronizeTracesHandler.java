@@ -31,7 +31,7 @@ import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.eclipse.linuxtools.tmf.core.trace.TmfTraceManager;
@@ -186,7 +186,7 @@ public class SynchronizeTracesHandler extends AbstractHandler {
                                 if ((expTrace != null) && syncAlgo.isTraceSynced(expTrace.getHostId())) {
 
                                     ITmfTimestampTransform xform = syncAlgo.getTimestampTransform(expTrace);
-                                    if (xform == TmfTimestampTransform.IDENTITY) {
+                                    if (xform == TimestampTransformFactory.getDefaultTransform()) {
                                         continue;
                                     }
 

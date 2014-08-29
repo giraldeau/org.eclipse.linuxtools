@@ -19,10 +19,10 @@ import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.request.ITmfEventRequest.ExecutionType;
 import org.eclipse.linuxtools.tmf.core.request.TmfEventRequest;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 import org.junit.Test;
@@ -141,7 +141,7 @@ public class TestGraphMultiHost {
     public void testSyncTransform() {
         Path path = Paths.get(TraceStrings.TRACE_DIR, TraceStrings.EXP_BUG_SYNC);
         TmfExperiment experiment = CtfTraceFinder.makeTmfExperiment(path);
-        SynchronizationAlgorithm algo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.matchEvents();
 
@@ -165,7 +165,7 @@ public class TestGraphMultiHost {
             //algo.getTimestampTransform(0, host);
             ITmfTimestampTransform xform = algo.getTimestampTransform(host);
             System.out.println("result " + trace.getHostId() + " " + xform);
-            if (xform == TmfTimestampTransform.IDENTITY) {
+            if (xform == TimestampTransformFactory.getDefaultTransform()) {
                 identity++;
             }
         }

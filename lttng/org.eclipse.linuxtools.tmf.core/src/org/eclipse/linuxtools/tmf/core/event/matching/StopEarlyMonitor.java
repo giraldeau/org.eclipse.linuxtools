@@ -1,6 +1,7 @@
 package org.eclipse.linuxtools.tmf.core.event.matching;
 
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+
 
 /**
  * Detect the condition where the synchronization graph is connected (only one

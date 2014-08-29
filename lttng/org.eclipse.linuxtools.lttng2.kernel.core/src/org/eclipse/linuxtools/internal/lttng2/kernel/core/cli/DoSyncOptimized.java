@@ -7,7 +7,8 @@ import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterOrigin;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
@@ -22,20 +23,20 @@ public class DoSyncOptimized implements IBenchRunner {
         BenchResult res = ctx.get(BenchResult.class);
         TmfExperiment experiment = ctx.get(TmfExperiment.class);
 
-        SyncAlgorithmFullyIncremental algo;
+        SynchronizationAlgorithm algo;
         TmfNetworkEventMatching matching;
 
         res.begin(ctx);
 
         IFunction<TmfExperiment> func = new TraceShifterOrigin();
         func.apply(experiment);
-        algo = new SyncAlgorithmFullyIncremental();
+        algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         matching = new TmfNetworkEventMatchingRawReader(Collections.singleton(experiment), algo);
         matching.addMatchMonitor(new StopEarlyMonitor());
         matching.matchEvents();
         CtfTraceFinder.applyComposeTransform(algo, experiment);
 
-        algo = new SyncAlgorithmFullyIncremental();
+        algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         matching = new TmfNetworkEventMatchingRawReader(Collections.singleton(experiment), algo);
         matching.addMatchMonitor(new ExpireCleanupMonitor());
         matching.matchEvents();

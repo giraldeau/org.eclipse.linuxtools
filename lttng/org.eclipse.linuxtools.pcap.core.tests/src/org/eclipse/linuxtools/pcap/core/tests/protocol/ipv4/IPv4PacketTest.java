@@ -26,13 +26,13 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.eclipse.linuxtools.pcap.core.packet.BadPacketException;
-import org.eclipse.linuxtools.pcap.core.protocol.Protocol;
-import org.eclipse.linuxtools.pcap.core.protocol.ipv4.IPv4Endpoint;
-import org.eclipse.linuxtools.pcap.core.protocol.ipv4.IPv4Packet;
+import org.eclipse.linuxtools.internal.pcap.core.packet.BadPacketException;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.PcapProtocol;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.ipv4.IPv4Endpoint;
+import org.eclipse.linuxtools.internal.pcap.core.protocol.ipv4.IPv4Packet;
+import org.eclipse.linuxtools.internal.pcap.core.trace.BadPcapFileException;
+import org.eclipse.linuxtools.internal.pcap.core.trace.PcapFile;
 import org.eclipse.linuxtools.pcap.core.tests.shared.PcapTestTrace;
-import org.eclipse.linuxtools.pcap.core.trace.BadPcapFileException;
-import org.eclipse.linuxtools.pcap.core.trace.PcapFile;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -155,8 +155,7 @@ public class IPv4PacketTest {
     public void CompleteIPv4PacketTest() throws IOException, BadPcapFileException, BadPacketException {
         PcapTestTrace trace = PcapTestTrace.MOSTLY_TCP;
         assumeTrue(trace.exists());
-        String file = trace.getPath();
-        try (PcapFile dummy = new PcapFile(file)) {
+        try (PcapFile dummy = new PcapFile(trace.getPath())) {
             ByteBuffer byteBuffer = fPacket;
             if (byteBuffer == null) {
                 fail("CompleteIPv4PacketTest has failed!");
@@ -165,10 +164,10 @@ public class IPv4PacketTest {
             IPv4Packet packet = new IPv4Packet(dummy, null, byteBuffer);
 
             // Protocol Testing
-            assertEquals(Protocol.IPV4, packet.getProtocol());
-            assertTrue(packet.hasProtocol(Protocol.IPV4));
-            assertTrue(packet.hasProtocol(Protocol.UNKNOWN));
-            assertFalse(packet.hasProtocol(Protocol.TCP));
+            assertEquals(PcapProtocol.IPV4, packet.getProtocol());
+            assertTrue(packet.hasProtocol(PcapProtocol.IPV4));
+            assertTrue(packet.hasProtocol(PcapProtocol.UNKNOWN));
+            assertFalse(packet.hasProtocol(PcapProtocol.TCP));
 
             // Abstract methods Testing
             assertTrue(packet.validate());

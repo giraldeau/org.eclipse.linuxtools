@@ -31,8 +31,8 @@ public class TraceShifterDisjoint implements IFunction<TmfExperiment> {
             ctx = t2.seekEvent(0L);
             ITmfEvent first = t2.getNext(ctx);
 
-            double beta = lastEv.getTimestamp().getValue() - first.getTimestamp().getValue();
-            ITmfTimestampTransform xform = new TmfTimestampTransformLinear(1.0, beta);
+            long beta = lastEv.getTimestamp().getValue() - first.getTimestamp().getValue();
+            ITmfTimestampTransform xform = TimestampTransformFactory.createWithOffset(beta);
             t2.setTimestampTransform(xform);
         }
 

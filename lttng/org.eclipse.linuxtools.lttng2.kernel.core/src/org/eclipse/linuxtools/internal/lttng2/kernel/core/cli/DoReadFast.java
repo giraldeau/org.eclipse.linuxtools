@@ -1,7 +1,7 @@
 package org.eclipse.linuxtools.internal.lttng2.kernel.core.cli;
 
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.ctf.CtfTraceFinder;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 

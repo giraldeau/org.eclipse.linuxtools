@@ -4,7 +4,8 @@ import java.util.Collections;
 
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.synchronization.IFunction;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
 import org.eclipse.linuxtools.tmf.core.synchronization.TraceShifterDisjoint;
 import org.eclipse.linuxtools.tmf.core.trace.TmfExperiment;
 
@@ -21,7 +22,7 @@ public class DoSyncWorst implements IBenchRunner {
         IFunction<TmfExperiment> distjoint = new TraceShifterDisjoint();
         distjoint.apply(experiment);
         res.begin(ctx);
-        SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
         matching.matchEvents();
         res.done(ctx);

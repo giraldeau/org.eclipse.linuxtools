@@ -49,6 +49,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
 
     /**
      * The array of traces to match
+     * @since 4.0
      */
     protected final Collection<? extends ITmfTrace> fTraces;
 

@@ -20,10 +20,11 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.ITmfTimestampTransformInvertible;
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.TmfTimestampTransform;
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinearFast;
 import org.eclipse.linuxtools.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.junit.Test;
@@ -151,7 +152,7 @@ public class TsTransformTest {
      */
     @Test
     public void testInverseComposition() {
-        ITmfTimestampTransform xform = new TmfTimestampTransformLinear(BigDecimal.valueOf(2.0), BigDecimal.valueOf(3));
+        ITmfTimestampTransformInvertible xform = new TmfTimestampTransformLinear(BigDecimal.valueOf(2.0), BigDecimal.valueOf(3));
         ITmfTimestampTransform inv = xform.inverse();
         TmfTimestampTransformLinear identity = (TmfTimestampTransformLinear) xform.composeWith(inv);
         assertEquals(1.0, identity.getAlpha().doubleValue(), 0.001);

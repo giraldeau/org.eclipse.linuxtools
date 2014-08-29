@@ -21,13 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
+import org.eclipse.linuxtools.internal.tmf.core.synchronization.TmfTimestampTransformLinear;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfEventDependency;
 import org.eclipse.linuxtools.tmf.core.synchronization.ITmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.SyncAlgorithmFullyIncremental;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm;
 import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithm.SyncQuality;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransform;
-import org.eclipse.linuxtools.tmf.core.synchronization.TmfTimestampTransformLinear;
+import org.eclipse.linuxtools.tmf.core.synchronization.SynchronizationAlgorithmFactory;
+import org.eclipse.linuxtools.tmf.core.synchronization.TimestampTransformFactory;
 import org.eclipse.linuxtools.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.core.trace.ITmfTrace;
 import org.eclipse.linuxtools.tmf.tests.stubs.event.TmfSyncEventStub;
@@ -61,7 +62,7 @@ public class SyncTest {
         traces.add(t1);
         traces.add(t2);
         fTraces = traces;
-        SyncAlgorithmFullyIncremental.setSyncThreshold(100);
+        SynchronizationAlgorithm.setSyncThreshold(100);
     }
 
     /**
@@ -70,11 +71,12 @@ public class SyncTest {
      */
     @Test
     public void testFullyIncremental() {
-        SynchronizationAlgorithm syncAlgo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm syncAlgo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
+
         syncAlgo.init(fTraces);
         assertEquals(SyncQuality.ABSENT, syncAlgo.getSynchronizationQuality(t1, t2));
-        assertEquals(TmfTimestampTransform.IDENTITY, syncAlgo.getTimestampTransform(t1));
-        assertEquals(TmfTimestampTransform.IDENTITY, syncAlgo.getTimestampTransform(t1));
+        assertEquals(TimestampTransformFactory.getDefaultTransform(), syncAlgo.getTimestampTransform(t1));
+        assertEquals(TimestampTransformFactory.getDefaultTransform(), syncAlgo.getTimestampTransform(t1));
 
         genMatchEvent(syncAlgo, t1, t2, 10, 20);
         assertEquals(SyncQuality.INCOMPLETE, syncAlgo.getSynchronizationQuality(t1, t2));
@@ -93,7 +95,6 @@ public class SyncTest {
             off += 40;
         }
         assertEquals(SyncQuality.ACCURATE, syncAlgo.getSynchronizationQuality(t1, t2));
-
         /* Make the two hulls intersect */
 
         genMatchEvent(syncAlgo, t1, t2, off + 80, off + 1000);
@@ -108,7 +109,7 @@ public class SyncTest {
     @Ignore // FIXME: To test convex-hull, the class should be exposed
     @Test
     public void testOneHull() {
-        SynchronizationAlgorithm syncAlgo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm syncAlgo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         syncAlgo.init(fTraces);
         assertEquals(SyncQuality.ABSENT, syncAlgo.getSynchronizationQuality(t1, t2));
 
@@ -138,7 +139,8 @@ public class SyncTest {
      */
     @Test
     public void testDisjoint() {
-        SynchronizationAlgorithm syncAlgo = new SyncAlgorithmFullyIncremental();
+        SynchronizationAlgorithm syncAlgo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
+
         syncAlgo.init(fTraces);
         assertEquals(SyncQuality.ABSENT, syncAlgo.getSynchronizationQuality(t1, t2));
 
@@ -194,7 +196,8 @@ public class SyncTest {
     }
 
     private static void assertIdentity(List<ITmfTrace> traces, int[][] links) {
-        SyncAlgorithmFullyIncremental algo = new SyncAlgorithmFullyIncremental();
+        SyncAlgorithmFullyIncremental algo = (SyncAlgorithmFullyIncremental) SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
+
         algo.init(traces);
         int clk = 100000;
         for (int[] link : links) {
@@ -215,7 +218,7 @@ public class SyncTest {
         int identity = 0;
         for (ITmfTrace trace : traces) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
-            if (xform == TmfTimestampTransform.IDENTITY) {
+            if (xform == TimestampTransformFactory.getDefaultTransform()) {
                 identity++;
             }
         }
@@ -228,8 +231,6 @@ public class SyncTest {
         for (ITmfTrace trace : traces) {
             ITmfTimestampTransform xform = algo.getTimestampTransform(trace);
             System.out.println("new " + trace.getHostId() + " " + xform);
-            xform = algo.getOldTimestampTransform(trace.getHostId());
-            System.out.println("old " + trace.getHostId() + " " + xform);
         }
         try {
             assertEquals(1, identity);
