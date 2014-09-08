@@ -24,4 +24,5 @@ Export-Package: org.eclipse.linuxtools.lttng2.kernel.core.tests,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.perf.analysis;x-internal:=true,
  org.eclipse.linuxtools.lttng2.kernel.core.tests.stateprovider;x-internal:=true
 Import-Package: com.google.common.collect,
+ org.eclipse.cdt.utils.elf,
  org.eclipse.test.performance
