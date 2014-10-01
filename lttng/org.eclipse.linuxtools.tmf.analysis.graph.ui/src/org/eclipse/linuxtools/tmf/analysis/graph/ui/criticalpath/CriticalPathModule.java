@@ -147,6 +147,7 @@ public class CriticalPathModule extends TmfAbstractAnalysisModule {
         }
     }
 
+    @SuppressWarnings("nls")
     private TmfGraphBuilderModule getGraph() throws TmfAnalysisException {
         /* The graph module is null, take the first available graph if any */
         if (fGraphModule == null) {
@@ -155,10 +156,18 @@ public class CriticalPathModule extends TmfAbstractAnalysisModule {
                 IAnalysisModule module = getTrace().getAnalysisModule((String) paramGraph);
                 if (module instanceof TmfGraphBuilderModule) {
                     fGraphModule = (TmfGraphBuilderModule) module;
+                } else {
+                    throw new TmfAnalysisException(String.format(
+                            "CriticalPathModule: getParameter(%s) is of the wrong type " +
+                            "(expected TmfGraphBuilderModule but was %s)",
+                            PARAM_GRAPH, (module == null) ? "null" : module.getClass()));
                 }
-                throw new TmfAnalysisException(String.format("CriticalPathModule: getParameter(%s) is of the wrong type (expected TmfGraphBuilderModule but was %s)", PARAM_GRAPH, (module == null) ? "null" : module.getClass())); //$NON-NLS-1$ //$NON-NLS-2$
+            } else {
+                throw new TmfAnalysisException(String.format(
+                        "CriticalPathModule: getParameter(%s) is of the wrong type " +
+                        "(expected the ID of a graph analysis, but got %s)",
+                        PARAM_GRAPH, paramGraph));
             }
-            throw new TmfAnalysisException(String.format("CriticalPathModule: getParameter(%s) is of the wrong type (expected the ID of a graph analysis, but got %s)", PARAM_GRAPH, paramGraph)); //$NON-NLS-1$
         }
         return fGraphModule;
     }
