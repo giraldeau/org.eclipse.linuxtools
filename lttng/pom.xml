@@ -117,13 +117,13 @@
     <module>org.eclipse.linuxtools.tmf.core.tests</module>
     <module>org.eclipse.linuxtools.tmf.ui</module>
     <module>org.eclipse.linuxtools.tmf.ui.tests</module>
-    <!-- module>org.eclipse.linuxtools.tmf.ui.swtbot.tests</module -->
+    <module>org.eclipse.linuxtools.tmf.ui.swtbot.tests</module>
     <module>org.eclipse.linuxtools.tmf.help</module>
 
     <module>org.eclipse.linuxtools.tmf.ctf</module>
     <module>org.eclipse.linuxtools.tmf.ctf.core</module>
     <module>org.eclipse.linuxtools.tmf.ctf.core.tests</module>
-    <!-- module>org.eclipse.linuxtools.tmf.ctf.ui.swtbot.tests</module -->
+    <module>org.eclipse.linuxtools.tmf.ctf.ui.swtbot.tests</module>
  
     <module>org.eclipse.linuxtools.tmf.analysis.graph.core</module>
     <module>org.eclipse.linuxtools.tmf.analysis.graph.core.tests</module>
@@ -155,7 +155,7 @@
     <module>org.eclipse.linuxtools.lttng2.kernel.core.tests</module>
     <module>org.eclipse.linuxtools.lttng2.kernel.ui</module>
     <module>org.eclipse.linuxtools.lttng2.kernel.ui.tests</module>
-    <!-- module>org.eclipse.linuxtools.lttng2.kernel.ui.swtbot.tests</module -->
+    <module>org.eclipse.linuxtools.lttng2.kernel.ui.swtbot.tests</module>
 
     <module>org.eclipse.linuxtools.lttng2.ust</module>
     <module>org.eclipse.linuxtools.lttng2.ust.core</module>

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge.EdgeType;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 
@@ -150,6 +151,26 @@ public class CriticalPathAlgorithmBounded extends AbstractCriticalPathAlgorithm 
         TmfVertex node = down.getVertexFrom();
         currentBound = currentBound.compareTo(blocking.getVertexFrom()) < 0 ? blocking.getVertexFrom() : currentBound;
         Stack<TmfVertex> stack = new Stack<>();
+
+        // HACK: look ahead for incoming network edge in case wakeup occurs *before* the packet tracepoint
+        if (node.hasNeighbor(TmfVertex.OUTH)) {
+            TmfVertex next = node.neighbor(TmfVertex.OUTH);
+            if (next.hasNeighbor(TmfVertex.INV) &&
+                    next.getEdges()[TmfVertex.INV].getType() == TmfEdge.EdgeType.NETWORK) {
+                TmfGraph graph = getGraph();
+                TmfVertex from = next.neighbor(TmfVertex.INV);
+                TmfVertex hack = new TmfVertex(node.getTs());
+                graph.add(graph.getParentOf(next), hack);
+                if (node.hasNeighbor(TmfVertex.INH)) {
+                    EdgeType type = node.getEdges()[TmfVertex.INH].getType();
+                    node.neighbor(TmfVertex.INH).linkHorizontal(hack).setType(type);
+                }
+                EdgeType type = node.getEdges()[TmfVertex.OUTH].getType();
+                hack.linkHorizontal(node).setType(type);
+                from.linkVertical(hack).setType(TmfEdge.EdgeType.NETWORK);
+            }
+        }
+
         while (node != null && node.compareTo(currentBound) > 0) {
             /* shortcut for down link that goes beyond the blocking */
             if (node.hasNeighbor(TmfVertex.INV) && node.inv().compareTo(currentBound) <= 0) {

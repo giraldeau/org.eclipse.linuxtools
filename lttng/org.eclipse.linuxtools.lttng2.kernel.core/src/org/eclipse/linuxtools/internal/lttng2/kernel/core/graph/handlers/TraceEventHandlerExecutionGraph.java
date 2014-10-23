@@ -225,6 +225,10 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
             return;
         }
 
+        if (target.getId() == 2615L && current.getId() == 1294) {
+            System.out.println("got it");
+        }
+
         process_status_enum status = (process_status_enum) target.getOldValue(LttngStrings.STATUS);
         if (status == null) {
             return;
@@ -267,11 +271,8 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
                 if (vec == Softirq.NET_RX || vec == Softirq.NET_TX) {
                     // create edge if wake up is caused by incoming packet
                     TmfWorker k = getOrCreateKernelWorker(event);
-                    TmfVertex tail = graph.getTail(k);
-                    if (tail.hasNeighbor(TmfVertex.INV)) {
-                        TmfVertex kwup = stateExtend(k, event.getTimestamp().getValue());
-                        kwup.linkVertical(wup);
-                    }
+                    TmfVertex kwup = stateExtend(k, event.getTimestamp().getValue());
+                    kwup.linkVertical(wup);
                 }
                 break;
             case NONE:

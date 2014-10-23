@@ -22,6 +22,7 @@ public class MainCLI implements IApplication {
         commands.put("list", new ListTaskCommand());
         commands.put("bench", new BenchCommand());
         commands.put("xform", new TransformCommand());
+        commands.put("sync", new SyncCommand());
     }
 
     public static final String ARGS_KEY = "application.args";

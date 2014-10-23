@@ -18,6 +18,7 @@ import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.CriticalPathAlgorithmBounded;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.criticalpath.ICriticalPathAlgorithm;
+import org.eclipse.linuxtools.tmf.analysis.graph.core.model.Dot;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.model.Ops;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.stubs.GraphBuilder;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.stubs.GraphFactory;
@@ -40,6 +41,9 @@ public class TmfCriticalPathTest {
             ICriticalPathAlgorithm cp = new CriticalPathAlgorithmBounded(main);
             TmfGraph bounded = cp.compute(main.getHead(), null);
             TmfVertex actBounded = bounded.getHead(0L);
+            Dot.writeString(builder.getName(), "graph.dot", Dot.todot(main));
+            Dot.writeString(builder.getName(), "path.dot", Dot.todot(builder.getData(i).bounded));
+
             boolean status = Ops.validate(actBounded);
             status = status & Ops.match(builder.getData(i).bounded, actBounded);
             assertTrue(status);
@@ -100,6 +104,11 @@ public class TmfCriticalPathTest {
     @Test
     public void testCriticalPathWakeupNet1() {
         assertTrue(testCriticalPathOne(GraphFactory.GRAPH_NET1));
+    }
+
+    @Test
+    public void testCriticalPathWakeupNet2() {
+        assertTrue(testCriticalPathOne(GraphFactory.GRAPH_NET2));
     }
 
 }

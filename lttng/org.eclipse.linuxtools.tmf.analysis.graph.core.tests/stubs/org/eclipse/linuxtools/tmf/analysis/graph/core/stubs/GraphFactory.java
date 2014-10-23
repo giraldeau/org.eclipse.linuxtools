@@ -615,4 +615,61 @@ public class GraphFactory {
                 }
             };
 
+            /**
+             * HACK: look ahead for incoming packet
+             */
+            public static final GraphBuilder GRAPH_NET2 =
+                    new GraphBuilder("wakeup_net2", 1) {
+                        @Override
+                        public void build(int index) {
+                            TmfVertex t1 = Ops.sequence(4, 1, EdgeType.RUNNING);
+                            Ops.seek(t1, 1).getEdges()[TmfVertex.OUTH].setType(EdgeType.BLOCKED);
+                            TmfVertex irq = Ops.sequence(2, 1, EdgeType.RUNNING);
+                            TmfVertex t2 = Ops.sequence(3, 1, EdgeType.RUNNING);
+                            irq = Ops.alignRight(t1, irq);
+                            t2 = Ops.alignRight(t1, t2);
+
+                            Ops.seek(irq, 0).linkVertical(Ops.seek(t1, 2)).setType(EdgeType.DEFAULT);
+                            Ops.seek(t2, 1).linkVertical(Ops.seek(irq, 1)).setType(EdgeType.NETWORK);
+                            fData[index].head = t1;
+                        }
+
+                        @Override
+                        public void buildData() {
+                            for (int i = 0; i < fData.length; i++) {
+                                fData[i] = new GraphBuilderData();
+                                fData[i].id = i;
+                                fData[i].len = 1;
+                            }
+                        }
+
+                        @Override
+                        public void criticalPathBounded(int index) {
+                            TmfVertex v00 = new TmfVertex(0);
+                            TmfVertex v10 = new TmfVertex(1);
+                            TmfVertex v11 = new TmfVertex(1);
+                            TmfVertex v20 = new TmfVertex(2);
+                            TmfVertex v21 = new TmfVertex(2);
+                            TmfVertex v22 = new TmfVertex(2);
+                            TmfVertex v23 = new TmfVertex(2);
+                            TmfVertex v30 = new TmfVertex(3);
+                            v00.linkHorizontal(v10).setType(EdgeType.RUNNING);
+                            v10.linkVertical(v11).setType(EdgeType.DEFAULT);
+                            v11.linkHorizontal(v20).setType(EdgeType.RUNNING);
+                            v20.linkVertical(v21).setType(EdgeType.NETWORK);
+                            v21.linkHorizontal(v22).setType(EdgeType.RUNNING);
+                            v22.linkVertical(v23).setType(EdgeType.DEFAULT);
+                            v23.linkHorizontal(v30).setType(EdgeType.RUNNING);
+                            fData[index].bounded = v00;
+                        }
+
+                        @Override
+                        public void criticalPathUnbounded(int index) {
+                            if (fData[index].bounded == null) {
+                                criticalPathBounded(index);
+                            }
+                            fData[index].unbounded = fData[index].bounded;
+                        }
+                    };
+
 }
