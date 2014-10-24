@@ -20,6 +20,7 @@ public class MainCLI implements IApplication {
     static {
         commands.put("base", new BaseCommand());
         commands.put("list", new ListTaskCommand());
+        commands.put("path", new CriticalPathCommand());
         commands.put("bench", new BenchCommand());
         commands.put("xform", new TransformCommand());
     }
