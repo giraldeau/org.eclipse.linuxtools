@@ -23,6 +23,7 @@ public class MainCLI implements IApplication {
         commands.put("path", new CriticalPathCommand());
         commands.put("bench", new BenchCommand());
         commands.put("xform", new TransformCommand());
+        commands.put("stats", new EventStatsCommand());
     }
 
     public static final String ARGS_KEY = "application.args";
