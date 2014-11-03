@@ -267,11 +267,8 @@ public class TraceEventHandlerExecutionGraph extends AbstractTraceEventHandler {
                 if (vec == Softirq.NET_RX || vec == Softirq.NET_TX) {
                     // create edge if wake up is caused by incoming packet
                     TmfWorker k = getOrCreateKernelWorker(event);
-                    TmfVertex tail = graph.getTail(k);
-                    if (tail.hasNeighbor(TmfVertex.INV)) {
-                        TmfVertex kwup = stateExtend(k, event.getTimestamp().getValue());
-                        kwup.linkVertical(wup);
-                    }
+                    TmfVertex kwup = stateExtend(k, event.getTimestamp().getValue());
+                    kwup.linkVertical(wup);
                 }
                 break;
             case NONE:

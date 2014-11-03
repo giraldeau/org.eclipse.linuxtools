@@ -14,15 +14,11 @@ package org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.building;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.LttngStrings;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.handlers.EventContextHandler;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.handlers.TraceEventHandlerExecutionGraph;
 import org.eclipse.linuxtools.internal.lttng2.kernel.core.graph.handlers.TraceEventHandlerSched;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfEdge.EdgeType;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfGraph;
-import org.eclipse.linuxtools.tmf.analysis.graph.core.base.TmfVertex;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTmfGraphProvider;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AbstractTraceEventHandler;
 import org.eclipse.linuxtools.tmf.analysis.graph.core.building.AnalysisPhase;
@@ -267,48 +263,6 @@ public class LttngKernelExecGraphProvider extends AbstractTmfGraphProvider {
         fPrev = ts;
 
         return true;
-    }
-
-    /**
-     * Simplify graph after construction
-     */
-    @Override
-    public void done() {
-        TmfGraph g = getAssignedGraph();
-        Set<Object> keys = g.getNodesMap().keySet();
-        ArrayList<TmfWorker> kernelWorker = new ArrayList<>();
-        /* build the set of worker to eliminate */
-        for (Object k: keys) {
-            if (k instanceof TmfWorker) {
-                TmfWorker w = (TmfWorker) k;
-                if (w.getId() == -1) {
-                    kernelWorker.add(w);
-                }
-            }
-        }
-        for (TmfWorker k: kernelWorker) {
-            List<TmfVertex> nodes = g.getNodesOf(k);
-            for(TmfVertex node: nodes) {
-                /* send -> recv */
-                if (node.hasNeighbor(TmfVertex.INV) &&
-                        node.hasNeighbor(TmfVertex.OUTH)) {
-                    TmfVertex next = node.neighbor(TmfVertex.OUTH);
-                    if (!next.hasNeighbor(TmfVertex.OUTV) && node.hasNeighbor(TmfVertex.OUTH)) {
-                        next = node.neighbor(TmfVertex.OUTH);
-                    }
-                    if (next.hasNeighbor(TmfVertex.OUTV)) {
-                        TmfVertex src = node.neighbor(TmfVertex.INV);
-                        TmfVertex dst = next.neighbor(TmfVertex.OUTV);
-                        //TmfWorker sender = (TmfWorker) g.getParentOf(src);
-                        //TmfWorker receiver = (TmfWorker) g.getParentOf(dst);
-                        /* unlink */
-                        node.getEdges()[TmfVertex.INV] = null;
-                        next.getEdges()[TmfVertex.OUTV] = null;
-                        src.linkVertical(dst).setType(EdgeType.NETWORK);
-                    }
-                }
-            }
-        }
     }
 
     private class TraceEventHandlerPhaseOne extends AbstractTraceEventHandler {
