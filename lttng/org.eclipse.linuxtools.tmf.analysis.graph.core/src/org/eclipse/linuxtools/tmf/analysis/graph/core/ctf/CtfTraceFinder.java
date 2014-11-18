@@ -130,7 +130,7 @@ public class CtfTraceFinder extends SimpleFileVisitor<Path> {
     public static void synchronizeExperimentWithCleanupMonitor(TmfExperiment experiment) {
         SynchronizationAlgorithm algo = SynchronizationAlgorithmFactory.getFullyIncrementalAlgorithm();
         TmfNetworkEventMatching matching = new TmfNetworkEventMatching(Collections.singleton(experiment), algo);
-        matching.addMatchMonitor(new ExpireCleanupMonitor());
+        //matching.addMatchMonitor(new ExpireCleanupMonitor());
         matching.matchEvents();
         applyComposeTransform(algo, experiment);
     }
