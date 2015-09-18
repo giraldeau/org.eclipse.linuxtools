@@ -47,10 +47,8 @@ public class TmfGraphBuildRequest extends TmfEventRequest {
     @Override
     public void handleData(final ITmfEvent event) {
         super.handleData(event);
-        if (event != null) {
-            fListener.progress(event.getTimestamp().getValue());
-            fProvider.processEvent(event);
-        }
+        fListener.progress(event.getTimestamp().getValue());
+        fProvider.processEvent(event);
     }
 
     @Override

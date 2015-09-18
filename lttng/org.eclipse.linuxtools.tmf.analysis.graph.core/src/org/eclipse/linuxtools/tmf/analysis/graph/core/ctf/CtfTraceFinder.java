@@ -18,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.linuxtools.tmf.core.event.ITmfEvent;
-import org.eclipse.linuxtools.tmf.core.event.matching.ExpireCleanupMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.StopEarlyMonitor;
 import org.eclipse.linuxtools.tmf.core.event.matching.TmfNetworkEventMatching;
 import org.eclipse.linuxtools.tmf.core.exceptions.TmfTraceException;

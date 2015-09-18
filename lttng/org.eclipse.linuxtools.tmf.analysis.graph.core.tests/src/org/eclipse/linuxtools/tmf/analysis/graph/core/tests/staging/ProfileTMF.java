@@ -43,7 +43,7 @@ public class ProfileTMF {
                         CTFTraceReader reader = new CTFTraceReader(trace)) {
                     while(reader.hasMoreEvents()) {
                         EventDefinition event = reader.getCurrentEventDef();
-                        if (event == null || event.getFields().getDeclaration() == null) {
+                        if (event == null) {
                             throw new RuntimeException("null event");
                         }
                         if (parse) {
@@ -85,13 +85,11 @@ public class ProfileTMF {
                             execType) {
                         @Override
                         public void handleData(final ITmfEvent event) {
-                            if (event != null) {
-                                tmfCount++;
-                                if (parse) {
-                                    if (event.getContent() == null) {
-                                        event.getContent().getFields().size();
-                                        throw new RuntimeException("null ctx");
-                                    }
+                            tmfCount++;
+                            if (parse) {
+                                if (event.getContent() == null) {
+                                    event.getContent().getFields().size();
+                                    throw new RuntimeException("null ctx");
                                 }
                             }
                         }
